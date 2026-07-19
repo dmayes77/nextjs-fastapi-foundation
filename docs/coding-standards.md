@@ -355,6 +355,28 @@ chore: update development scripts
 
 Do not combine unrelated changes in one commit.
 
+Changelog
+
+Every meaningful project change must be represented under the `[Unreleased]` section of `docs/changelog.md`.
+
+This applies to:
+
+- Features
+- Fixes
+- Architecture changes
+- Developer tooling
+- Important documentation changes
+- Security changes
+
+It does not normally apply to:
+
+- Typo corrections
+- Formatting-only edits
+- Generated file refreshes with no contract change
+- Temporary investigative work
+
+A feature implemented over several commits may share one consolidated changelog entry.
+
 Pull Requests
 
 A pull request should include:

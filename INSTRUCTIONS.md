@@ -39,7 +39,8 @@ For every step:
 4. Do not continue when an error appears.
 5. Fix the current step before moving forward.
 6. Mark the step complete in this file after verification.
-7. Commit only at the checkpoints identified in this plan.
+7. Update `docs/changelog.md` under `[Unreleased]` when the step delivers a meaningful change (see the Changelog Rule below).
+8. Commit only at the checkpoints identified in this plan.
 
 Do not skip ahead. A later step may depend on files created or verified in an earlier step.
 
@@ -1000,6 +1001,28 @@ Every command shown in the README must be copied from a verified project command
 
 ---
 
+# Changelog Rule
+
+Before committing a meaningful completed step:
+
+1. Update `docs/changelog.md` under `[Unreleased]`.
+2. Use the correct category.
+3. Describe the delivered capability.
+4. Include the implementation commit hash when available.
+5. Verify the changelog does not duplicate an existing entry.
+
+Because the implementation commit hash is not known before committing, the accepted workflow is:
+
+```text
+Implementation and changelog commit
+    ↓
+Optional focused changelog hash follow-up
+```
+
+Formatting-only, typo-only, and temporary investigative commits do not require changelog entries.
+
+---
+
 # Safety Rules
 
 - Never commit `.env` files.
@@ -1026,10 +1049,10 @@ Every command shown in the README must be copied from a verified project command
 - [x] Step 2: Define project development standards
 - [x] Step 3: Create Next.js frontend
 - [x] Step 4: Create FastAPI backend
-- [ ] Step 5: Add root development commands
-- [ ] Step 6: Normalize the FastAPI application structure
-- [ ] Step 7: Add settings and environment validation
-- [ ] Step 8: Add structured logging and request IDs
+- [x] Step 5: Add root development commands
+- [x] Step 6: Normalize the FastAPI application structure
+- [x] Step 7: Add settings and environment validation
+- [x] Step 8: Add structured logging and request IDs
 - [ ] Step 9: Add health and readiness endpoints
 - [ ] Step 10: Add standard application error handling
 - [ ] Step 11: Add PostgreSQL and async SQLAlchemy
@@ -1059,6 +1082,6 @@ Every command shown in the README must be copied from a verified project command
 
 The next action is:
 
-> **Step 5: Commit and finalize the root development commands.**
+> **Step 9: Add health and readiness endpoints.**
 
-Do not begin restructuring FastAPI until the root package files are committed and the working tree is clean.
+Do not begin standard application error handling until the health and readiness endpoints are implemented, verified, documented in the changelog, and committed.

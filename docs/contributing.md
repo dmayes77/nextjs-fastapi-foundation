@@ -209,6 +209,27 @@ Update documentation when a contribution changes:
 
 Every documented command must have been tested successfully.
 
+## Changelog Updates
+
+Every meaningful commit must update docs/changelog.md.
+
+- Add the entry under [Unreleased].
+- Use the correct category: Added, Changed, Fixed, Documentation, or Developer Experience.
+- Describe the capability or behavior the change delivers, not only the file that changed.
+- Include the short commit hash once the commit exists.
+- Do not add changelog entries for formatting-only, typo-only, or internal cleanup commits unless users or contributors would notice the change.
+- Keep one changelog entry per meaningful change, not necessarily one entry per low-level commit.
+- When a feature requires multiple commits, update or consolidate the entry when the feature is complete.
+- Do not create release headings until a version is actually tagged.
+
+The practical workflow is:
+
+1. Make and verify the change.
+2. Add or update the changelog entry, leaving out the hash if the commit does not exist yet.
+3. Commit the implementation and changelog together when practical.
+4. If the hash must be added afterward, make a focused documentation follow-up commit.
+5. Before opening a pull request, confirm the changelog accurately represents the completed work.
+
 Pull Request Description
 
 Each pull request should explain:
@@ -246,6 +267,7 @@ Before requesting review, confirm:
 - Migrations are included when needed.
 - Generated API output is current.
 - Documentation is accurate.
+- docs/changelog.md represents the completed work under [Unreleased].
 - No secrets are committed.
 - No personal machine paths are committed.
 
