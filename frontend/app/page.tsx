@@ -10,9 +10,8 @@ export default function Home() {
             Next.js + FastAPI + PostgreSQL
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-            The frontend is ready for the next phases of this boilerplate. The
-            FastAPI connection and database integration will be introduced as
-            the stack is built out.
+            The frontend is ready for the next phases of this boilerplate. The FastAPI connection
+            and database integration will be introduced as the stack is built out.
           </p>
         </div>
 
