@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+.next/
+out/
+coverage/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# uv
+.python-version
+
+# PostgreSQL
+*.pid
+*.log
+
+# Editors
+.vscode/
+.idea/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Generated API client
+frontend/lib/api/generated/
+backend/openapi.json
