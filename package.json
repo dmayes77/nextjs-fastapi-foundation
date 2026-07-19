@@ -1,0 +1,21 @@
+{
+  "name": "next-fastapi-postgres",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A production-ready boilerplate built with Next.js, FastAPI, PostgreSQL, SQLAlchemy, and Alembic.",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail -n frontend,backend -c cyan,green \"pnpm --dir frontend dev\" \"cd backend && uv run fastapi dev\"",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:backend": "cd backend && uv run fastapi dev"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.10.0",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
