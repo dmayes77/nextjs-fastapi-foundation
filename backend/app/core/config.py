@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +13,9 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     database_url: str
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000"]
+    )
 
 
 @lru_cache
