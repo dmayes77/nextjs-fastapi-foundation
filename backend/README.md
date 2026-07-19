@@ -22,8 +22,10 @@ uv run fastapi deploy
 
 ## Project Structure
 
-- `main.py` - Your FastAPI application
-- `pyproject.toml` - Project dependencies
+- `app/main.py` - Creates the FastAPI application and includes the top-level router
+- `app/api/router.py` - Top-level API router that aggregates the route modules
+- `app/api/routes/root.py` - Root route (`GET /`)
+- `pyproject.toml` - Project dependencies and the FastAPI entrypoint (`app.main:app`)
 
 ## Learn More
 
