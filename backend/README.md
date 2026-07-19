@@ -23,6 +23,13 @@ Visit http://localhost:8000
 2. Update the values as needed.
 3. Settings are validated when FastAPI starts — missing required values fail at startup.
 
+## Logging
+
+- Every request receives an `X-Request-ID`.
+- Clients may send an existing `X-Request-ID` header, and the same value is returned in the response.
+- Request logs include method, path, status code, and duration.
+- Request bodies, secrets, and query values are not logged.
+
 ### Deploy to FastAPI Cloud
 
 Sign up and log in at https://fastapicloud.com, then deploy with:
