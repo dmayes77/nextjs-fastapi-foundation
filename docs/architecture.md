@@ -326,3 +326,9 @@ The first version does not include:
 - Nx
 
 These features can be added later after the core template is stable and fully tested.
+
+## Architecture Decision Records
+
+Long-lived architectural decisions, including the reasoning behind the technology choices described in this document, are recorded in `docs/adr/`.
+
+See [Architecture Decision Records](./adr/README.md).
