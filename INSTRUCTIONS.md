@@ -186,7 +186,33 @@ Commit:
 chore: initialize boilerplate repository
 ```
 
-## Step 2: Create the Next.js frontend
+## Step 2: Define project development standards
+
+**Goal:** Document the project rules before generating application code.
+
+Documents:
+
+- `docs/architecture.md`
+- `docs/coding-standards.md`
+- `docs/api-standards.md`
+- `docs/database-standards.md`
+- `docs/testing-standards.md`
+- `docs/contributing.md`
+
+Checkpoint:
+
+- All six standards documents exist.
+- Architecture and responsibilities are documented.
+- API, database, testing, and contribution rules are documented.
+- Working tree is clean after the standards commit.
+
+Commit:
+
+```text
+docs: define project development standards
+```
+
+## Step 3: Create the Next.js frontend
 
 **Goal:** Generate the official Next.js application without a `src/` directory.
 
@@ -214,7 +240,7 @@ Commit:
 feat(frontend): add Next.js application
 ```
 
-## Step 3: Create the FastAPI backend
+## Step 4: Create the FastAPI backend
 
 **Goal:** Generate the official FastAPI application and verify it runs independently.
 
@@ -239,7 +265,7 @@ Commit:
 feat(backend): add FastAPI application
 ```
 
-## Step 4: Add root development commands
+## Step 5: Add root development commands
 
 **Goal:** Start both applications with one root command.
 
@@ -262,7 +288,7 @@ Commit:
 chore: add root development commands
 ```
 
-## Step 5: Normalize the FastAPI structure
+## Step 6: Normalize the FastAPI structure
 
 **Goal:** Create a small, understandable backend layout.
 
@@ -298,7 +324,7 @@ Commit:
 feat(api): add versioned API foundation
 ```
 
-## Step 6: Add settings and environment validation
+## Step 7: Add settings and environment validation
 
 **Goal:** Fail clearly when required configuration is missing.
 
@@ -335,7 +361,7 @@ Commit:
 feat(config): add validated environment settings
 ```
 
-## Step 7: Connect the frontend and backend
+## Step 8: Connect the frontend and backend
 
 **Goal:** Prove Next.js can reach FastAPI through both supported paths.
 
@@ -361,7 +387,7 @@ Commit:
 feat(api-client): connect Next.js and FastAPI
 ```
 
-## Step 8: Add PostgreSQL and SQLAlchemy
+## Step 9: Add PostgreSQL and SQLAlchemy
 
 **Goal:** Establish the async database layer.
 
@@ -393,7 +419,7 @@ Commit:
 feat(database): add async PostgreSQL foundation
 ```
 
-## Step 9: Add Alembic
+## Step 10: Add Alembic
 
 **Goal:** Make migrations the only supported way to change the schema.
 
@@ -431,7 +457,7 @@ Commit:
 feat(database): add Alembic migrations
 ```
 
-## Step 10: Build the Todo vertical slice
+## Step 11: Build the Todo vertical slice
 
 **Goal:** Prove the entire stack works through one complete feature.
 
@@ -481,7 +507,7 @@ Commit:
 feat(todos): add full-stack Todo example
 ```
 
-## Step 11: Generate the OpenAPI client
+## Step 12: Generate the OpenAPI client
 
 **Goal:** Remove duplicated handwritten API contracts.
 
@@ -508,7 +534,7 @@ Commit:
 feat(api-client): generate client from OpenAPI
 ```
 
-## Step 12: Add backend tests
+## Step 13: Add backend tests
 
 **Goal:** Make backend behavior safe to change.
 
@@ -535,7 +561,7 @@ Commit:
 test(api): add backend test foundation
 ```
 
-## Step 13: Add frontend tests
+## Step 14: Add frontend tests
 
 **Goal:** Test frontend logic and interactive components.
 
@@ -559,7 +585,7 @@ Commit:
 test(frontend): add Jest and component tests
 ```
 
-## Step 14: Add Playwright end-to-end testing
+## Step 15: Add Playwright end-to-end testing
 
 **Goal:** Verify the complete user path.
 
@@ -587,7 +613,7 @@ Commit:
 test(e2e): add full-stack Playwright coverage
 ```
 
-## Step 15: Add code-quality commands
+## Step 16: Add code-quality commands
 
 **Goal:** Give contributors one predictable validation workflow.
 
@@ -618,7 +644,7 @@ Commit:
 chore: add repository quality checks
 ```
 
-## Step 16: Add GitHub Actions
+## Step 17: Add GitHub Actions
 
 **Goal:** Validate every pull request.
 
@@ -646,7 +672,7 @@ Commit:
 ci: add full-stack GitHub Actions
 ```
 
-## Step 17: Write the template-quality README
+## Step 18: Write the template-quality README
 
 **Goal:** Make a new user successful without needing private guidance.
 
@@ -692,7 +718,7 @@ Commit:
 docs: add complete project documentation
 ```
 
-## Step 18: Prepare the GitHub template
+## Step 19: Prepare the GitHub template
 
 **Goal:** Make the repository safe and easy to reuse.
 
@@ -721,7 +747,7 @@ Commit:
 chore: prepare repository as GitHub template
 ```
 
-## Step 19: Tag version 1.0.0
+## Step 20: Tag version 1.0.0
 
 **Goal:** Publish the first stable template release.
 
@@ -788,25 +814,26 @@ Every command shown in the README must be copied from a verified project command
 - [x] Supabase removed from the core
 - [x] No `src/` directory selected
 - [x] Simple duplex monorepo selected
-- [ ] Step 1: Verify tools and initialize repository
-- [ ] Step 2: Create Next.js frontend
-- [ ] Step 3: Create FastAPI backend
-- [ ] Step 4: Add root development commands
-- [ ] Step 5: Normalize FastAPI structure
-- [ ] Step 6: Add environment validation
-- [ ] Step 7: Connect frontend and backend
-- [ ] Step 8: Add PostgreSQL and SQLAlchemy
-- [ ] Step 9: Add Alembic
-- [ ] Step 10: Build Todo vertical slice
-- [ ] Step 11: Generate OpenAPI client
-- [ ] Step 12: Add backend tests
-- [ ] Step 13: Add frontend tests
-- [ ] Step 14: Add Playwright
-- [ ] Step 15: Add quality commands
-- [ ] Step 16: Add GitHub Actions
-- [ ] Step 17: Write complete README
-- [ ] Step 18: Prepare GitHub template
-- [ ] Step 19: Release version 1.0.0
+- [x] Step 1: Verify tools and initialize repository
+- [x] Step 2: Define project development standards
+- [ ] Step 3: Create Next.js frontend
+- [ ] Step 4: Create FastAPI backend
+- [ ] Step 5: Add root development commands
+- [ ] Step 6: Normalize FastAPI structure
+- [ ] Step 7: Add environment validation
+- [ ] Step 8: Connect frontend and backend
+- [ ] Step 9: Add PostgreSQL and SQLAlchemy
+- [ ] Step 10: Add Alembic
+- [ ] Step 11: Build Todo vertical slice
+- [ ] Step 12: Generate OpenAPI client
+- [ ] Step 13: Add backend tests
+- [ ] Step 14: Add frontend tests
+- [ ] Step 15: Add Playwright
+- [ ] Step 16: Add quality commands
+- [ ] Step 17: Add GitHub Actions
+- [ ] Step 18: Write complete README
+- [ ] Step 19: Prepare GitHub template
+- [ ] Step 20: Release version 1.0.0
 
 ---
 
@@ -814,6 +841,6 @@ Every command shown in the README must be copied from a verified project command
 
 The next action is:
 
-> **Step 1: Verify tools and initialize the empty repository.**
+> **Step 3: Create the Next.js frontend.**
 
-Do not start the Next.js or FastAPI scaffolds until Step 1 has been verified and committed.
+Do not create the FastAPI backend until the Next.js scaffold has been started, linted, built, and committed.
