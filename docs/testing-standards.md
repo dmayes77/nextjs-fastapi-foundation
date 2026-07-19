@@ -17,6 +17,8 @@ The project uses four testing layers:
 
 Each layer has a different purpose.
 
+The testing order follows the implementation order. Backend tests are established with the backend foundation, frontend unit and component tests are established with the frontend foundation, and Playwright is added after the complete Todo workflow exists.
+
 Backend Unit Tests
 
 Backend unit tests use Pytest.

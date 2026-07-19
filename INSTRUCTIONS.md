@@ -155,6 +155,8 @@ Directories should be created only when a step needs them. We will not generate 
 
 # Build Roadmap
 
+## Phase A: Repository foundation
+
 ## Step 1: Verify the computer and create the empty repository
 
 **Goal:** Confirm the required tools exist and create a clean repository folder.
@@ -275,12 +277,14 @@ Tasks:
 - Install `concurrently`
 - Add `dev`, `dev:frontend`, and `dev:backend`
 - Ensure one process stops when the other fails
+- Commit the root package files only after the shared development command has been verified
 
 Checkpoint:
 
 - `pnpm dev` starts ports 3000 and 8000
 - Logs are clearly labeled
 - Ctrl+C stops both processes
+- Root package files are committed before continuing
 
 Commit:
 
@@ -288,7 +292,9 @@ Commit:
 chore: add root development commands
 ```
 
-## Step 6: Normalize the FastAPI structure
+## Phase B: Backend foundation
+
+## Step 6: Normalize the FastAPI application structure
 
 **Goal:** Create a small, understandable backend layout.
 
@@ -361,33 +367,76 @@ Commit:
 feat(config): add validated environment settings
 ```
 
-## Step 8: Connect the frontend and backend
+## Step 8: Add structured logging and request IDs
 
-**Goal:** Prove Next.js can reach FastAPI through both supported paths.
+**Goal:** Make backend requests observable before the application grows.
 
 Tasks:
 
-- Add Next.js rewrite for browser requests
-- Add `lib/api/browser.ts`
-- Add `lib/api/server.ts`
-- Add a frontend page that reads FastAPI health
-- Keep server-side requests direct
-- Keep browser-side requests same-origin
+- Add request ID middleware or context propagation
+- Add structured logging around requests and errors
+- Include the request ID in error responses and logs
+- Keep logs safe by excluding secrets
 
 Checkpoint:
 
-- Browser request reaches FastAPI through `/api`
-- Server Component reaches FastAPI directly
-- No development CORS error
-- FastAPI request logs prove both paths work
+- Every request gets a request ID
+- Logs are structured and readable
+- Sensitive values remain excluded from logs
 
 Commit:
 
 ```text
-feat(api-client): connect Next.js and FastAPI
+feat(api): add structured logging and request IDs
 ```
 
-## Step 9: Add PostgreSQL and SQLAlchemy
+## Step 9: Add health and readiness endpoints
+
+**Goal:** Make the application status explicit for local development and deployment.
+
+Tasks:
+
+- Add `/health` for process health
+- Add `/ready` for readiness after dependencies are available
+- Keep health checks lightweight and dependency-free
+- Make readiness reflect the database state when available
+
+Checkpoint:
+
+- `/health` returns success quickly
+- `/ready` reports the application state clearly
+- The endpoints remain documented in FastAPI
+
+Commit:
+
+```text
+feat(api): add health and readiness endpoints
+```
+
+## Step 10: Add standard application error handling
+
+**Goal:** Return consistent, testable errors from the backend.
+
+Tasks:
+
+- Define a standard error response shape
+- Translate service and validation failures into that shape
+- Include request IDs in the response body
+- Keep the error layer centralized
+
+Checkpoint:
+
+- Backend errors follow one predictable contract
+- Frontend consumers can normalize responses consistently
+- Validation failures remain readable
+
+Commit:
+
+```text
+feat(api): add standard error handling
+```
+
+## Step 11: Add PostgreSQL and async SQLAlchemy
 
 **Goal:** Establish the async database layer.
 
@@ -419,7 +468,7 @@ Commit:
 feat(database): add async PostgreSQL foundation
 ```
 
-## Step 10: Add Alembic
+## Step 12: Add Alembic migrations
 
 **Goal:** Make migrations the only supported way to change the schema.
 
@@ -457,84 +506,7 @@ Commit:
 feat(database): add Alembic migrations
 ```
 
-## Step 11: Build the Todo vertical slice
-
-**Goal:** Prove the entire stack works through one complete feature.
-
-Backend:
-
-- SQLAlchemy Todo table
-- Alembic migration
-- Pydantic request schemas
-- Pydantic response schema
-- Todo service
-- CRUD routes
-- Pagination
-- Validation
-- Standard 404 behavior
-
-Frontend:
-
-- Todo list page
-- Create form
-- Edit flow
-- Delete flow
-- Loading state
-- Error state
-- Empty state
-
-Endpoints:
-
-```text
-GET    /api/v1/todos
-GET    /api/v1/todos/{todo_id}
-POST   /api/v1/todos
-PUT    /api/v1/todos/{todo_id}
-DELETE /api/v1/todos/{todo_id}
-```
-
-Checkpoint:
-
-- Todo can be created from Next.js
-- Todo appears in PostgreSQL
-- Todo can be read, updated, and deleted
-- Validation errors display correctly
-- Backend tests pass
-
-Commit:
-
-```text
-feat(todos): add full-stack Todo example
-```
-
-## Step 12: Generate the OpenAPI client
-
-**Goal:** Remove duplicated handwritten API contracts.
-
-Tasks:
-
-- Export OpenAPI deterministically from FastAPI
-- Install the selected OpenAPI TypeScript generator
-- Generate into `frontend/lib/api/generated/`
-- Add `api:generate`
-- Add `api:check`
-- Wrap generated calls only where application behavior is needed
-- Do not manually edit generated files
-
-Checkpoint:
-
-- Changing a Pydantic response changes generated TypeScript
-- Stale generated output fails the check
-- Frontend build uses generated types
-- Backend does not need to be manually running during CI generation
-
-Commit:
-
-```text
-feat(api-client): generate client from OpenAPI
-```
-
-## Step 13: Add backend tests
+## Step 13: Add backend test foundation
 
 **Goal:** Make backend behavior safe to change.
 
@@ -542,8 +514,8 @@ Tests:
 
 - Health route
 - Readiness route
-- Todo service
-- Todo routes
+- Service behavior
+- Route behavior
 - Validation
 - Not found
 - Database rollback or isolation
@@ -561,17 +533,87 @@ Commit:
 test(api): add backend test foundation
 ```
 
-## Step 14: Add frontend tests
+## Phase C: Frontend foundation
 
-**Goal:** Test frontend logic and interactive components.
+## Step 14: Add frontend environment validation
+
+**Goal:** Make the frontend configuration explicit before integration work begins.
+
+Tasks:
+
+- Add browser-safe and server-safe environment validation helpers
+- Keep `NEXT_PUBLIC_` usage limited to values that must reach the browser
+- Keep server-only values out of the client bundle
+- Document required variables in `.env.example`
+
+Checkpoint:
+
+- Frontend configuration fails clearly when variables are missing
+- Client and server values are separated correctly
+- The frontend can start with the expected environment contract
+
+Commit:
+
+```text
+feat(frontend): add environment validation
+```
+
+## Step 15: Add browser and server API client layers
+
+**Goal:** Prepare the frontend for both browser and server requests.
+
+Tasks:
+
+- Add `lib/api/browser.ts` for same-origin browser requests
+- Add `lib/api/server.ts` for direct FastAPI calls
+- Keep browser requests on `/api/...`
+- Keep server-side requests direct through `FASTAPI_INTERNAL_URL`
+
+Checkpoint:
+
+- Browser code uses the same-origin rewrite path
+- Server code uses the direct internal FastAPI URL
+- Both layers are ready for feature work
+
+Commit:
+
+```text
+feat(frontend): add API client layers
+```
+
+## Step 16: Add frontend error normalization
+
+**Goal:** Make API failures presentable and consistent in the UI.
+
+Tasks:
+
+- Normalize backend errors into one frontend-facing shape
+- Keep error handling central and reusable
+- Preserve helpful details without leaking sensitive data
+
+Checkpoint:
+
+- Frontend code can handle backend errors with one shared path
+- Loading and empty states remain separate from error handling
+- Error UI components can be reused safely
+
+Commit:
+
+```text
+feat(frontend): add API error normalization
+```
+
+## Step 17: Add Jest and React Testing Library
+
+**Goal:** Establish frontend unit and component testing early.
 
 Tests:
 
 - API error normalization
-- Todo form validation
-- Todo components
+- Validation helpers
+- Component rendering
 - Loading and empty states
-- Client-side interactions
+- Basic user interactions
 
 Checkpoint:
 
@@ -582,10 +624,174 @@ Checkpoint:
 Commit:
 
 ```text
-test(frontend): add Jest and component tests
+test(frontend): add Jest and React Testing Library
 ```
 
-## Step 15: Add Playwright end-to-end testing
+## Phase D: Application integration
+
+## Step 18: Connect Next.js and FastAPI
+
+**Goal:** Prove the two applications can communicate through the planned runtime paths.
+
+Tasks:
+
+- Add Next.js rewrite for browser requests
+- Add a frontend page that reads FastAPI health
+- Keep server-side requests direct
+- Keep browser-side requests same-origin
+
+Checkpoint:
+
+- Browser request reaches FastAPI through `/api`
+- Server Component reaches FastAPI directly
+- No development CORS error
+- FastAPI request logs prove both paths work
+
+Commit:
+
+```text
+feat(api-client): connect Next.js and FastAPI
+```
+
+## Step 19: Add deterministic OpenAPI export
+
+**Goal:** Make API contracts reproducible and reviewable.
+
+Tasks:
+
+- Export OpenAPI deterministically from FastAPI
+- Keep the export command local and scriptable
+- Preserve versioned routing in the exported schema
+
+Checkpoint:
+
+- OpenAPI export is stable across runs
+- Backend route changes are reflected in the generated schema
+- The export path is documented for contributors
+
+Commit:
+
+```text
+feat(api): add deterministic OpenAPI export
+```
+
+## Step 20: Generate the frontend API client
+
+**Goal:** Remove duplicated handwritten API contracts.
+
+Tasks:
+
+- Install the selected OpenAPI TypeScript generator
+- Generate into `frontend/lib/api/generated/`
+- Wrap generated calls only where application behavior is needed
+- Do not manually edit generated files
+
+Checkpoint:
+
+- Changing a Pydantic response changes generated TypeScript
+- Frontend build uses generated types
+- Backend does not need to be manually running during CI generation
+
+Commit:
+
+```text
+feat(api-client): generate frontend client
+```
+
+## Step 21: Add API contract freshness checks
+
+**Goal:** Keep the generated frontend client current.
+
+Tasks:
+
+- Add `api:check` or similar validation command
+- Fail when generated output is stale
+- Document the regeneration workflow for contributors
+
+Checkpoint:
+
+- Stale generated output fails the check
+- Frontend and backend contracts remain aligned
+- CI can guard against drift
+
+Commit:
+
+```text
+chore(api-client): add contract freshness checks
+```
+
+## Phase E: First vertical slice
+
+## Step 22: Build the Todo database model and migration
+
+**Goal:** Prove the backend can persist a real domain object.
+
+Tasks:
+
+- Add a SQLAlchemy Todo table
+- Add an Alembic migration for the table
+- Choose deterministic constraint names and UUID primary keys
+- Keep the model and migration together
+
+Checkpoint:
+
+- The migration applies successfully
+- The Todo table exists in PostgreSQL
+- The schema change is reviewable and versioned
+
+Commit:
+
+```text
+feat(database): add Todo model and migration
+```
+
+## Step 23: Add Todo schemas, service, and routes
+
+**Goal:** Expose the Todo domain through the API.
+
+Tasks:
+
+- Add Pydantic request and response schemas
+- Add a Todo service with business rules
+- Add CRUD routes under `/api/v1/todos`
+- Return consistent errors and validation responses
+
+Checkpoint:
+
+- Todo endpoints work end to end through FastAPI
+- Validation errors are predictable
+- Missing resources return standard 404 behavior
+
+Commit:
+
+```text
+feat(api): add Todo schemas, service, and routes
+```
+
+## Step 24: Add the Todo frontend feature
+
+**Goal:** Show the Todo workflow in the Next.js application.
+
+Tasks:
+
+- Add a Todo list page
+- Add create, edit, and delete flows
+- Add loading, empty, and error states
+- Keep UI logic clear and testable
+
+Checkpoint:
+
+- The Todo flow works from the browser UI
+- The frontend uses the generated API client and shared error handling
+- The feature is ready for end-to-end verification
+
+Commit:
+
+```text
+feat(frontend): add Todo feature
+```
+
+## Step 25: Add Playwright end-to-end coverage
 
 **Goal:** Verify the complete user path.
 
@@ -613,7 +819,9 @@ Commit:
 test(e2e): add full-stack Playwright coverage
 ```
 
-## Step 16: Add code-quality commands
+## Phase F: Repository completion
+
+## Step 26: Add root quality and validation commands
 
 **Goal:** Give contributors one predictable validation workflow.
 
@@ -644,7 +852,7 @@ Commit:
 chore: add repository quality checks
 ```
 
-## Step 17: Add GitHub Actions
+## Step 27: Add GitHub Actions
 
 **Goal:** Validate every pull request.
 
@@ -672,7 +880,7 @@ Commit:
 ci: add full-stack GitHub Actions
 ```
 
-## Step 18: Write the template-quality README
+## Step 28: Write the complete template README
 
 **Goal:** Make a new user successful without needing private guidance.
 
@@ -718,7 +926,7 @@ Commit:
 docs: add complete project documentation
 ```
 
-## Step 19: Prepare the GitHub template
+## Step 29: Prepare the GitHub template
 
 **Goal:** Make the repository safe and easy to reuse.
 
@@ -747,7 +955,7 @@ Commit:
 chore: prepare repository as GitHub template
 ```
 
-## Step 20: Tag version 1.0.0
+## Step 30: Release version 1.0.0
 
 **Goal:** Publish the first stable template release.
 
@@ -816,24 +1024,34 @@ Every command shown in the README must be copied from a verified project command
 - [x] Simple duplex monorepo selected
 - [x] Step 1: Verify tools and initialize repository
 - [x] Step 2: Define project development standards
-- [ ] Step 3: Create Next.js frontend
-- [ ] Step 4: Create FastAPI backend
+- [x] Step 3: Create Next.js frontend
+- [x] Step 4: Create FastAPI backend
 - [ ] Step 5: Add root development commands
-- [ ] Step 6: Normalize FastAPI structure
-- [ ] Step 7: Add environment validation
-- [ ] Step 8: Connect frontend and backend
-- [ ] Step 9: Add PostgreSQL and SQLAlchemy
-- [ ] Step 10: Add Alembic
-- [ ] Step 11: Build Todo vertical slice
-- [ ] Step 12: Generate OpenAPI client
-- [ ] Step 13: Add backend tests
-- [ ] Step 14: Add frontend tests
-- [ ] Step 15: Add Playwright
-- [ ] Step 16: Add quality commands
-- [ ] Step 17: Add GitHub Actions
-- [ ] Step 18: Write complete README
-- [ ] Step 19: Prepare GitHub template
-- [ ] Step 20: Release version 1.0.0
+- [ ] Step 6: Normalize the FastAPI application structure
+- [ ] Step 7: Add settings and environment validation
+- [ ] Step 8: Add structured logging and request IDs
+- [ ] Step 9: Add health and readiness endpoints
+- [ ] Step 10: Add standard application error handling
+- [ ] Step 11: Add PostgreSQL and async SQLAlchemy
+- [ ] Step 12: Add Alembic migrations
+- [ ] Step 13: Add backend test foundation
+- [ ] Step 14: Add frontend environment validation
+- [ ] Step 15: Add browser and server API client layers
+- [ ] Step 16: Add frontend error normalization
+- [ ] Step 17: Add Jest and React Testing Library
+- [ ] Step 18: Connect Next.js and FastAPI
+- [ ] Step 19: Add deterministic OpenAPI export
+- [ ] Step 20: Generate the frontend API client
+- [ ] Step 21: Add API contract freshness checks
+- [ ] Step 22: Build the Todo database model and migration
+- [ ] Step 23: Add Todo schemas, service, and routes
+- [ ] Step 24: Add the Todo frontend feature
+- [ ] Step 25: Add Playwright end-to-end coverage
+- [ ] Step 26: Add root quality and validation commands
+- [ ] Step 27: Add GitHub Actions
+- [ ] Step 28: Write the complete template README
+- [ ] Step 29: Prepare the GitHub template
+- [ ] Step 30: Release version 1.0.0
 
 ---
 
@@ -841,6 +1059,6 @@ Every command shown in the README must be copied from a verified project command
 
 The next action is:
 
-> **Step 3: Create the Next.js frontend.**
+> **Step 5: Commit and finalize the root development commands.**
 
-Do not create the FastAPI backend until the Next.js scaffold has been started, linted, built, and committed.
+Do not begin restructuring FastAPI until the root package files are committed and the working tree is clean.

@@ -24,6 +24,8 @@ Database Access
 
 FastAPI accesses PostgreSQL through SQLAlchemy 2.
 
+PostgreSQL and async SQLAlchemy are added before frontend integration so the backend foundation is stable before the browser-facing layers are connected.
+
 The application must not:
 
 - Query PostgreSQL directly from Next.js

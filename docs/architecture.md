@@ -9,6 +9,16 @@ This repository contains two independent applications inside one Git repository:
 
 Each application manages its own dependencies and can run independently.
 
+The implementation order is intentionally backend-first:
+
+Backend foundation
+↓
+Frontend foundation
+↓
+Application integration
+↓
+Vertical slice
+
 This structure works like a duplex:
 
 - The frontend and backend are separate living spaces.

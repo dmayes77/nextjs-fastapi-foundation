@@ -120,6 +120,8 @@ Documentation that cannot be trusted is worse than no documentation.
 
 The repository is intentionally divided into two independent applications.
 
+Each application foundation is completed independently before integration. The frontend should not be wired to an unfinished backend, and the backend should not be treated as complete only because the API routes exist. Integration should join two stable applications rather than two unfinished halves. This sequencing reduces avoidable refactoring and keeps the final template easier to reason about.
+
 ```text
 Browser
     ↓
