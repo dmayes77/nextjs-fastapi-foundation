@@ -13,6 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Added backend environment configuration using Pydantic Settings, validated at startup and loaded from `.env` with a committed `.env.example` (`a55a9e2`).
 - Added structured request logging and request-scoped `X-Request-ID` handling, including start and completion logs with duration and the request ID echoed in every response (`7dbcc4d`).
 - Added production-style `GET /health` and `GET /ready` endpoints for application liveness and readiness monitoring, with database readiness deferred until the database layer exists.
+- Added centralized application, HTTP, validation, and unexpected-exception handling with a consistent request-ID-aware error envelope.
 
 ### Changed
 

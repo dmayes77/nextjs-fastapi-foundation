@@ -37,6 +37,25 @@ Visit http://localhost:8000
 
 Database readiness is intentionally deferred until the database layer exists.
 
+## Error Responses
+
+- Errors use one standard envelope, regardless of the source.
+- Error bodies include a stable, machine-readable `code`.
+- Error bodies include the request ID that generated the error.
+- Validation errors return normalized field details instead of raw framework output.
+- Unexpected internal details are logged with a stack trace but are not returned publicly.
+
+```json
+{
+  "error": {
+    "code": "resource_not_found",
+    "message": "Resource not found",
+    "details": null,
+    "requestId": "request-id-value"
+  }
+}
+```
+
 ### Deploy to FastAPI Cloud
 
 Sign up and log in at https://fastapicloud.com, then deploy with:

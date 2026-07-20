@@ -7,11 +7,10 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.request_context import reset_request_id, set_request_id
+from app.core.request_context import REQUEST_ID_HEADER, reset_request_id, set_request_id
 
 logger = logging.getLogger("app.request")
 
-REQUEST_ID_HEADER = "X-Request-ID"
 MAX_REQUEST_ID_LENGTH = 128
 _ALLOWED_CHARS = frozenset(string.ascii_letters + string.digits + "-_.")
 
@@ -30,6 +29,10 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         request_id = incoming if _is_valid_request_id(incoming) else str(uuid.uuid4())
 
         token = set_request_id(request_id)
+        # Also stash on request.state: exceptions that escape this middleware
+        # (bare `Exception`, handled by the outer ServerErrorMiddleware) run
+        # after the context var has already been reset in `finally` below.
+        request.state.request_id = request_id
         start = time.perf_counter()
         logger.info("request started method=%s path=%s", request.method, request.url.path)
         try:
