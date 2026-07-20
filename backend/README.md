@@ -30,6 +30,13 @@ Visit http://localhost:8000
 - Request logs include method, path, status code, and duration.
 - Request bodies, secrets, and query values are not logged.
 
+## Operational Endpoints
+
+- `GET /health` - liveness endpoint confirming the process is running; performs no dependency checks.
+- `GET /ready` - application readiness endpoint validating configuration and application state.
+
+Database readiness is intentionally deferred until the database layer exists.
+
 ### Deploy to FastAPI Cloud
 
 Sign up and log in at https://fastapicloud.com, then deploy with:
