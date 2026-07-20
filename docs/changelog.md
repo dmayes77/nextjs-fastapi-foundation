@@ -23,6 +23,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Fixed
 
 - Isolated the default CORS origins list so `Settings` instances do not share mutable state (`839b61c`).
+- Fixed Next.js Turbopack workspace-root detection for the duplex repository layout.
 
 ### Documentation
 
