@@ -33,9 +33,17 @@ Visit http://localhost:8000
 ## Operational Endpoints
 
 - `GET /health` - liveness endpoint confirming the process is running; performs no dependency checks.
-- `GET /ready` - application readiness endpoint validating configuration and application state.
+- `GET /ready` - application readiness endpoint validating configuration, application state, and database connectivity.
 
-Database readiness is intentionally deferred until the database layer exists.
+## Database
+
+- Async PostgreSQL access uses SQLAlchemy 2 with the Psycopg 3 driver.
+- One async engine and one `async_sessionmaker` are created at startup; the engine is never created per request.
+- `app.database.session.get_db()` yields one `AsyncSession` per request, rolling back only if an unhandled exception escapes and always closing the session.
+- The dependency never commits automatically — transaction ownership belongs to the service layer that uses the session.
+- `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names.
+- No models exist yet; this is infrastructure only. Alembic and the first domain model are later steps.
+- `GET /ready` verifies database connectivity with a lightweight `SELECT 1` and returns `503` through the standard error envelope when the database is unreachable.
 
 ## Error Responses
 
@@ -70,6 +78,9 @@ uv run fastapi deploy
 - `app/api/router.py` - Top-level API router that aggregates the route modules
 - `app/api/routes/root.py` - Root route (`GET /`)
 - `app/core/config.py` - Application settings loaded from the environment / `.env`
+- `app/database/base.py` - Declarative `Base` and the deterministic constraint naming convention
+- `app/database/engine.py` - Async engine and session factory
+- `app/database/session.py` - `get_db()` FastAPI dependency yielding one session per request
 - `pyproject.toml` - Project dependencies and the FastAPI entrypoint (`app.main:app`)
 
 ## Learn More
