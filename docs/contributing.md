@@ -82,7 +82,7 @@ Good examples:
 - Add the FastAPI scaffold
 - Configure SQLAlchemy
 - Add Alembic
-- Add the Todo feature
+- Add the Project feature
 - Add frontend tests
 
 Avoid combining unrelated work such as:

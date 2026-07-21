@@ -1,4 +1,4 @@
-# Next.js + FastAPI + PostgreSQL Boilerplate Build Instructions
+# Next.js FastAPI Foundation Build Instructions
 
 ## Purpose
 
@@ -49,7 +49,7 @@ Do not skip ahead. A later step may depend on files created or verified in an ea
 # Final Project Shape
 
 ```text
-next-fastapi-postgres/
+nextjs-fastapi-foundation/
 ├── frontend/
 │   ├── app/
 │   ├── components/
@@ -151,6 +151,25 @@ Directories should be created only when a step needs them. We will not generate 
 - Pytest
 - Playwright
 - No Vitest
+
+---
+
+## Foundation Boundary
+
+Version one provides a complete, working full-stack foundation.
+
+It must work without authentication, multi-tenancy, billing, storage, or other product-specific integrations.
+
+Those capabilities may be added later without changing the core Next.js → FastAPI → SQLAlchemy → PostgreSQL architecture.
+
+Rules that follow from this:
+
+1. Version one must be usable without auth or multi-tenancy.
+2. The frontend and backend connection must be fully implemented and tested before optional product features are considered.
+3. The Project Management vertical slice must remain small and removable.
+4. Authentication, multi-tenancy, billing, storage, and similar features are post-foundation extensions.
+5. Step 11 remains domain-neutral.
+6. Steps 22-25 prove the architecture but do not turn the repository into a complete Project Management product.
 
 ---
 
@@ -439,7 +458,9 @@ feat(api): add standard error handling
 
 ## Step 11: Add PostgreSQL and async SQLAlchemy
 
-**Goal:** Establish the async database layer.
+**Goal:** Establish a generic, reusable async database foundation.
+
+Keep Step 11 limited to the PostgreSQL engine, async session factory, SQLAlchemy metadata, database dependency injection, and readiness database check. Save the Project model, repository, schemas, service, migration, and routes for the Project Management vertical slice so the database foundation remains generic and reusable.
 
 Dependencies:
 
@@ -449,12 +470,29 @@ Dependencies:
 
 Tasks:
 
-- Create async engine
-- Create async session factory
-- Create one database session per request
+- Create the async PostgreSQL engine
+- Create `async_sessionmaker`
+- Create SQLAlchemy declarative metadata and `Base`
 - Add deterministic constraint naming
-- Add database readiness check
+- Create a FastAPI dependency that yields one async database session per request
+- Add a lightweight database connectivity check
+- Integrate the connectivity check into `/ready`
+- Configure the engine and pool from environment settings
 - Avoid `create_all()` in application startup
+- Document and validate the generic foundation
+
+Explicitly out of scope for this step:
+
+- Project table or model
+- Repository implementations
+- Project schemas
+- Project service
+- Project routes
+- Project migrations
+- Seed data
+- Authentication
+- Multi-tenancy
+- Generic repository abstractions that have no current consumer
 
 Checkpoint:
 
@@ -462,6 +500,7 @@ Checkpoint:
 - `/ready` verifies the database
 - Invalid database configuration produces a clear failure
 - Tests can override the database dependency
+- No Project-specific code exists yet
 
 Commit:
 
@@ -473,6 +512,8 @@ feat(database): add async PostgreSQL foundation
 
 **Goal:** Make migrations the only supported way to change the schema.
 
+Keep Step 12 limited to Alembic infrastructure. Do not add the Project table migration in Step 12 — that belongs to the Project Management vertical slice.
+
 Tasks:
 
 - Install Alembic in the backend project
@@ -481,7 +522,7 @@ Tasks:
 - Connect Alembic to SQLAlchemy metadata
 - Support async database configuration
 - Add root migration commands
-- Create an initial empty or baseline migration
+- Create an initial empty or baseline migration (infrastructure only, no Project table)
 
 Root commands:
 
@@ -723,76 +764,92 @@ chore(api-client): add contract freshness checks
 
 ## Phase E: First vertical slice
 
-## Step 22: Build the Todo database model and migration
+## Step 22: Build the Project database model and migration
 
 **Goal:** Prove the backend can persist a real domain object.
 
 Tasks:
 
-- Add a SQLAlchemy Todo table
+- Add a SQLAlchemy Project table with `id`, `name`, `description`, `status`, `due_date`, `created_at`, `updated_at`
 - Add an Alembic migration for the table
 - Choose deterministic constraint names and UUID primary keys
+- Default `status` to `planned`, with allowed values `planned`, `active`, `completed`, `archived`
 - Keep the model and migration together
 
 Checkpoint:
 
 - The migration applies successfully
-- The Todo table exists in PostgreSQL
+- The Project table exists in PostgreSQL
 - The schema change is reviewable and versioned
 
 Commit:
 
 ```text
-feat(database): add Todo model and migration
+feat(database): add Project model and migration
 ```
 
-## Step 23: Add Todo schemas, service, and routes
+## Step 23: Add Project repository, schemas, service, and routes
 
-**Goal:** Expose the Todo domain through the API.
+**Goal:** Expose the Project domain through the API.
 
 Tasks:
 
 - Add Pydantic request and response schemas
-- Add a Todo service with business rules
-- Add CRUD routes under `/api/v1/todos`
+- Add a Project repository for persistence access
+- Add a Project service with business rules
+- Add routes under `/api/v1/projects`:
+  - `GET /api/v1/projects`
+  - `GET /api/v1/projects/{project_id}`
+  - `POST /api/v1/projects`
+  - `PATCH /api/v1/projects/{project_id}`
+  - `POST /api/v1/projects/{project_id}/archive`
+- Enforce business rules:
+  - Project name is required.
+  - Status defaults to `planned`.
+  - Archived projects cannot be edited.
+  - Any non-archived project may be archived.
+  - Due date is optional.
+  - Invalid lifecycle actions return `409 Conflict`.
 - Return consistent errors and validation responses
+- Keep the vertical slice limited to one Project table (no tasks, members, comments, attachments, authentication, organizations, notifications, kanban behavior, or time tracking)
 
 Checkpoint:
 
-- Todo endpoints work end to end through FastAPI
+- Project endpoints work end to end through FastAPI
 - Validation errors are predictable
 - Missing resources return standard 404 behavior
+- Invalid lifecycle actions return 409 Conflict
 
 Commit:
 
 ```text
-feat(api): add Todo schemas, service, and routes
+feat(api): add Project repository, schemas, service, and routes
 ```
 
-## Step 24: Add the Todo frontend feature
+## Step 24: Add the Project Management frontend
 
-**Goal:** Show the Todo workflow in the Next.js application.
+**Goal:** Show the Project Management workflow in the Next.js application.
 
 Tasks:
 
-- Add a Todo list page
-- Add create, edit, and delete flows
+- Add a Project list page
+- Add create, edit, and archive flows
 - Add loading, empty, and error states
 - Keep UI logic clear and testable
 
 Checkpoint:
 
-- The Todo flow works from the browser UI
+- The Project Management flow works from the browser UI
 - The frontend uses the generated API client and shared error handling
 - The feature is ready for end-to-end verification
 
 Commit:
 
 ```text
-feat(frontend): add Todo feature
+feat(frontend): add Project Management feature
 ```
 
-## Step 25: Add Playwright end-to-end coverage
+## Step 25: Add Project Management Playwright coverage
 
 **Goal:** Verify the complete user path.
 
@@ -801,12 +858,12 @@ Flow:
 1. Start frontend
 2. Start backend
 3. Use a dedicated test database
-4. Open the Todo page
-5. Create a Todo
+4. Open the Project Management page
+5. Create a Project
 6. Confirm it appears
 7. Update it
-8. Delete it
-9. Confirm it is gone
+8. Archive it
+9. Confirm it shows as archived
 
 Checkpoint:
 
@@ -1053,8 +1110,8 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 6: Normalize the FastAPI application structure
 - [x] Step 7: Add settings and environment validation
 - [x] Step 8: Add structured logging and request IDs
-- [ ] Step 9: Add health and readiness endpoints
-- [ ] Step 10: Add standard application error handling
+- [x] Step 9: Add health and readiness endpoints
+- [x] Step 10: Add standard application error handling
 - [ ] Step 11: Add PostgreSQL and async SQLAlchemy
 - [ ] Step 12: Add Alembic migrations
 - [ ] Step 13: Add backend test foundation
@@ -1066,10 +1123,10 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [ ] Step 19: Add deterministic OpenAPI export
 - [ ] Step 20: Generate the frontend API client
 - [ ] Step 21: Add API contract freshness checks
-- [ ] Step 22: Build the Todo database model and migration
-- [ ] Step 23: Add Todo schemas, service, and routes
-- [ ] Step 24: Add the Todo frontend feature
-- [ ] Step 25: Add Playwright end-to-end coverage
+- [ ] Step 22: Build the Project database model and migration
+- [ ] Step 23: Add Project repository, schemas, service, and routes
+- [ ] Step 24: Add the Project Management frontend
+- [ ] Step 25: Add Project Management Playwright coverage
 - [ ] Step 26: Add root quality and validation commands
 - [ ] Step 27: Add GitHub Actions
 - [ ] Step 28: Write the complete template README
@@ -1082,6 +1139,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 9: Add health and readiness endpoints.**
+> **Step 11: Add PostgreSQL and async SQLAlchemy.**
 
-Do not begin standard application error handling until the health and readiness endpoints are implemented, verified, documented in the changelog, and committed.
+Keep Step 11 limited to the engine, session factory, metadata, dependency injection, and readiness database check. Do not begin Project domain implementation until the Project Management vertical slice.

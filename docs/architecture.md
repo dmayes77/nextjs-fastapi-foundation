@@ -111,7 +111,7 @@ The browser sees a request to the same origin as the Next.js application. This p
 
 Example:
 
-fetch("/api/v1/todos")
+fetch("/api/v1/projects")
 
 Server Requests
 
@@ -123,7 +123,7 @@ Next.js server
 
 Example:
 
-fetch(`${process.env.FASTAPI_INTERNAL_URL}/api/v1/todos`)
+fetch(`${process.env.FASTAPI_INTERNAL_URL}/api/v1/projects`)
 
 Server-side requests should not travel through the browser rewrite because both applications can communicate directly.
 
@@ -133,11 +133,11 @@ All application API routes use the /api/v1 prefix.
 
 Examples:
 
-GET /api/v1/todos
-GET /api/v1/todos/{todo_id}
-POST /api/v1/todos
-PUT /api/v1/todos/{todo_id}
-DELETE /api/v1/todos/{todo_id}
+GET /api/v1/projects
+GET /api/v1/projects/{project_id}
+POST /api/v1/projects
+PATCH /api/v1/projects/{project_id}
+POST /api/v1/projects/{project_id}/archive
 
 Using a versioned prefix allows future API changes without immediately breaking existing consumers.
 
@@ -251,8 +251,8 @@ FastAPI returns errors using one consistent structure:
 
 {
 "error": {
-"code": "todo_not_found",
-"message": "Todo not found",
+"code": "project_not_found",
+"message": "Project not found",
 "details": null,
 "requestId": "request-id-value"
 }
@@ -326,6 +326,32 @@ The first version does not include:
 - Nx
 
 These features can be added later after the core template is stable and fully tested.
+
+## Foundation and Extensions
+
+The stable core of this repository is:
+
+```text
+Next.js
+  → FastAPI
+  → SQLAlchemy
+  → PostgreSQL
+```
+
+Optional capabilities connect around this core later. Examples:
+
+```text
+Authentication
+Multi-tenancy
+Billing
+Storage
+Realtime
+Background jobs
+```
+
+These extensions should not change the core frontend-to-backend communication pattern described above.
+
+The Project Management reference feature is not a required permanent domain. It exists to demonstrate the architecture end to end and may be removed or replaced.
 
 ## Architecture Decision Records
 

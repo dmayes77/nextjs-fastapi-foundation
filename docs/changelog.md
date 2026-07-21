@@ -31,6 +31,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Added the project philosophy and updated the implementation roadmap (`9b344b5`).
 - Revised the implementation roadmap to match the current build sequence (`6b6f1ab`).
 - Added Architecture Decision Records under `docs/adr/` covering the core technology and sequencing decisions (`067231c`).
+- Replaced the planned Todo example with a Project Management reference application while keeping the database foundation domain-neutral.
+- Clarified that the repository is a complete full-stack foundation with optional authentication, multi-tenancy, billing, storage, and other product-specific extensions.
 
 ### Developer Experience
 

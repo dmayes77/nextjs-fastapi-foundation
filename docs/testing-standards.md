@@ -17,7 +17,7 @@ The project uses four testing layers:
 
 Each layer has a different purpose.
 
-The testing order follows the implementation order. Backend tests are established with the backend foundation, frontend unit and component tests are established with the frontend foundation, and Playwright is added after the complete Todo workflow exists.
+The testing order follows the implementation order. Backend tests are established with the backend foundation, frontend unit and component tests are established with the frontend foundation, and Playwright is added after the complete Project Management workflow exists.
 
 Backend Unit Tests
 
@@ -105,13 +105,13 @@ Initial End-to-End Flow
 
 The first full-flow test should:
 
-1. Open the Todo page.
-2. Create a Todo.
-3. Confirm the Todo appears.
-4. Update the Todo.
+1. Open the Project Management page.
+2. Create a Project.
+3. Confirm the Project appears.
+4. Update the Project.
 5. Confirm the new values appear.
-6. Delete the Todo.
-7. Confirm the Todo disappears.
+6. Archive the Project.
+7. Confirm the Project shows as archived.
 
 Test Naming
 

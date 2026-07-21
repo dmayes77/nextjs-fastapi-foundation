@@ -6,6 +6,8 @@ This project is not intended to be another boilerplate.
 
 Its purpose is to become a production-ready reference implementation for building modern full-stack applications with Next.js, FastAPI, PostgreSQL, SQLAlchemy, and Alembic.
 
+The foundation must work immediately after setup. Its core value is reliable, well-documented communication between Next.js, FastAPI, and PostgreSQL — not the breadth of features it includes.
+
 Every architectural decision should favor clarity, maintainability, and long-term usability over adding more features.
 
 The goal is not to build the biggest template.
@@ -23,6 +25,8 @@ Not because it contains every possible feature.
 Because the important architectural decisions have already been made thoughtfully and documented clearly.
 
 The template should feel predictable, organized, and easy to extend.
+
+The included Project Management feature exists only to demonstrate the architecture end to end; it may be removed or replaced without affecting the foundation.
 
 ---
 
@@ -78,8 +82,9 @@ Examples:
 - No Turborepo in version one.
 - No Docker in version one.
 - No Redis until it is needed.
-- No authentication until the application foundation is complete.
+- No authentication or multi-tenancy in version one — these are valid future extensions, not version-one requirements.
 - No infrastructure simply because another template includes it.
+- No optional product feature forced into every generated project.
 
 Every dependency should justify its existence.
 
