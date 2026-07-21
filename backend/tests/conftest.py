@@ -1,8 +1,17 @@
+import os
 from collections.abc import AsyncIterator, Iterator
 
 import httpx
 import pytest
 from fastapi import FastAPI
+
+# The application validates DATABASE_URL while importing its database modules.
+# Seed a deliberately unreachable test value before importing application code so
+# collection works in clean checkouts and CI without relying on backend/.env.
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql+psycopg://invalid:invalid@127.0.0.1:1/invalid",
+)
 
 from app.core.config import get_settings
 from app.main import create_app
