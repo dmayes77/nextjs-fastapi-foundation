@@ -88,7 +88,7 @@ Optional migration configuration:
 
 DATABASE_MIGRATION_URL=postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi
 
-When DATABASE_MIGRATION_URL is not provided, Alembic may use DATABASE_URL.
+When DATABASE_MIGRATION_URL is not provided, Alembic falls back to DATABASE_URL. A second URL is not required for local development.
 
 Environment-specific URLs must never be hardcoded in Python files.
 
@@ -344,13 +344,17 @@ The standard migration process is:
 6. Verify downgrade behavior when practical.
 7. Commit the model and migration together.
 
-Example commands will eventually include:
+Root commands:
 
-pnpm db:revision
+pnpm db:revision -m "describe change"
 pnpm db:upgrade
 pnpm db:downgrade
 pnpm db:current
 pnpm db:history
+
+db:revision always runs with --autogenerate; pass the message directly (no -- separator).
+
+The baseline migration is intentionally empty and contains no domain schema. It exists only to establish migration history before the first domain table is added.
 
 Migration Review
 

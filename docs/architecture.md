@@ -96,6 +96,8 @@ Alembic handles:
 
 The application must not use Base.metadata.create_all() as a replacement for Alembic migrations.
 
+Alembic sits beside the FastAPI application, inside `backend/`, rather than inside `app/`. Its migration environment (`backend/migrations/env.py`) imports the same `Base.metadata` and naming convention the application uses, so migrations and models never drift apart. Migration connections use `NullPool`, since each migration run opens a connection once and does not need pooling; this is separate from the application's own runtime engine and pooling configured in `app/database/engine.py`. Migrations run only through the Alembic CLI or root `db:*` commands, never automatically during FastAPI startup. The baseline migration makes no schema changes; domain migrations begin later with the Project Management vertical slice.
+
 Frontend and Backend Communication
 
 The frontend communicates with FastAPI in two different ways.

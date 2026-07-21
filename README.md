@@ -8,6 +8,20 @@ The project is currently being built step by step. See [INSTRUCTIONS.md](./INSTR
 
 See [docs/changelog.md](./docs/changelog.md) for unreleased changes and future release history.
 
+## Database Migrations
+
+Alembic is the only supported way to change the database schema; `Base.metadata.create_all()` is never used. Run migration commands from the repository root:
+
+```bash
+pnpm db:revision -m "describe change"
+pnpm db:upgrade
+pnpm db:downgrade
+pnpm db:current
+pnpm db:history
+```
+
+`db:revision` always runs with `--autogenerate`; pass the message directly (no `--` separator — the underlying script is already a compound shell command, and pnpm forwards trailing arguments to it as-is).
+
 ## Foundation Scope
 
 Version one focuses on:

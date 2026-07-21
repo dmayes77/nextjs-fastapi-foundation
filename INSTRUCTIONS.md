@@ -527,12 +527,14 @@ Tasks:
 Root commands:
 
 ```text
-pnpm db:revision
+pnpm db:revision -m "describe change"
 pnpm db:upgrade
 pnpm db:downgrade
 pnpm db:current
 pnpm db:history
 ```
+
+`db:revision` always runs with `--autogenerate`; pass the message directly (no `--` separator — verified: `pnpm db:revision -- -m "..."` fails because the underlying script is a compound shell command and pnpm forwards the literal `--` into it, which Alembic then rejects as an unrecognized argument).
 
 Checkpoint:
 
@@ -1112,7 +1114,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 8: Add structured logging and request IDs
 - [x] Step 9: Add health and readiness endpoints
 - [x] Step 10: Add standard application error handling
-- [ ] Step 11: Add PostgreSQL and async SQLAlchemy
+- [x] Step 11: Add PostgreSQL and async SQLAlchemy
 - [ ] Step 12: Add Alembic migrations
 - [ ] Step 13: Add backend test foundation
 - [ ] Step 14: Add frontend environment validation
@@ -1139,6 +1141,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 11: Add PostgreSQL and async SQLAlchemy.**
+> **Step 12: Add Alembic migrations.**
 
-Keep Step 11 limited to the engine, session factory, metadata, dependency injection, and readiness database check. Do not begin Project domain implementation until the Project Management vertical slice.
+Step 12 is in progress. The async Alembic foundation (`env.py`, the infrastructure-only baseline migration, root `db:*` commands, and documentation) has been implemented and validated locally against PostgreSQL, but is not yet committed or merged. Do not begin the Project Management vertical slice (Steps 22-25) until Step 12 is committed and merged.

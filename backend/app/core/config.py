@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     database_url: str
+    database_migration_url: str | None = None
     database_echo: bool = False
     cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000"]
