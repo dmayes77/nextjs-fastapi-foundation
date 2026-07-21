@@ -36,6 +36,10 @@ Unit tests should avoid real external services.
 
 Use fakes, stubs, or dependency overrides when practical.
 
+The default backend suite uses pytest, pytest-asyncio, and `httpx.AsyncClient` over `httpx.ASGITransport` — never the synchronous FastAPI `TestClient`. Each test builds a fresh application from `create_app()` and gets its own async client, so middleware, exception handlers, and dependency overrides never leak between tests; an autouse fixture also clears the `get_settings()` cache before and after every test. This default suite must not require PostgreSQL or run Alembic migrations.
+
+Database readiness is verified by monkeypatching `app.services.system.check_database` directly (it is a plain function call inside `check_readiness()`, not a FastAPI dependency, so `app.dependency_overrides` has no effect on it). Test-only routes needed to exercise error handling (unique paths such as `/__test__/...`) may be attached to the per-test application instance inside a test; they are never added to the production route table.
+
 Backend Integration Tests
 
 Backend integration tests verify that multiple backend layers work together.
@@ -53,6 +57,8 @@ They may test:
 Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
+
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13, and are added later.
 
 Frontend Unit Tests
 
@@ -195,7 +201,7 @@ Use fixtures for repeatable setup.
 
 Examples:
 
-- FastAPI test client
+- Fresh `create_app()` application and async test client (function-scoped)
 - Database session
 - Todo factory
 - Environment settings
@@ -331,7 +337,7 @@ pnpm test:backend
 pnpm test:e2e
 pnpm check
 
-The exact commands must be documented in the README after they are verified.
+The exact commands must be documented in the README after they are verified. `pnpm test:backend` is implemented and verified; the remaining commands are added with their respective testing layers.
 
 Local Test Workflow
 

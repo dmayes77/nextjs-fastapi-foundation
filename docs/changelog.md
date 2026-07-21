@@ -16,6 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Added centralized application, HTTP, validation, and unexpected-exception handling with a consistent request-ID-aware error envelope.
 - Added a domain-neutral async PostgreSQL and SQLAlchemy 2 foundation: a single async engine and session factory, a deterministic constraint naming convention, one database session per request via dependency injection, and a `/ready` database connectivity check that returns `503` through the standard error envelope when the database is unreachable.
 - Added an async Alembic migration foundation with shared SQLAlchemy metadata, environment-driven migration URLs, root migration commands, and an infrastructure-only baseline revision.
+- Added an isolated async backend test foundation covering operational routes, request IDs, readiness failures, and the standard error envelope without requiring PostgreSQL.
 
 ### Changed
 

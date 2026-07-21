@@ -1115,8 +1115,8 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 9: Add health and readiness endpoints
 - [x] Step 10: Add standard application error handling
 - [x] Step 11: Add PostgreSQL and async SQLAlchemy
-- [ ] Step 12: Add Alembic migrations
-- [ ] Step 13: Add backend test foundation
+- [x] Step 12: Add Alembic migrations
+- [x] Step 13: Add backend test foundation
 - [ ] Step 14: Add frontend environment validation
 - [ ] Step 15: Add browser and server API client layers
 - [ ] Step 16: Add frontend error normalization
@@ -1141,6 +1141,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 12: Add Alembic migrations.**
+> **Step 14: Add frontend environment validation.**
 
-Step 12 is in progress. The async Alembic foundation (`env.py`, the infrastructure-only baseline migration, root `db:*` commands, and documentation) has been implemented and validated locally against PostgreSQL, but is not yet committed or merged. Do not begin the Project Management vertical slice (Steps 22-25) until Step 12 is committed and merged.
+Step 13 (isolated backend test foundation) is complete, committed, and pushed on `feature/step-13-backend-test-foundation`. Do not begin the Project Management vertical slice (Steps 22-25) until the frontend foundation phase (Steps 14-17) is complete.
