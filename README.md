@@ -22,6 +22,14 @@ pnpm db:history
 
 `db:revision` always runs with `--autogenerate`; pass the message directly (no `--` separator — the underlying script is already a compound shell command, and pnpm forwards trailing arguments to it as-is).
 
+## Backend Tests
+
+```bash
+pnpm test:backend
+```
+
+The default backend test suite is isolated and does not require a running PostgreSQL instance.
+
 ## Foundation Scope
 
 Version one focuses on:

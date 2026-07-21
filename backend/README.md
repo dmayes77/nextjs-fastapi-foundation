@@ -75,6 +75,26 @@ pnpm db:current
 pnpm db:history
 ```
 
+## Tests
+
+- Test dependencies (`httpx`, `pytest`, `pytest-asyncio`) live in the `dev` dependency group, not the runtime dependencies.
+- Each test gets a fresh application from `create_app()` and its own `httpx.AsyncClient` over `httpx.ASGITransport`, so middleware, exception handlers, and dependency overrides never leak between tests.
+- An autouse fixture clears the `get_settings()` cache before and after every test.
+- Database readiness is tested by monkeypatching `app.services.system.check_database` directly, not through `app.dependency_overrides` — `check_readiness()` calls it as a plain function, not as a FastAPI dependency.
+- The default test suite does not require PostgreSQL and never runs Alembic migrations. Real database and Alembic integration tests are deferred to a later, separate test category.
+
+Run the suite from `backend/`:
+
+```bash
+uv run --group dev pytest
+```
+
+Or from the repository root:
+
+```bash
+pnpm test:backend
+```
+
 ## Error Responses
 
 - Errors use one standard envelope, regardless of the source.
@@ -114,6 +134,7 @@ uv run fastapi deploy
 - `alembic.ini` - Alembic configuration; the runtime database URL is supplied programmatically by `migrations/env.py`, never hardcoded here
 - `migrations/env.py` - Async Alembic environment wired to `Base.metadata`
 - `migrations/versions/` - Migration history, starting with the infrastructure-only baseline
+- `tests/conftest.py` - Fresh `create_app()` fixture, async test client, and settings-cache isolation
 - `pyproject.toml` - Project dependencies and the FastAPI entrypoint (`app.main:app`)
 
 ## Learn More

@@ -11,7 +11,8 @@
     "db:upgrade": "cd backend && uv run alembic upgrade head",
     "db:downgrade": "cd backend && uv run alembic downgrade -1",
     "db:current": "cd backend && uv run alembic current",
-    "db:history": "cd backend && uv run alembic history"
+    "db:history": "cd backend && uv run alembic history",
+    "test:backend": "cd backend && uv run --group dev pytest"
   },
   "devEngines": {
     "packageManager": {
