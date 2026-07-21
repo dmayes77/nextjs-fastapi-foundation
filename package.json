@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "concurrently --kill-others-on-fail -n frontend,backend -c cyan,green \"pnpm --dir frontend dev\" \"cd backend && uv run fastapi dev\"",
     "dev:frontend": "pnpm --dir frontend dev",
-    "dev:backend": "cd backend && uv run fastapi dev"
+    "dev:backend": "cd backend && uv run fastapi dev",
+    "db:revision": "cd backend && uv run alembic revision --autogenerate",
+    "db:upgrade": "cd backend && uv run alembic upgrade head",
+    "db:downgrade": "cd backend && uv run alembic downgrade -1",
+    "db:current": "cd backend && uv run alembic current",
+    "db:history": "cd backend && uv run alembic history"
   },
   "devEngines": {
     "packageManager": {

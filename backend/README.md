@@ -23,6 +23,8 @@ Visit http://localhost:8000
 2. Update the values as needed.
 3. Settings are validated when FastAPI starts — missing required values fail at startup.
 
+`DATABASE_MIGRATION_URL` is optional. When set, Alembic uses it instead of `DATABASE_URL`; leave it blank to have Alembic fall back to `DATABASE_URL`. A second URL is not required for local development.
+
 ## Logging
 
 - Every request receives an `X-Request-ID`.
@@ -42,8 +44,36 @@ Visit http://localhost:8000
 - `app.database.session.get_db()` yields one `AsyncSession` per request, rolling back only if an unhandled exception escapes and always closing the session.
 - The dependency never commits automatically — transaction ownership belongs to the service layer that uses the session.
 - `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names.
-- No models exist yet; this is infrastructure only. Alembic and the first domain model are later steps.
+- No models exist yet; this is infrastructure only. The first domain model arrives with the Project Management vertical slice.
 - `GET /ready` verifies database connectivity with a lightweight `SELECT 1` and returns `503` through the standard error envelope when the database is unreachable.
+
+## Migrations
+
+- Alembic is the only supported mechanism for changing the database schema; `Base.metadata.create_all()` is never used, in application code or otherwise.
+- Migrations share the same `Base.metadata` and naming convention as the application, defined in `app/database/base.py`.
+- Runtime requests use `DATABASE_URL`. Migrations use `DATABASE_MIGRATION_URL` when set, and fall back to `DATABASE_URL` otherwise.
+- The baseline migration (`migrations/versions/`) is intentionally empty — it establishes migration history before any domain tables exist. No Project tables exist yet.
+- Migrations are never run automatically during FastAPI startup; they are always a separate, explicit step.
+
+Local commands (run from `backend/`):
+
+```bash
+uv run alembic revision --autogenerate -m "describe change"
+uv run alembic upgrade head
+uv run alembic downgrade -1
+uv run alembic current
+uv run alembic history
+```
+
+Or from the repository root:
+
+```bash
+pnpm db:revision -m "describe change"
+pnpm db:upgrade
+pnpm db:downgrade
+pnpm db:current
+pnpm db:history
+```
 
 ## Error Responses
 
@@ -81,6 +111,9 @@ uv run fastapi deploy
 - `app/database/base.py` - Declarative `Base` and the deterministic constraint naming convention
 - `app/database/engine.py` - Async engine and session factory
 - `app/database/session.py` - `get_db()` FastAPI dependency yielding one session per request
+- `alembic.ini` - Alembic configuration; the runtime database URL is supplied programmatically by `migrations/env.py`, never hardcoded here
+- `migrations/env.py` - Async Alembic environment wired to `Base.metadata`
+- `migrations/versions/` - Migration history, starting with the infrastructure-only baseline
 - `pyproject.toml` - Project dependencies and the FastAPI entrypoint (`app.main:app`)
 
 ## Learn More
