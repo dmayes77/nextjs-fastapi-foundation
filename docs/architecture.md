@@ -85,6 +85,8 @@ SQLAlchemy handles:
 - Relationships
 - Transactions
 
+The database foundation uses SQLAlchemy 2 with the async Psycopg 3 driver: one async engine and one `async_sessionmaker` are created at startup, and a FastAPI dependency yields one `AsyncSession` per request. The dependency never commits automatically; transaction ownership belongs to the service layer. `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names across every future table. No models exist yet — this foundation is domain-neutral until the Project Management vertical slice.
+
 Alembic handles:
 
 - Creating migrations
@@ -237,13 +239,13 @@ GET /ready
 
 This endpoint confirms that the application is ready to accept traffic.
 
-It may verify:
+It verifies:
 
-- PostgreSQL connectivity
+- PostgreSQL connectivity, using a lightweight `SELECT 1` over a short-lived connection
 - Required application configuration
-- Other required dependencies
+- Other required dependencies as they are added
 
-A running application can be healthy but not ready.
+A running application can be healthy but not ready. When the database is unreachable, `/ready` returns `503 Service Unavailable` through the standard error envelope.
 
 Error Responses
 

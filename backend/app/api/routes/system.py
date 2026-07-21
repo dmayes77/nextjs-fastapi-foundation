@@ -12,5 +12,5 @@ def health() -> HealthResponse:
 
 
 @router.get("/ready", summary="Readiness", response_model=ReadyResponse)
-def ready() -> ReadyResponse:
-    return system.check_readiness()
+async def ready() -> ReadyResponse:
+    return await system.check_readiness()

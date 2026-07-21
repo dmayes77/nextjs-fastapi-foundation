@@ -8,6 +8,7 @@ class HealthResponse(BaseModel):
 class ReadyChecks(BaseModel):
     configuration: str
     application: str
+    database: str
 
 
 class ReadyResponse(BaseModel):
