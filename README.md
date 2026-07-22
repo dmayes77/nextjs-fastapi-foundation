@@ -30,6 +30,22 @@ pnpm test:backend
 
 The default backend test suite is isolated and does not require a running PostgreSQL instance.
 
+## Environment Configuration
+
+Configuration belongs in environment variables. Application code never changes between local development, CI, preview, staging, or production — only the environment values do.
+
+The frontend requires two server-only variables:
+
+```bash
+APP_ORIGIN=http://localhost:3000
+FASTAPI_INTERNAL_URL=http://127.0.0.1:8000
+```
+
+- `APP_ORIGIN` is the canonical frontend origin, used for server-generated absolute URLs (metadata, canonical links, password reset and email links, OAuth callbacks). It is never used for browser fetches and is not a security boundary.
+- `FASTAPI_INTERNAL_URL` is the backend origin used by Server Components and Server Actions for direct server-to-server requests. It must never be exposed through a `NEXT_PUBLIC_` variable.
+
+Both are validated at startup in `frontend/lib/env/server.ts`; the application fails immediately with a clear message when either is missing or not a valid URL. See [frontend/README.md](./frontend/README.md) for details.
+
 ## Foundation Scope
 
 Version one focuses on:

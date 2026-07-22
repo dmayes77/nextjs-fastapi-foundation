@@ -365,6 +365,7 @@ CORS_ORIGINS=http://localhost:3000
 Frontend variables:
 
 ```env
+APP_ORIGIN=http://localhost:3000
 FASTAPI_INTERNAL_URL=http://127.0.0.1:8000
 ```
 
@@ -589,6 +590,7 @@ Tasks:
 - Keep `NEXT_PUBLIC_` usage limited to values that must reach the browser
 - Keep server-only values out of the client bundle
 - Document required variables in `.env.example`
+- Document that future frontend CI (Step 27) will require `APP_ORIGIN` and `FASTAPI_INTERNAL_URL` to lint and build; do not implement the workflow in this step
 
 Checkpoint:
 
@@ -1143,4 +1145,4 @@ The next action is:
 
 > **Step 14: Add frontend environment validation.**
 
-Step 13 (isolated backend test foundation) is complete, committed, and pushed on `feature/step-13-backend-test-foundation`. Do not begin the Project Management vertical slice (Steps 22-25) until the frontend foundation phase (Steps 14-17) is complete.
+Step 14 has been implemented and validated locally on `feature/step-14-frontend-environment-validation`, but it is not yet committed or merged. Review, commit, push, and merge Step 14 before beginning the browser and server API client layers in Step 15.
