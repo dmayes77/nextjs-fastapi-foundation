@@ -18,6 +18,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Added an async Alembic migration foundation with shared SQLAlchemy metadata, environment-driven migration URLs, root migration commands, and an infrastructure-only baseline revision.
 - Added an isolated async backend test foundation covering operational routes, request IDs, readiness failures, and the standard error envelope without requiring PostgreSQL.
 - Added the frontend environment contract (`APP_ORIGIN`, `FASTAPI_INTERNAL_URL`) with a server-only validation layer that fails immediately with a clear message on missing or invalid values, keeping application code identical across local development, CI, and production.
+- Added a reusable browser and server API client foundation (`frontend/lib/api/`) with a shared request layer that normalizes every failure into `APIError`, `NetworkError`, or `TimeoutError`, applies a fixed internal timeout, and safely parses JSON responses; the server client is server-only and the browser client uses relative same-origin paths only.
 
 ### Changed
 

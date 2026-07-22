@@ -115,7 +115,8 @@ The browser sees a request to the same origin as the Next.js application. This p
 
 Example:
 
-fetch("/api/v1/projects")
+import { apiRequest } from "@/lib/api/client"
+apiRequest("/api/v1/projects")
 
 Server Requests
 
@@ -127,9 +128,14 @@ Next.js server
 
 Example:
 
-fetch(`${process.env.FASTAPI_INTERNAL_URL}/api/v1/projects`)
+import { apiRequest } from "@/lib/api/server"
+apiRequest("/api/v1/projects")
 
 Server-side requests should not travel through the browser rewrite because both applications can communicate directly.
+
+Both examples go through `frontend/lib/api/shared.ts`, a request implementation shared by the browser and server clients. It normalizes every failure into `APIError`, `NetworkError`, or `TimeoutError` instead of a raw `fetch()` rejection, applies a fixed internal timeout, and safely parses response bodies: empty and `204 No Content` responses become `null`, valid JSON is parsed, and non-JSON text is preserved rather than discarded. `frontend/lib/api/server.ts` begins with `import "server-only"`, so importing it from a Client Component fails the build, and `frontend/lib/api/client.ts` never imports `server.ts` or references `FASTAPI_INTERNAL_URL`.
+
+Both clients validate the request path before it is used: it must begin with exactly one `/`, must not be protocol-relative, and must not itself parse as an absolute URL. A caller can never supply their own origin — browser requests always stay same-origin, and server requests can never bypass the configured `FASTAPI_INTERNAL_URL`.
 
 API Versioning
 
