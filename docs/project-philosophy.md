@@ -121,6 +121,18 @@ Documentation that cannot be trusted is worse than no documentation.
 
 ---
 
+## 6. Environment-Driven Configuration
+
+Configuration belongs in environment variables, not code.
+
+Application code should never change between local development, CI, preview deployments, staging, and production. Only the environment values change.
+
+Avoid branching on `NODE_ENV`, hardcoding `localhost`, or hardcoding production domains anywhere in feature code.
+
+Environment variables configure the application. They are not a security boundary and are not used to determine whether a request or redirect is trustworthy — authentication and callback validation use explicit allow-lists and origin validation instead.
+
+---
+
 # Architectural Philosophy
 
 The repository is intentionally divided into two independent applications.

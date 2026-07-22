@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { serverEnv } from "@/lib/env/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,6 +24,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Referencing serverEnv here ensures required environment variables are
+  // validated as soon as the application builds or starts.
+  void serverEnv;
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full bg-background text-foreground">{children}</body>

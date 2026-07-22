@@ -209,9 +209,12 @@ Environment Configuration
 
 The applications manage environment settings separately.
 
-The frontend uses variables such as:
+The frontend requires:
 
+APP_ORIGIN=http://localhost:3000
 FASTAPI_INTERNAL_URL=http://127.0.0.1:8000
+
+APP_ORIGIN is the canonical frontend origin used for server-generated absolute URLs (metadata, canonical links, password reset and email links, OAuth callbacks). It is not used for browser fetches and is not a security boundary. FASTAPI_INTERNAL_URL is the backend origin used by Server Components and Server Actions for direct server-to-server requests. Both are server-only and are never exposed through a NEXT_PUBLIC_ variable. They are validated at startup in frontend/lib/env/server.ts, which fails immediately with a clear message when a value is missing or not a valid HTTP or HTTPS origin (no path, credentials, query, or fragment).
 
 The backend uses variables such as:
 
