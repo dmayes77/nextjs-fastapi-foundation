@@ -12,10 +12,10 @@ Visit http://localhost:3000
 
 ## Environment
 
-1. Copy `.env.example` to `.env`:
+1. Copy `.env.example` to `.env.local`:
 
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
 
 2. Update the values as needed.

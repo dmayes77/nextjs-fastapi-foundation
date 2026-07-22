@@ -8,6 +8,16 @@ The project is currently being built step by step. See [INSTRUCTIONS.md](./INSTR
 
 See [docs/changelog.md](./docs/changelog.md) for unreleased changes and future release history.
 
+## Getting Started
+
+Before the first run, copy the frontend environment example and fill in the values:
+
+```bash
+cp frontend/.env.example frontend/.env.local
+```
+
+`frontend/.env.local` is the file Next.js loads for local development. Without it, the frontend fails immediately with a clear environment-validation error — see [Environment Configuration](#environment-configuration) below.
+
 ## Database Migrations
 
 Alembic is the only supported way to change the database schema; `Base.metadata.create_all()` is never used. Run migration commands from the repository root:
