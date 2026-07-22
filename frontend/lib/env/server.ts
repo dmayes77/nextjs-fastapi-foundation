@@ -1,6 +1,6 @@
 import "server-only";
 
-import { assertUrlVariables, validateUrlVariable } from "./shared";
+import { assertUrlVariables, validateOriginVariable } from "./shared";
 
 /**
  * Server-only environment contract.
@@ -28,8 +28,8 @@ export interface ServerEnv {
 
 function loadServerEnv(): ServerEnv {
   const values = assertUrlVariables([
-    validateUrlVariable("APP_ORIGIN", process.env.APP_ORIGIN),
-    validateUrlVariable("FASTAPI_INTERNAL_URL", process.env.FASTAPI_INTERNAL_URL),
+    validateOriginVariable("APP_ORIGIN", process.env.APP_ORIGIN),
+    validateOriginVariable("FASTAPI_INTERNAL_URL", process.env.FASTAPI_INTERNAL_URL),
   ]);
 
   return {

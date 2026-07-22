@@ -18,31 +18,50 @@ interface UrlValidationResult {
   error?: string;
 }
 
-/** Validates that a single environment variable is present and a well-formed URL. */
-export function validateUrlVariable(
+function invalidOriginError(variableName: string): string {
+  return `Environment variable "${variableName}" must be a valid HTTP or HTTPS origin with no path, credentials, query, or fragment.`;
+}
+
+/**
+ * Validates that a single environment variable is present and a well-formed
+ * HTTP(S) origin: `http:`/`https:` only, no credentials, no path beyond `/`,
+ * no query string, no fragment. Returns the URL's normalized `origin` (e.g.
+ * `https://example.com`), not the raw configured string.
+ */
+export function validateOriginVariable(
   variableName: string,
   rawValue: string | undefined,
 ): UrlValidationResult {
   if (!rawValue || rawValue.trim() === "") {
     return {
       variableName,
-      error: `Missing required environment variable "${variableName}". Expected an absolute URL.`,
+      error: `Missing required environment variable "${variableName}". Expected an HTTP or HTTPS origin.`,
     };
   }
 
+  let parsed: URL;
   try {
-    new URL(rawValue);
+    parsed = new URL(rawValue);
   } catch {
-    return {
-      variableName,
-      // Deliberately excludes the raw value: environment error messages
-      // must never echo the configured value back, even though URLs are
-      // not typically secret, to keep this path safe by default.
-      error: `Environment variable "${variableName}" must be a valid absolute URL.`,
-    };
+    // Deliberately excludes the raw value: environment error messages must
+    // never echo the configured value back, even though URLs are not
+    // typically secret, to keep this path safe by default.
+    return { variableName, error: invalidOriginError(variableName) };
   }
 
-  return { variableName, value: rawValue };
+  const isHttpOrigin =
+    (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+    parsed.username === "" &&
+    parsed.password === "" &&
+    parsed.search === "" &&
+    parsed.hash === "" &&
+    parsed.pathname === "/";
+
+  if (!isHttpOrigin) {
+    return { variableName, error: invalidOriginError(variableName) };
+  }
+
+  return { variableName, value: parsed.origin };
 }
 
 /**
