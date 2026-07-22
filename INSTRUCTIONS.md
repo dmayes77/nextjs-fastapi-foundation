@@ -610,15 +610,19 @@ feat(frontend): add environment validation
 
 Tasks:
 
-- Add `lib/api/browser.ts` for same-origin browser requests
+- Add `lib/api/shared.ts` for the request implementation, error normalization, timeout, path validation, and safe response-body parsing shared by both clients
+- Add `lib/api/client.ts` for same-origin browser requests
 - Add `lib/api/server.ts` for direct FastAPI calls
 - Keep browser requests on `/api/...`
 - Keep server-side requests direct through `FASTAPI_INTERNAL_URL`
+- Validate every request path so a caller can never supply their own origin
 
 Checkpoint:
 
 - Browser code uses the same-origin rewrite path
 - Server code uses the direct internal FastAPI URL
+- An absolute or protocol-relative path is rejected before a request is made
+- Non-JSON response text is preserved rather than discarded
 - Both layers are ready for feature work
 
 Commit:
@@ -1119,7 +1123,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 11: Add PostgreSQL and async SQLAlchemy
 - [x] Step 12: Add Alembic migrations
 - [x] Step 13: Add backend test foundation
-- [ ] Step 14: Add frontend environment validation
+- [x] Step 14: Add frontend environment validation
 - [ ] Step 15: Add browser and server API client layers
 - [ ] Step 16: Add frontend error normalization
 - [ ] Step 17: Add Jest and React Testing Library
@@ -1143,6 +1147,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 14: Add frontend environment validation.**
+> **Step 15: Add browser and server API client layers.**
 
-Step 14 has been implemented and validated locally on `feature/step-14-frontend-environment-validation`, but it is not yet committed or merged. Review, commit, push, and merge Step 14 before beginning the browser and server API client layers in Step 15.
+Step 14 (frontend environment validation) is complete, committed, and merged into `main`. Step 15 has been implemented and validated locally on `feature/step-15-api-client-layers`, but it is not yet committed or merged. Review, commit, push, and merge Step 15 before beginning frontend error normalization in Step 16.

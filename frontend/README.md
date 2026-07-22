@@ -57,6 +57,18 @@ Environment access is centralized under `lib/env/`, never read directly (`proces
 - `lib/env/client.ts` — browser-safe variables only (`NEXT_PUBLIC_...`); nothing is required yet.
 - `lib/env/shared.ts` — validation helpers with no secrets and no server-only logic, usable by both.
 
+## API Requests
+
+Feature code should call FastAPI through `lib/api/`, never with a raw `fetch()`:
+
+- `lib/api/client.ts` — the browser client. `apiRequest(path, options)` takes a relative, same-origin path (e.g. `/api/example`) — the browser never talks to FastAPI directly, and this file never imports `server.ts` or references `FASTAPI_INTERNAL_URL`.
+- `lib/api/server.ts` — the server client for Server Components and Server Actions. `apiRequest(path, options)` resolves `path` against `FASTAPI_INTERNAL_URL` and optionally forwards an `X-Request-ID` header. Imports `server-only`, so importing this file from a Client Component fails the build.
+- `lib/api/shared.ts` — the request implementation both clients call. Every failure is normalized into `APIError` (preserves HTTP status, message, and the response body as `details`), `NetworkError`, or `TimeoutError` — callers never see a raw `fetch()` rejection. Requests use a fixed internal timeout and safely parse response bodies: empty and `204 No Content` responses become `null`, valid JSON is parsed, and non-empty text that is not valid JSON is preserved as-is rather than discarded.
+
+Both clients validate `path` with a shared helper before making a request: it must begin with exactly one `/`, must not be protocol-relative (`//host/...`), and must not itself parse as an absolute URL. This means a caller can never supply their own origin — the browser client always stays same-origin, and the server client can never be redirected away from the configured `FASTAPI_INTERNAL_URL`.
+
+No proxy route or generated OpenAPI client exists yet — these clients are the reusable foundation later features build on.
+
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
