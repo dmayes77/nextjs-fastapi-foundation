@@ -633,19 +633,21 @@ feat(frontend): add API client layers
 
 ## Step 16: Add frontend error normalization
 
-**Goal:** Make API failures presentable and consistent in the UI.
+**Goal:** Make API failures presentable and consistent, before any UI is built on top of them.
 
 Tasks:
 
-- Normalize backend errors into one frontend-facing shape
-- Keep error handling central and reusable
-- Preserve helpful details without leaking sensitive data
+- Add `lib/errors/types.ts` for the single normalized `AppError` shape (`code`, `message`, `status`, `details`, `requestId`, `retryable`)
+- Add `lib/errors/messages.ts` for centralized, user-safe generic messages
+- Add `lib/errors/normalize.ts` with `normalizeError()`, converting `APIError`, `NetworkError`, `TimeoutError`, `InvalidPathError`, and any other thrown value into `AppError`
+- Preserve the backend's `requestId` and structured error envelope when available
+- Keep error handling central and reusable — feature code calls `normalizeError()` instead of inspecting transport error types directly
 
 Checkpoint:
 
-- Frontend code can handle backend errors with one shared path
-- Loading and empty states remain separate from error handling
-- Error UI components can be reused safely
+- `normalizeError()` never throws, for any input
+- Backend request IDs and structured error details survive normalization
+- Retryable semantics match the specification (network failures, timeouts, and HTTP 408/429/500/502/503/504)
 
 Commit:
 
@@ -1124,7 +1126,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 12: Add Alembic migrations
 - [x] Step 13: Add backend test foundation
 - [x] Step 14: Add frontend environment validation
-- [ ] Step 15: Add browser and server API client layers
+- [x] Step 15: Add browser and server API client layers
 - [ ] Step 16: Add frontend error normalization
 - [ ] Step 17: Add Jest and React Testing Library
 - [ ] Step 18: Connect Next.js and FastAPI
@@ -1147,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 15: Add browser and server API client layers.**
+> **Step 16: Add frontend error normalization.**
 
-Step 14 (frontend environment validation) is complete, committed, and merged into `main`. Step 15 has been implemented and validated locally on `feature/step-15-api-client-layers`, but it is not yet committed or merged. Review, commit, push, and merge Step 15 before beginning frontend error normalization in Step 16.
+Step 15 (browser and server API client layers) is complete, committed, and merged into `main`. Step 16 has been implemented and validated locally on `feature/step-16-frontend-error-normalization`, but it is not yet committed or merged. Review, commit, push, and merge Step 16 before adding Jest and React Testing Library in Step 17.

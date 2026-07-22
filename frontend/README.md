@@ -69,6 +69,18 @@ Both clients validate `path` with a shared helper before making a request: it mu
 
 No proxy route or generated OpenAPI client exists yet — these clients are the reusable foundation later features build on.
 
+## Error Normalization
+
+Feature code should call `normalizeError(error)` from `lib/errors/normalize.ts`, never inspect `APIError`, `NetworkError`, `TimeoutError`, or `InvalidPathError` directly:
+
+- `lib/errors/types.ts` — the single `AppError` shape every transport or runtime error is converted into: `code`, `message`, `status`, `details`, `requestId`, `retryable`.
+- `lib/errors/normalize.ts` — `normalizeError(error: unknown): AppError`. Accepts anything — a transport error, a plain `Error`, a string, `null`, `undefined` — and never throws.
+- `lib/errors/messages.ts` — the user-safe generic messages `normalize.ts` uses, kept in one place instead of inlined.
+
+When an `APIError`'s response body matches the backend's `{ error: { code, message, details, requestId } }` envelope, those values are preferred; otherwise `normalizeError` falls back to a generic `http_error` code and a safe message. A backend `requestId`, when present, is always preserved onto `AppError.requestId`.
+
+`retryable` is `true` only for `NetworkError`, `TimeoutError`, and `APIError` with status `408`, `429`, `500`, `502`, `503`, or `504`; everything else is `false`.
+
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
