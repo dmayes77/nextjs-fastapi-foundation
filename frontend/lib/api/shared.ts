@@ -41,26 +41,41 @@ export class InvalidPathError extends Error {
   }
 }
 
+// A placeholder origin used only to test path resolution in isolation; it
+// is never contacted.
+const PATH_VALIDATION_ORIGIN = "https://example.invalid";
+
 /**
  * Validates that `path` is a same-origin application path: a string that
- * begins with exactly one `/`, is not protocol-relative (`//host/...`), and
- * cannot itself be parsed as an absolute URL (which would mean it carries
- * its own scheme, such as `http:`, `https:`, `mailto:`, or `javascript:`).
- * Used by both clients so neither can be pointed at an arbitrary origin.
+ * begins with exactly one `/`, is not protocol-relative (`//host/...`),
+ * contains no backslash, and — decisively — resolves to the exact same
+ * origin as a neutral placeholder base. That last check is what actually
+ * matters: WHATWG URL parsing normalizes backslashes to forward slashes for
+ * special schemes, so a literal `//`/scheme check alone can be bypassed by
+ * a path such as `/\evil.example/api`, which normalizes into a
+ * protocol-relative URL during resolution. Comparing the resolved origin
+ * against the placeholder catches every way a path could change the origin
+ * — backslashes, a scheme of its own, or a protocol-relative prefix — so
+ * neither client can ever be pointed at an arbitrary origin.
  */
 export function assertApiPath(path: string): string {
-  if (typeof path !== "string" || !path.startsWith("/") || path.startsWith("//")) {
+  if (
+    typeof path !== "string" ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("\\")
+  ) {
     throw new InvalidPathError();
   }
 
-  let parsesAsAbsoluteUrl = true;
+  let resolvedOrigin: string;
   try {
-    new URL(path);
+    resolvedOrigin = new URL(path, PATH_VALIDATION_ORIGIN).origin;
   } catch {
-    parsesAsAbsoluteUrl = false;
+    throw new InvalidPathError();
   }
 
-  if (parsesAsAbsoluteUrl) {
+  if (resolvedOrigin !== PATH_VALIDATION_ORIGIN) {
     throw new InvalidPathError();
   }
 
@@ -141,28 +156,42 @@ export async function request<T = unknown>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
-  let response: Response;
+  // The timeout stays active for the whole request lifecycle — fetch,
+  // response body streaming, and parsing — not just until headers arrive.
+  // A stalled body after headers are received still aborts and surfaces as
+  // `TimeoutError`, rather than hanging indefinitely.
   try {
-    response = await fetch(url, {
-      method,
-      headers: requestHeaders,
-      body: hasBody ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    });
-  } catch (cause) {
-    if (controller.signal.aborted) {
-      throw new TimeoutError();
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers: requestHeaders,
+        body: hasBody ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (cause) {
+      if (controller.signal.aborted) {
+        throw new TimeoutError();
+      }
+      throw new NetworkError("Unable to reach the server.", { cause });
     }
-    throw new NetworkError("Unable to reach the server.", { cause });
+
+    let data: T;
+    try {
+      data = (await parseResponseBody(response)) as T;
+    } catch (cause) {
+      if (controller.signal.aborted) {
+        throw new TimeoutError();
+      }
+      throw new NetworkError("Unable to reach the server.", { cause });
+    }
+
+    if (!response.ok) {
+      throw new APIError(deriveErrorMessage(data, response.status), response.status, data);
+    }
+
+    return { status: response.status, data };
   } finally {
     clearTimeout(timeoutId);
   }
-
-  const data = (await parseResponseBody(response)) as T;
-
-  if (!response.ok) {
-    throw new APIError(deriveErrorMessage(data, response.status), response.status, data);
-  }
-
-  return { status: response.status, data };
 }
