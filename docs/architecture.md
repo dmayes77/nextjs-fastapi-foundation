@@ -139,6 +139,24 @@ Both clients validate the request path before it is used: it must begin with exa
 
 Every transport error (`APIError`, `NetworkError`, `TimeoutError`, `InvalidPathError`) is converted into one normalized `AppError` shape by `frontend/lib/errors/normalize.ts` before it reaches feature code. Pages and future UI code never inspect the transport error types directly — they call `normalizeError(error)` and work with `code`, `message`, `status`, `details`, `requestId`, and `retryable` instead. A backend `requestId`, when the response matches the standard FastAPI error envelope, is preserved onto the normalized error. `retryable` is `true` for network failures, timeouts, and HTTP `408`/`429`/`500`/`502`/`503`/`504`; everything else is `false`.
 
+Working Example: Health Check
+
+`frontend/app/api/backend/health/route.ts` is the first concrete route proving the full path works end to end:
+
+BackendStatus Client Component
+→ browser apiRequest("/api/backend/health")
+→ Next.js Route Handler
+→ server apiRequest("/health")
+→ FastAPI
+
+The route handler never calls `fetch()` directly and never reads `FASTAPI_INTERNAL_URL` or `serverEnv` itself — it only calls `lib/api/server.ts`. It validates an incoming `X-Request-ID` using the exact same rule as `backend/app/middleware/request_id.py`: at most 128 characters, containing only `A-Z`, `a-z`, `0-9`, `.`, `_`, and `-`. A valid ID is preserved exactly as received — never trimmed, never sanitized — and echoed on every `X-Request-ID` response header. An invalid ID is rejected outright, not rewritten, and replaced with a freshly generated UUID before forwarding. This matching validation is what guarantees the request ID Next.js returns to the browser is the same one FastAPI actually preserves and logs, keeping successful requests correlated end to end. On failure it normalizes the error with `normalizeError()` and re-encodes it into the same `{ error: { code, message, details, requestId } }` envelope FastAPI returns, so the browser-side normalizer treats a same-origin route failure and a direct FastAPI failure identically — but the envelope's `requestId` field carries the *backend's own* request ID when a structured FastAPI error provided one, deliberately left distinct from the route-level ID in the response header, since the two identify different things.
+
+The route's status mapping: an `APIError` preserves FastAPI's real HTTP status; `network_error` and `request_timeout` (the Next.js server failing to reach FastAPI) both map to `503 Service Unavailable`; `invalid_request_path` and any other unexpected error map to `500 Internal Server Error`.
+
+`normalizeError()` intentionally preserves the raw upstream response body in `AppError.details` when FastAPI's response isn't its own structured error envelope (`code: "http_error"`) — correct for the shared transport layer, which callers may want for debugging. This public health bridge is stricter: it only ever forwards a `details` value that came from a genuine backend-provided `{ error: { ... } }` envelope, and always returns `details: null` for the `http_error` fallback case, so arbitrary upstream HTML, text, or debug output can never reach the browser.
+
+`frontend/components/backend-status.tsx` is the Client Component that calls this route and renders the result on the homepage: a loading state, a connected state, and a safe unavailable state with a `Retry` button (and a `Refresh` button on success) — it never retries automatically, and it never renders `AppError.details`. This is a narrow, domain-neutral example — not a general proxy framework, not authentication, not generic forwarding middleware, and no OpenAPI generation is involved — that later feature routes can follow the same shape as.
+
 API Versioning
 
 All application API routes use the /api/v1 prefix.
@@ -300,7 +318,7 @@ Jest and React Testing Library test:
 - Empty states
 - Error states
 
-Jest runs through Next.js's built-in `next/jest` integration (`frontend/jest.config.ts`), with a shared setup file (`frontend/jest.setup.ts`) that loads `@testing-library/jest-dom` matchers for every test. Tests live under `frontend/tests/`, organized by layer (e.g. `tests/api/`, `tests/errors/`) rather than by feature, and stay shallow until a feature needs its own folder. The initial foundation covers the API client's error classes and the error-normalization layer; component and interaction tests follow the same structure as UI features are built.
+Jest runs through Next.js's built-in `next/jest` integration (`frontend/jest.config.ts`), with a shared setup file (`frontend/jest.setup.ts`) that loads `@testing-library/jest-dom` matchers for every test. Tests live under `frontend/tests/`, organized by layer (e.g. `tests/api/`, `tests/errors/`, `tests/integration/`, `tests/components/`) rather than by feature, and stay shallow until a feature needs its own folder. Route handler tests run under `testEnvironment: "node"` (they construct and read native `Request`/`Response` objects) with `lib/api/server.ts` mocked at the module boundary, keeping them focused on route orchestration rather than transport behavior; component tests run under the default jsdom environment with `lib/api/client.ts` mocked at the same kind of module boundary, since jsdom does not implement the Fetch API.
 
 End-to-End
 

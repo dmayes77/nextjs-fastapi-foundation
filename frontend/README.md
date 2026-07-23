@@ -67,7 +67,19 @@ Feature code should call FastAPI through `lib/api/`, never with a raw `fetch()`:
 
 Both clients validate `path` with a shared helper before making a request: it must begin with exactly one `/`, must not be protocol-relative (`//host/...`), and must not itself parse as an absolute URL. This means a caller can never supply their own origin — the browser client always stays same-origin, and the server client can never be redirected away from the configured `FASTAPI_INTERNAL_URL`.
 
-No proxy route or generated OpenAPI client exists yet — these clients are the reusable foundation later features build on.
+No generated OpenAPI client exists yet — these clients are the reusable foundation later features build on.
+
+## Frontend-to-Backend Integration
+
+`app/api/backend/health/route.ts` demonstrates the full reusable communication path end to end:
+
+```text
+Browser → lib/api/client.ts → /api/backend/health → lib/api/server.ts → FastAPI /health
+```
+
+The browser calls the same-origin route through `lib/api/client.ts`; the route itself calls FastAPI directly through `lib/api/server.ts`, forwarding a valid incoming `X-Request-ID` or generating one otherwise. On success it returns FastAPI's payload as-is with an `X-Request-ID` response header. On failure it normalizes the error with `normalizeError()` and re-encodes it into the same `{ error: { code, message, details, requestId } }` envelope FastAPI itself returns, so the browser-side normalizer handles both origins identically. The route's own status mapping: an `APIError` preserves FastAPI's real HTTP status; a network failure or timeout — the Next.js server failing to reach FastAPI — returns `503 Service Unavailable`; anything else (an invalid path or a genuinely unexpected error) returns `500 Internal Server Error`. The `X-Request-ID` response header always carries this route's own selected request ID; the JSON envelope's `requestId` carries the backend's own request ID when a structured FastAPI error provided one — the two identify different things and are not merged.
+
+`components/backend-status.tsx` is the browser-facing Client Component that calls this route and renders the result — the live example on the homepage. No browser code accesses `FASTAPI_INTERNAL_URL` or `serverEnv` directly. It shows a loading state, a connected state, and a safe unavailable state with a `Retry` button on failure and a `Refresh` button on success — never an automatic retry — and displays `Reference: <requestId>` only when the normalized error carries one. `AppError.details` is never rendered.
 
 ## Error Normalization
 
@@ -94,8 +106,10 @@ Tests live under `tests/`, mirrored by layer rather than by feature:
 
 - `tests/api/` — the API client foundation (`lib/api/`): error classes, construction, inheritance.
 - `tests/errors/` — the error normalization layer (`lib/errors/`): `normalizeError()` across every transport error type and unrecognized thrown value.
+- `tests/integration/` — the `/api/backend/health` route handler, run under `testEnvironment: "node"` (it constructs and reads native `Request`/`Response` objects) with `lib/api/server.ts` mocked at the module boundary, so route orchestration is tested independently of fetch, transport behavior, and any running backend.
+- `tests/components/` — `BackendStatus`, with `lib/api/client.ts` mocked at the module boundary rather than mocking `fetch`, since jsdom does not implement the Fetch API.
 
-This foundation is intentionally utility-layer only — no component or interaction tests exist yet. Component tests (`@testing-library/react`, `@testing-library/user-event`) are available and configured, ready for feature work in later steps. End-to-end coverage is out of scope for Jest and belongs to Playwright once the application is integrated.
+End-to-end coverage is out of scope for Jest and belongs to Playwright once the application is integrated.
 
 ## Learn More
 

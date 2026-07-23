@@ -1128,7 +1128,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 14: Add frontend environment validation
 - [x] Step 15: Add browser and server API client layers
 - [x] Step 16: Add frontend error normalization
-- [ ] Step 17: Add Jest and React Testing Library
+- [x] Step 17: Add Jest and React Testing Library
 - [ ] Step 18: Connect Next.js and FastAPI
 - [ ] Step 19: Add deterministic OpenAPI export
 - [ ] Step 20: Generate the frontend API client
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Step 17: Add Jest and React Testing Library.**
+> **Step 18: Connect Next.js and FastAPI.**
 
-Step 16 (frontend error normalization) is complete, committed, and merged into `main`. Step 17 has been implemented and validated locally on `feature/step-17-frontend-test-foundation`, but it is not yet committed or merged. Review, commit, push, and merge Step 17 before connecting Next.js and FastAPI in Step 18.
+Step 17 (Jest and React Testing Library) is complete, committed, and merged into `main`. Step 18 has been implemented and validated locally on `feature/step-18-nextjs-fastapi-integration`, but it is not yet committed or merged. Review, commit, push, and merge Step 18 before adding deterministic OpenAPI export in Step 19.
