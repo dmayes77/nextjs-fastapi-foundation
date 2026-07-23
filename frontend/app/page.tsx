@@ -1,3 +1,5 @@
+import { BackendStatus } from "@/components/backend-status";
+
 export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-16 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100 sm:px-6 lg:px-8">
@@ -10,8 +12,8 @@ export default function Home() {
             Next.js + FastAPI + PostgreSQL
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-            The frontend is ready for the next phases of this boilerplate. The FastAPI connection
-            and database integration will be introduced as the stack is built out.
+            The frontend now talks to FastAPI through the reusable API client foundation.
+            Database-backed features will be introduced as the stack is built out.
           </p>
         </div>
 
@@ -23,7 +25,7 @@ export default function Home() {
 
           <article className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950/70">
             <h2 className="text-base font-semibold">FastAPI</h2>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Next</p>
+            <BackendStatus />
           </article>
 
           <article className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950/70">
