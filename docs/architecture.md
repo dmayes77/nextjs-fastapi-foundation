@@ -300,6 +300,8 @@ Jest and React Testing Library test:
 - Empty states
 - Error states
 
+Jest runs through Next.js's built-in `next/jest` integration (`frontend/jest.config.ts`), with a shared setup file (`frontend/jest.setup.ts`) that loads `@testing-library/jest-dom` matchers for every test. Tests live under `frontend/tests/`, organized by layer (e.g. `tests/api/`, `tests/errors/`) rather than by feature, and stay shallow until a feature needs its own folder. The initial foundation covers the API client's error classes and the error-normalization layer; component and interaction tests follow the same structure as UI features are built.
+
 End-to-End
 
 Playwright tests:
