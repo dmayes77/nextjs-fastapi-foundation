@@ -137,6 +137,8 @@ Both examples go through `frontend/lib/api/shared.ts`, a request implementation 
 
 Both clients validate the request path before it is used: it must begin with exactly one `/`, must not be protocol-relative, and must not itself parse as an absolute URL. A caller can never supply their own origin — browser requests always stay same-origin, and server requests can never bypass the configured `FASTAPI_INTERNAL_URL`.
 
+Every transport error (`APIError`, `NetworkError`, `TimeoutError`, `InvalidPathError`) is converted into one normalized `AppError` shape by `frontend/lib/errors/normalize.ts` before it reaches feature code. Pages and future UI code never inspect the transport error types directly — they call `normalizeError(error)` and work with `code`, `message`, `status`, `details`, `requestId`, and `retryable` instead. A backend `requestId`, when the response matches the standard FastAPI error envelope, is preserved onto the normalized error. `retryable` is `true` for network failures, timeouts, and HTTP `408`/`429`/`500`/`502`/`503`/`504`; everything else is `false`.
+
 API Versioning
 
 All application API routes use the /api/v1 prefix.
