@@ -159,4 +159,47 @@ describe("GET /api/backend/health", () => {
     expect(options?.requestId).toMatch(UUID_PATTERN);
     expect(response.headers.get("X-Request-ID")).toBe(options?.requestId);
   });
+
+  // Mirrors backend/app/middleware/request_id.py's exact allowlist
+  // (A-Z, a-z, 0-9, -, _, .) so a value this route preserves is guaranteed
+  // to be one FastAPI also preserves — otherwise the response header and
+  // FastAPI's own logs would correlate two different IDs.
+  it.each([
+    "request-123",
+    "request_123",
+    "request.123",
+    "ABC-xyz_123.test",
+  ])("9. preserves the backend-valid request ID %j unchanged", async (validId) => {
+    mockedApiRequest.mockResolvedValueOnce({ status: 200, data: { status: "ok" } });
+
+    const response = await GET(buildRequest({ "X-Request-ID": validId }));
+
+    expect(mockedApiRequest).toHaveBeenCalledWith("/health", { requestId: validId });
+    expect(response.headers.get("X-Request-ID")).toBe(validId);
+  });
+
+  it("10. rejects a space-containing request ID and generates a UUID instead", async () => {
+    mockedApiRequest.mockResolvedValueOnce({ status: 200, data: { status: "ok" } });
+
+    const response = await GET(buildRequest({ "X-Request-ID": "request id with spaces" }));
+
+    const [, options] = mockedApiRequest.mock.calls[0];
+    expect(options?.requestId).not.toBe("request id with spaces");
+    expect(options?.requestId).toMatch(UUID_PATTERN);
+    expect(response.headers.get("X-Request-ID")).toBe(options?.requestId);
+  });
+
+  it.each(["request/id", "request:id"])(
+    "11. rejects a request ID containing disallowed punctuation (%s) and generates a UUID instead",
+    async (invalidId) => {
+      mockedApiRequest.mockResolvedValueOnce({ status: 200, data: { status: "ok" } });
+
+      const response = await GET(buildRequest({ "X-Request-ID": invalidId }));
+
+      const [, options] = mockedApiRequest.mock.calls[0];
+      expect(options?.requestId).not.toBe(invalidId);
+      expect(options?.requestId).toMatch(UUID_PATTERN);
+      expect(response.headers.get("X-Request-ID")).toBe(options?.requestId);
+    },
+  );
 });

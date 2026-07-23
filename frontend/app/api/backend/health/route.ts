@@ -5,26 +5,22 @@ import { normalizeError } from "@/lib/errors/normalize";
 import type { AppError } from "@/lib/errors/types";
 
 const REQUEST_ID_HEADER = "X-Request-ID";
+// Mirrors backend/app/middleware/request_id.py exactly (MAX_REQUEST_ID_LENGTH,
+// _ALLOWED_CHARS): FastAPI silently replaces anything that fails this same
+// check with its own generated UUID, so accepting a broader value here would
+// desync the ID this route echoes from the one FastAPI actually logs.
 const MAX_REQUEST_ID_LENGTH = 128;
-
-function containsControlCharacter(value: string): boolean {
-  for (let i = 0; i < value.length; i += 1) {
-    const code = value.charCodeAt(i);
-    if (code <= 0x1f || code === 0x7f) {
-      return true;
-    }
-  }
-  return false;
-}
+const REQUEST_ID_PATTERN = /^[A-Za-z0-9._-]+$/;
 
 function isValidRequestId(value: string): boolean {
-  return (
-    value.length > 0 && value.length <= MAX_REQUEST_ID_LENGTH && !containsControlCharacter(value)
-  );
+  return value.length <= MAX_REQUEST_ID_LENGTH && REQUEST_ID_PATTERN.test(value);
 }
 
+// No trimming: an incoming value is either preserved exactly or rejected
+// outright in favor of a generated UUID, never rewritten — matching the
+// backend, which does not trim either.
 function resolveRequestId(request: NextRequest): string {
-  const incoming = request.headers.get(REQUEST_ID_HEADER)?.trim();
+  const incoming = request.headers.get(REQUEST_ID_HEADER);
   return incoming && isValidRequestId(incoming) ? incoming : crypto.randomUUID();
 }
 
