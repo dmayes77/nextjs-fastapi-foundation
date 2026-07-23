@@ -81,6 +81,22 @@ When an `APIError`'s response body matches the backend's `{ error: { code, messa
 
 `retryable` is `true` only for `NetworkError`, `TimeoutError`, and `APIError` with status `408`, `429`, `500`, `502`, `503`, or `504`; everything else is `false`.
 
+## Testing
+
+```bash
+pnpm test        # run once
+pnpm test:watch  # watch mode
+```
+
+Jest runs through Next.js's built-in [`next/jest`](https://nextjs.org/docs) integration (`jest.config.ts`), which handles SWC transforms, CSS/image/font mocking, and `.env` loading automatically. `moduleNameMapper` mirrors the `@/*` path alias, since `next/jest` transforms that alias but does not resolve it for Jest's own module resolution. `jest.setup.ts` loads `@testing-library/jest-dom` matchers for every test via `setupFilesAfterEnv`.
+
+Tests live under `tests/`, mirrored by layer rather than by feature:
+
+- `tests/api/` — the API client foundation (`lib/api/`): error classes, construction, inheritance.
+- `tests/errors/` — the error normalization layer (`lib/errors/`): `normalizeError()` across every transport error type and unrecognized thrown value.
+
+This foundation is intentionally utility-layer only — no component or interaction tests exist yet. Component tests (`@testing-library/react`, `@testing-library/user-event`) are available and configured, ready for feature work in later steps. End-to-end coverage is out of scope for Jest and belongs to Playwright once the application is integrated.
+
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
