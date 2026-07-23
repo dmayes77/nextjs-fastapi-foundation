@@ -202,4 +202,47 @@ describe("GET /api/backend/health", () => {
       expect(response.headers.get("X-Request-ID")).toBe(options?.requestId);
     },
   );
+
+  it("12. never forwards a raw upstream response body when FastAPI's response is not a structured error envelope", async () => {
+    mockedApiRequest.mockRejectedValueOnce(
+      new APIError(
+        "Request failed with status 502.",
+        502,
+        "<html><body>Bad Gateway - internal debug trace</body></html>",
+      ),
+    );
+
+    const response = await GET(buildRequest({ "X-Request-ID": "raw-body-id" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body).toEqual({
+      error: {
+        code: "http_error",
+        message: "Request failed with status 502.",
+        details: null,
+        requestId: "raw-body-id",
+      },
+    });
+    expect(JSON.stringify(body)).not.toContain("Bad Gateway");
+  });
+
+  it("13. still preserves genuine backend-provided details from a real structured error envelope", async () => {
+    mockedApiRequest.mockRejectedValueOnce(
+      new APIError("Validation failed", 422, {
+        error: {
+          code: "validation_error",
+          message: "Validation failed",
+          details: { field: "status", reason: "missing" },
+          requestId: "backend-validation-id",
+        },
+      }),
+    );
+
+    const response = await GET(buildRequest({ "X-Request-ID": "validation-request-id" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error.details).toEqual({ field: "status", reason: "missing" });
+  });
 });

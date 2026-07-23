@@ -47,6 +47,20 @@ function resolveResponseStatus(normalized: AppError): number {
 }
 
 /**
+ * `normalizeError()` intentionally preserves the raw upstream response body
+ * in `details` when FastAPI's response isn't its own structured error
+ * envelope (`code: "http_error"`) — correct for the shared transport layer,
+ * which callers may want for debugging. This public health bridge must
+ * never forward arbitrary upstream HTML, text, or debug output to the
+ * browser, so only a genuine backend-provided `details` value (from a real
+ * `{ error: { ... } }` envelope) is ever passed through; the raw-passthrough
+ * fallback case is always nulled out here instead.
+ */
+function resolveResponseDetails(normalized: AppError): unknown {
+  return normalized.code === "http_error" ? null : normalized.details;
+}
+
+/**
  * Demonstrates the reusable browser-to-FastAPI communication path: the
  * browser calls this same-origin route through `lib/api/client.ts`, and this
  * route calls FastAPI directly through the server-only `lib/api/server.ts`.
@@ -77,7 +91,7 @@ export async function GET(request: NextRequest) {
         error: {
           code: normalized.code,
           message: normalized.message,
-          details: normalized.details,
+          details: resolveResponseDetails(normalized),
           requestId: normalized.requestId ?? requestId,
         },
       },

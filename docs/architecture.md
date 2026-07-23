@@ -153,6 +153,8 @@ The route handler never calls `fetch()` directly and never reads `FASTAPI_INTERN
 
 The route's status mapping: an `APIError` preserves FastAPI's real HTTP status; `network_error` and `request_timeout` (the Next.js server failing to reach FastAPI) both map to `503 Service Unavailable`; `invalid_request_path` and any other unexpected error map to `500 Internal Server Error`.
 
+`normalizeError()` intentionally preserves the raw upstream response body in `AppError.details` when FastAPI's response isn't its own structured error envelope (`code: "http_error"`) — correct for the shared transport layer, which callers may want for debugging. This public health bridge is stricter: it only ever forwards a `details` value that came from a genuine backend-provided `{ error: { ... } }` envelope, and always returns `details: null` for the `http_error` fallback case, so arbitrary upstream HTML, text, or debug output can never reach the browser.
+
 `frontend/components/backend-status.tsx` is the Client Component that calls this route and renders the result on the homepage: a loading state, a connected state, and a safe unavailable state with a `Retry` button (and a `Refresh` button on success) — it never retries automatically, and it never renders `AppError.details`. This is a narrow, domain-neutral example — not a general proxy framework, not authentication, not generic forwarding middleware, and no OpenAPI generation is involved — that later feature routes can follow the same shape as.
 
 API Versioning
