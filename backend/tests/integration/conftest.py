@@ -96,6 +96,12 @@ def downgrade_test_database(config: Config, revision: str) -> None:
         command.downgrade(config, revision)
 
 
+def reset_test_database_to_baseline(config: Config) -> None:
+    """Establish the baseline regardless of the database's prior revision."""
+    downgrade_test_database(config, "base")
+    upgrade_test_database(config, BASELINE_REVISION)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _require_reachable_test_database():
     """Connects once per session; skips the whole integration suite
@@ -111,7 +117,7 @@ def _require_reachable_test_database():
         pytest.skip(f"PostgreSQL test database is not reachable: {exc}")
 
     config = alembic_config()
-    upgrade_test_database(config, BASELINE_REVISION)
+    reset_test_database_to_baseline(config)
     yield
     downgrade_test_database(config, "base")
 

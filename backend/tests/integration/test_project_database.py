@@ -19,6 +19,7 @@ from tests.integration.conftest import (
     TEST_DATABASE_URL,
     alembic_config,
     downgrade_test_database,
+    reset_test_database_to_baseline,
     upgrade_test_database,
 )
 
@@ -65,6 +66,20 @@ def test_reupgrade_recreates_projects_after_a_downgrade() -> None:
 
         upgrade_test_database(config, "head")
         assert _table_exists(engine) is True
+    finally:
+        engine.dispose()
+
+
+def test_reset_to_baseline_handles_a_database_already_at_head() -> None:
+    config = alembic_config()
+    engine = create_engine(TEST_DATABASE_URL)
+    try:
+        upgrade_test_database(config, "head")
+        assert _table_exists(engine) is True
+
+        reset_test_database_to_baseline(config)
+
+        assert _table_exists(engine) is False
     finally:
         engine.dispose()
 
