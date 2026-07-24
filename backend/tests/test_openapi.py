@@ -1,10 +1,17 @@
 import json
 from pathlib import Path
 
+from fastapi import FastAPI, routing
+from fastapi.routing import APIRoute
+
 from app.main import create_app
 from scripts.export_openapi import OUTPUT_PATH, build_openapi_json, is_up_to_date
 
 EXPECTED_OPERATION_IDS = {"root_get", "health_get", "ready_get"}
+
+# Methods FastAPI/Starlette add automatically and that a route's own author
+# never explicitly declared.
+_FRAMEWORK_ADDED_METHODS = {"HEAD", "OPTIONS"}
 
 
 def _operation_ids(schema: dict) -> list[str]:
@@ -16,6 +23,29 @@ def _operation_ids(schema: dict) -> list[str]:
     ]
 
 
+def _api_routes(app: FastAPI) -> list[APIRoute]:
+    """Resolves an app's actual `APIRoute` objects.
+
+    `app.routes` cannot be filtered with a plain `isinstance(route,
+    APIRoute)` here: this FastAPI version resolves routes registered
+    through `include_router()` lazily behind a private `_IncludedRouter`
+    wrapper, so `app.routes` never contains flat `APIRoute` instances for
+    an app assembled the way `create_app()` assembles this one (nested
+    `include_router()` calls). `fastapi.routing.iter_route_contexts()` is
+    the same resolution FastAPI's own `get_openapi()` uses internally, so
+    it's used here too rather than depending on `app.routes`' shape.
+    """
+    return [
+        route_context.original_route
+        for route_context in routing.iter_route_contexts(app.routes)
+        if isinstance(route_context.original_route, APIRoute)
+    ]
+
+
+def _declared_methods(route: APIRoute) -> set[str]:
+    return set(route.methods or set()) - _FRAMEWORK_ADDED_METHODS
+
+
 def test_operation_ids_are_explicit_and_unique():
     schema = create_app().openapi()
 
@@ -25,18 +55,43 @@ def test_operation_ids_are_explicit_and_unique():
     assert len(operation_ids) == len(set(operation_ids))
 
 
-def test_every_route_declares_exactly_one_http_method():
+def test_every_api_route_declares_exactly_one_http_method() -> None:
     # A single `APIRoute` spanning multiple HTTP methods gets one FastAPI
-    # unique-ID per route, not per method, which can silently collide
-    # operation IDs across methods. This repository's convention is one
-    # method per route (a separate @router.get/@router.post/... call each),
-    # enforced here against the actual exported schema rather than FastAPI's
-    # internal routing objects, which this FastAPI version resolves lazily
-    # and doesn't expose as a flat, directly-inspectable list.
-    schema = create_app().openapi()
+    # unique ID across all of them, which can silently collide operation
+    # IDs between those methods. This repository's convention is one
+    # intended HTTP method per `APIRoute` (a separate @router.get/.post/...
+    # call each) — checked here against each route object itself, not
+    # against how OpenAPI happens to group operations by path. Two
+    # *separate* routes are allowed to share a path with different methods
+    # (see test_separate_routes_may_share_a_path_with_different_methods);
+    # grouping by `schema["paths"]` would incorrectly flag that as a
+    # violation, which is the bug this test replaces.
+    for route in _api_routes(create_app()):
+        methods = _declared_methods(route)
+        assert len(methods) == 1, (
+            f"{route.path} must declare exactly one HTTP method; found {sorted(methods)}"
+        )
 
-    for path, methods in schema["paths"].items():
-        assert len(methods) == 1, f"{path} declares more than one HTTP method: {list(methods)}"
+
+def test_separate_routes_may_share_a_path_with_different_methods() -> None:
+    # Regression test: a normal REST pair (GET + POST on the same path) is
+    # two separate `APIRoute` objects, each with one intended method, even
+    # though OpenAPI groups them under one path object with two operations.
+    app = FastAPI()
+
+    @app.get("/items")
+    async def list_items():
+        return []
+
+    @app.post("/items")
+    async def create_item():
+        return {}
+
+    api_routes = _api_routes(app)
+    assert len(api_routes) == 2
+
+    for route in api_routes:
+        assert len(_declared_methods(route)) == 1
 
 
 def test_export_produces_a_valid_openapi_document():
