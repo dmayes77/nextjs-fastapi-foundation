@@ -11,7 +11,8 @@ applyTo: "**/*.md"
 - Do not alter later roadmap scope unless explicitly instructed.
 - Add at most one relevant changelog entry per implementation step unless a correction requires editing the existing entry.
 - Place new changelog entries under `[Unreleased]`.
-- Do not include commit hashes in changelog entries.
+- Include the implementation commit hash in a changelog entry once that commit exists, per `INSTRUCTIONS.md`'s Changelog Rule and `docs/contributing.md`'s Changelog Updates guidance.
+- Never invent, predict, or use a placeholder commit hash before the implementation commit exists; add the hash afterward as a focused documentation follow-up commit when the implementation and changelog commit happen together.
 - Do not create release headings for unreleased work.
 - Preserve historical changelog entries unless correcting a factual error.
 - Document security boundaries precisely.
