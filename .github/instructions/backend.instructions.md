@@ -21,6 +21,6 @@ applyTo: "backend/**/*.py"
 - Use temporary paths and `monkeypatch` for tests that modify files or environment variables.
 - Do not weaken runtime validation to make tests pass.
 - Run:
-  - `uv run python -m compileall app scripts tests`
-  - `uv run pytest`
+  - `cd backend && uv run python -m compileall app scripts tests`
+  - `cd backend && uv run pytest`
   - `pnpm openapi:check` when the API contract may have changed
