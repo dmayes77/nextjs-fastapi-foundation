@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Open a pull request for Step 21: Add API contract freshness checks.**
+> **Begin Step 22: Build the Project database model and migration.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) is merged into `main`. Step 21 is implemented and locally validated on `feature/step-21-api-contract-freshness` (`pnpm api:check`, backed by `frontend/scripts/check-generated-api.mjs`): it runs `pnpm openapi:check`, then regenerates the frontend contract into a temporary directory and compares it byte-for-byte against the committed `frontend/lib/api/generated/` files, without ever writing to them. Not yet committed, pushed, or opened as a pull request. Complete the Step 21 commit/push/PR cycle before beginning Step 22.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. The root `pnpm api:check` workflow is now available: it runs `pnpm openapi:check`, then regenerates the frontend contract into a temporary directory and compares it byte-for-byte against the committed `frontend/lib/api/generated/` files, without ever writing to them. Step 22 has not started.

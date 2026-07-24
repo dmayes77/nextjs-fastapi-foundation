@@ -82,11 +82,13 @@ Regenerates two files from the backend's committed `backend/openapi.json` — Fa
 
 Neither generated file introduces a second HTTP runtime. Feature code calls a generated operation function, passing in the real `apiRequest` from `lib/api/client.ts` or `lib/api/server.ts` — for example `healthGet(apiRequest, { requestId })` instead of writing `apiRequest<HealthResponse>("/health", { requestId })` by hand — so endpoint paths, HTTP methods, and response shapes are all generated from the contract rather than duplicated in feature code. `lib/api/contracts.ts` re-exports only the currently-used types and operation functions as a stable, narrow import boundary; feature code imports from there, never from the generated files directly.
 
+From the **repository root** (not from inside `frontend/`):
+
 ```bash
 pnpm api:check
 ```
 
-Verifies the committed generated files are current without writing to them: it runs `pnpm openapi:check` (confirms `backend/openapi.json` itself is current), then regenerates both files into a temporary directory and compares them byte-for-byte against the committed `lib/api/generated/schema.ts` and `lib/api/generated/operations.ts`. It exits non-zero and names the affected file when a generated file is stale, missing, or unexpectedly present, or when generation itself fails — but it never regenerates or overwrites the committed files itself; run `pnpm api:generate` and commit the result to fix a failure.
+Verifies the full backend-to-frontend contract is current without writing to any file. It runs two steps in order: `pnpm openapi:check` (confirms `backend/openapi.json` itself is current) and then this package's own `api:check`, which regenerates `schema.ts` and `operations.ts` into a temporary directory and compares them byte-for-byte against the committed `lib/api/generated/schema.ts` and `lib/api/generated/operations.ts`. It exits non-zero and names the affected file when a generated file is stale, missing, or unexpectedly present, or when generation itself fails — but it never regenerates or overwrites the committed files itself; run `pnpm api:generate` and commit the result to fix a failure. Running `pnpm api:check` from inside `frontend/` only performs the second step (the generated-file comparison) and skips the `backend/openapi.json` freshness check — prefer the root command.
 
 ## Frontend-to-Backend Integration
 
