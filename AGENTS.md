@@ -1,6 +1,11 @@
 # Repository Agent Instructions
 
-This file guides AI coding agents (GitHub coding agents, Claude, Codex, and similar) working anywhere in this repository. A more specific nested `AGENTS.md` — for example `frontend/AGENTS.md` — overrides this file for its own directory.
+This file guides AI coding agents (GitHub coding agents, Claude, Codex, and similar) working anywhere in this repository.
+
+- This `AGENTS.md` applies repository-wide.
+- Nested `AGENTS.md` files — for example `frontend/AGENTS.md` — add directory-specific guidance; they do not replace this file.
+- When instructions conflict, the nearest applicable `AGENTS.md` takes precedence for that specific conflict.
+- Non-conflicting repository-wide guidance from this file continues to apply everywhere, including inside directories with their own `AGENTS.md`.
 
 ## Source of Truth
 

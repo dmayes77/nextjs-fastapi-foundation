@@ -396,7 +396,7 @@ The Project Management reference feature is not a required permanent domain. It 
 
 Two complementary instruction layers guide automated and AI-assisted work in this repository:
 
-- **`AGENTS.md`** — repository-wide guidance for AI coding agents (GitHub coding agents, Claude, Codex, and similar). The root `AGENTS.md` applies everywhere; a more specific nested file, such as `frontend/AGENTS.md`, overrides it for its own directory.
+- **`AGENTS.md`** — repository-wide guidance for AI coding agents (GitHub coding agents, Claude, Codex, and similar), applied cumulatively. The root `AGENTS.md` applies everywhere; a more specific nested file, such as `frontend/AGENTS.md`, adds directory-specific guidance and takes precedence only where its instructions conflict with the root file. Non-conflicting root guidance still applies inside directories with their own `AGENTS.md`.
 - **`.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`** — GitHub Copilot custom instructions. The path-specific `.instructions.md` files apply to backend, frontend, and documentation work respectively, matched by their `applyTo` glob.
 
 Both layers define stable engineering constraints; neither replaces `INSTRUCTIONS.md`, which remains the source of truth for the numbered roadmap and active Resume Point.
