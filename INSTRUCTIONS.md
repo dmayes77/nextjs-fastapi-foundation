@@ -1132,7 +1132,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 18: Connect Next.js and FastAPI
 - [x] Step 19: Add deterministic OpenAPI export
 - [x] Step 20: Generate the frontend API client
-- [ ] Step 21: Add API contract freshness checks
+- [x] Step 21: Add API contract freshness checks
 - [ ] Step 22: Build the Project database model and migration
 - [ ] Step 23: Add Project repository, schemas, service, and routes
 - [ ] Step 24: Add the Project Management frontend
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Review and merge Step 20: Generate the frontend API client.**
+> **Open a pull request for Step 21: Add API contract freshness checks.**
 
-Step 20 is committed and pushed on `feature/step-20-generated-api-client` as PR #13, currently addressing review findings (most recently: generating typed, callable operation functions in addition to schema types, so endpoint paths and HTTP methods are generated rather than handwritten). Not yet merged. Complete the Step 20 pull-request cycle before beginning Step 21.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) is merged into `main`. Step 21 is implemented and locally validated on `feature/step-21-api-contract-freshness` (`pnpm api:check`, backed by `frontend/scripts/check-generated-api.mjs`): it runs `pnpm openapi:check`, then regenerates the frontend contract into a temporary directory and compares it byte-for-byte against the committed `frontend/lib/api/generated/` files, without ever writing to them. Not yet committed, pushed, or opened as a pull request. Complete the Step 21 commit/push/PR cycle before beginning Step 22.

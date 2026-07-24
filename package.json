@@ -15,7 +15,8 @@
     "test:backend": "cd backend && uv run --group dev pytest",
     "openapi:export": "cd backend && uv run python -m scripts.export_openapi --write",
     "openapi:check": "cd backend && uv run python -m scripts.export_openapi --check",
-    "api:generate": "pnpm --dir frontend api:generate"
+    "api:generate": "pnpm --dir frontend api:generate",
+    "api:check": "pnpm openapi:check && pnpm --dir frontend api:check"
   },
   "devEngines": {
     "packageManager": {
