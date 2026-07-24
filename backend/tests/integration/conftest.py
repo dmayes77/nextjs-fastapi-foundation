@@ -1,9 +1,9 @@
 """Fixtures for the real-PostgreSQL, real-Alembic integration suite (see
 docs/testing-standards.md's "Real database and Alembic integration
 tests" category). This suite is separate from the default backend suite
-established in Step 13: the default suite must not require PostgreSQL,
-so every test here skips cleanly (does not fail the run) when the
-dedicated test database is unreachable.
+established in Step 13: the default suite must not require PostgreSQL.
+This suite is run explicitly and fails when its dedicated test database
+is unreachable so it cannot report false-green migration coverage.
 
 Never targets the development or production database. `TEST_DATABASE_URL`
 defaults to a database whose name makes its purpose obvious
@@ -102,19 +102,23 @@ def reset_test_database_to_baseline(config: Config) -> None:
     upgrade_test_database(config, BASELINE_REVISION)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _require_reachable_test_database():
-    """Connects once per session; skips the whole integration suite
-    (rather than failing it) when the dedicated test database is not
-    reachable, and otherwise establishes it at the baseline revision as a
-    known-clean starting point."""
+def _assert_test_database_is_reachable() -> None:
+    engine = None
     try:
         engine = create_engine(TEST_DATABASE_URL)
         with engine.connect():
             pass
-        engine.dispose()
     except Exception as exc:
-        pytest.skip(f"PostgreSQL test database is not reachable: {exc}")
+        pytest.fail(f"PostgreSQL test database is not reachable: {exc}", pytrace=False)
+    finally:
+        if engine is not None:
+            engine.dispose()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _require_reachable_test_database():
+    """Require PostgreSQL, then establish a known-clean baseline revision."""
+    _assert_test_database_is_reachable()
 
     config = alembic_config()
     reset_test_database_to_baseline(config)

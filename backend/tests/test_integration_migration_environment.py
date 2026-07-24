@@ -6,6 +6,7 @@ from alembic.config import Config
 
 from app.core.config import get_settings
 from tests.integration.conftest import (
+    _assert_test_database_is_reachable,
     _test_database_environment,
     _validate_test_database_url,
     upgrade_test_database,
@@ -101,3 +102,30 @@ def test_previous_database_environment_is_restored_after_failure(
 def test_database_safety_guard_rejects_a_non_test_database() -> None:
     with pytest.raises(RuntimeError, match='name does not contain "test"'):
         _validate_test_database_url(PREVIOUS_DATABASE_URL)
+
+
+def test_unreachable_integration_database_fails_instead_of_skipping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class UnreachableEngine:
+        disposed = False
+
+        def connect(self):
+            raise RuntimeError("connection refused")
+
+        def dispose(self) -> None:
+            self.disposed = True
+
+    engine = UnreachableEngine()
+    monkeypatch.setattr(
+        "tests.integration.conftest.create_engine",
+        lambda url: engine,
+    )
+
+    with pytest.raises(
+        pytest.fail.Exception,
+        match="PostgreSQL test database is not reachable: connection refused",
+    ):
+        _assert_test_database_is_reachable()
+
+    assert engine.disposed is True

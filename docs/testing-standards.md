@@ -58,7 +58,7 @@ Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
 
-Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL test database whose name contains `test`. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL test database whose name contains `test`. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
 
 Frontend Unit Tests
 

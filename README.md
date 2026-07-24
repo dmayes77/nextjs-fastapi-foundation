@@ -46,7 +46,7 @@ Run the real-PostgreSQL and Alembic integration suite explicitly:
 pnpm test:backend:integration
 ```
 
-This command requires a reachable, dedicated PostgreSQL test database whose name contains `test`.
+This command requires a reachable, dedicated PostgreSQL test database whose name contains `test`. It fails rather than skips when the database cannot be reached.
 
 ## Environment Configuration
 
