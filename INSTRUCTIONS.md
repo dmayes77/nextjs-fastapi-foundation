@@ -1151,4 +1151,4 @@ The next action is:
 
 > **Review and merge Step 20: Generate the frontend API client.**
 
-The GitHub repository instruction layer has been merged. Step 20 has been implemented and validated locally on `feature/step-20-generated-api-client`, but it is not yet committed, pushed, reviewed, or merged. Complete the Step 20 pull-request cycle before beginning Step 21.
+Step 20 is committed and pushed on `feature/step-20-generated-api-client` as PR #13, currently addressing review findings (most recently: generating typed, callable operation functions in addition to schema types, so endpoint paths and HTTP methods are generated rather than handwritten). Not yet merged. Complete the Step 20 pull-request cycle before beginning Step 21.

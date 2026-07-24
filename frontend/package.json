@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "api:generate": "openapi-typescript ../backend/openapi.json -o lib/api/generated/schema.ts"
+    "api:generate": "openapi-typescript ../backend/openapi.json -o lib/api/generated/schema.ts && node scripts/generate-api-operations.mjs"
   },
   "dependencies": {
     "next": "16.2.10",

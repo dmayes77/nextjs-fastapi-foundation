@@ -1,4 +1,4 @@
-import type { HealthResponse, ReadyResponse } from "@/lib/api/contracts";
+import { healthGet, type HealthResponse, type ReadyResponse } from "@/lib/api/contracts";
 import type { operations } from "@/lib/api/generated/schema";
 
 // Type-only assertions: these only compile if the generated contract still
@@ -42,5 +42,12 @@ describe("generated OpenAPI contract", () => {
     };
 
     expect(sample.checks.database).toBe("ok");
+  });
+
+  it("re-exports the generated healthGet operation as part of the stable boundary", () => {
+    // Detailed behavior is covered in generated-operations.test.ts; this
+    // only proves `healthGet` is importable from `@/lib/api/contracts`,
+    // not just from the generated file directly.
+    expect(typeof healthGet).toBe("function");
   });
 });
