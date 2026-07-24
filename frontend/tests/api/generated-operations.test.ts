@@ -12,6 +12,18 @@ import {
   type ApiTransport,
 } from "@/lib/api/generated/operations";
 
+// The real OpenAPI contract has no templated path yet (Step 22 hasn't
+// started), so templated-operation runtime behavior is proven against a
+// committed fixture pair that mirrors exactly what the generator would
+// produce for one — see the header comment in
+// tests/fixtures/templated-operation/schema.ts for how it was captured.
+import {
+  interpolatePath,
+  projectGet,
+  projectGetOperation,
+  type ApiTransport as FixtureApiTransport,
+} from "../fixtures/templated-operation/generated";
+
 // Mirrors the shape of `ServerRequestOptions` (`lib/api/server.ts`) without
 // importing it, since a generated operation's transport parameter must work
 // with *any* compatible options shape, not just that one concrete type.
@@ -110,5 +122,146 @@ describe("healthGet", () => {
     } finally {
       fetchSpy.mockRestore();
     }
+  });
+});
+
+describe("interpolatePath", () => {
+  it("interpolates a plain value into the template", () => {
+    expect(interpolatePath("/api/v1/projects/{project_id}", { project_id: "abc-123" })).toBe(
+      "/api/v1/projects/abc-123",
+    );
+  });
+
+  it("URL-encodes a value containing reserved characters", () => {
+    expect(interpolatePath("/api/v1/projects/{project_id}", { project_id: "a/b c" })).toBe(
+      "/api/v1/projects/a%2Fb%20c",
+    );
+  });
+
+  it("preserves numeric zero rather than treating it as missing", () => {
+    expect(interpolatePath("/api/v1/projects/{project_id}", { project_id: 0 })).toBe(
+      "/api/v1/projects/0",
+    );
+  });
+
+  it("preserves false rather than treating it as missing", () => {
+    expect(interpolatePath("/x/{flag}", { flag: false })).toBe("/x/false");
+  });
+
+  it("throws when a required parameter is entirely missing from the object", () => {
+    expect(() => interpolatePath("/api/v1/projects/{project_id}", {})).toThrow(
+      'Missing required path parameter: "project_id"',
+    );
+  });
+
+  it("throws when a required parameter is undefined", () => {
+    expect(() =>
+      interpolatePath("/api/v1/projects/{project_id}", { project_id: undefined }),
+    ).toThrow('Missing required path parameter: "project_id"');
+  });
+
+  it("throws when a required parameter is null", () => {
+    expect(() =>
+      interpolatePath("/api/v1/projects/{project_id}", {
+        project_id: null as unknown as string,
+      }),
+    ).toThrow('Missing required path parameter: "project_id"');
+  });
+
+  it("throws when a placeholder has no corresponding entry, leaving it unresolved", () => {
+    expect(() => interpolatePath("/x/{a}/{b}", { a: "1" })).toThrow(
+      'Missing required path parameter: "b"',
+    );
+  });
+
+  it("does not mutate the caller's parameters object", () => {
+    const parameters = { project_id: "abc-123" };
+    const snapshot = { ...parameters };
+
+    interpolatePath("/api/v1/projects/{project_id}", parameters);
+
+    expect(parameters).toEqual(snapshot);
+  });
+});
+
+function mockProjectTransport(): jest.MockedFunction<FixtureApiTransport<TestTransportOptions>> {
+  return jest.fn().mockResolvedValue({ status: 200, data: { id: "proj-1" } });
+}
+
+describe("projectGet (templated operation, via the committed fixture)", () => {
+  it("is a callable generated function that resolves with the transport's response data", async () => {
+    const transport = mockProjectTransport();
+
+    const result = await projectGet(transport, { path: { project_id: "abc-123" } });
+
+    expect(result).toEqual({ id: "proj-1" });
+  });
+
+  it("retains the original operation ID, method, and path template in its metadata", () => {
+    expect(projectGetOperation).toEqual({
+      operationId: "project_get",
+      method: "GET",
+      path: "/api/v1/projects/{project_id}",
+    });
+  });
+
+  it("interpolates the path parameter into the URL passed to the transport", async () => {
+    const transport = mockProjectTransport();
+
+    await projectGet(transport, { path: { project_id: "abc-123" } });
+
+    const [calledPath] = transport.mock.calls[0];
+    expect(calledPath).toBe("/api/v1/projects/abc-123");
+    expect(calledPath).not.toMatch(/[{}]/);
+  });
+
+  it("forces the generated method to GET even when the caller supplies POST", async () => {
+    const transport = mockProjectTransport();
+
+    await projectGet(transport, {
+      path: { project_id: "abc-123" },
+      options: { method: "POST", requestId: "request-456" },
+    });
+
+    const [, calledOptions] = transport.mock.calls[0];
+    expect(calledOptions).toEqual({ method: "GET", requestId: "request-456" });
+  });
+
+  it("preserves unrelated caller options alongside the forced method", async () => {
+    const transport = mockProjectTransport();
+
+    await projectGet(transport, {
+      path: { project_id: "abc-123" },
+      options: { requestId: "request-789", headers: { "X-Test": "1" } },
+    });
+
+    const [, calledOptions] = transport.mock.calls[0];
+    expect(calledOptions).toEqual({
+      method: "GET",
+      requestId: "request-789",
+      headers: { "X-Test": "1" },
+    });
+  });
+
+  it("never calls the transport when a required path parameter is missing", async () => {
+    const transport = mockProjectTransport();
+
+    await expect(
+      projectGet(transport, { path: {} as unknown as { project_id: string } }),
+    ).rejects.toThrow('Missing required path parameter: "project_id"');
+
+    expect(transport).not.toHaveBeenCalled();
+  });
+
+  it("never calls the transport when the path parameter is null via an unsafe cast", async () => {
+    const transport = mockProjectTransport();
+
+    await expect(
+      projectGet(transport, {
+        path: { project_id: null as unknown as string },
+      }),
+    ).rejects.toThrow('Missing required path parameter: "project_id"');
+
+    expect(transport).not.toHaveBeenCalled();
   });
 });
