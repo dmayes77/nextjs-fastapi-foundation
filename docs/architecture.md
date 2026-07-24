@@ -229,6 +229,10 @@ FastAPI routes and schemas
 
 Generated client files must not be edited manually.
 
+The OpenAPI document is exported deterministically and committed at `backend/openapi.json`, so it becomes the single source of truth a future frontend client generator (Step 20) reads from — never the live `/openapi.json` endpoint of a running server. `backend/scripts/export_openapi.py` builds it from a fresh application instance on every run and serializes it with sorted keys, fixed indentation, UTF-8 encoding, and a trailing newline, so the output is byte-identical across machines and repeated executions whenever the API itself hasn't changed. `pnpm openapi:export` regenerates the committed file; `pnpm openapi:check` regenerates it in memory and fails with "OpenAPI specification is out of date." if it no longer matches the committed copy, without writing anything.
+
+Every operation has an explicit `operation_id` set directly on its route (e.g. `health_get`, `ready_get`, `root_get`), rather than relying on FastAPI's default ID generation, which derives IDs from the Python handler function's name — a name that can be refactored without changing the route at all. Renaming a handler function must never silently change the public OpenAPI contract or any future generated client. The application also configures a deterministic fallback `generate_unique_id_function` (`app/main.py`) for any route that omits an explicit `operation_id`, built only from the route's tag, path, and HTTP method — never from the handler's function name — so this guarantee holds even if a future route forgets to set one.
+
 When a backend request or response changes, the frontend client must be regenerated.
 
 Environment Configuration

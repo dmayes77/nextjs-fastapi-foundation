@@ -48,4 +48,3 @@ test-results/
 
 # Generated API client
 frontend/lib/api/generated/
-backend/openapi.json
