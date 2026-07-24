@@ -12,7 +12,9 @@
     "db:downgrade": "cd backend && uv run alembic downgrade -1",
     "db:current": "cd backend && uv run alembic current",
     "db:history": "cd backend && uv run alembic history",
-    "test:backend": "cd backend && uv run --group dev pytest"
+    "test:backend": "cd backend && uv run --group dev pytest",
+    "openapi:export": "cd backend && uv run python -m scripts.export_openapi --write",
+    "openapi:check": "cd backend && uv run python -m scripts.export_openapi --check"
   },
   "devEngines": {
     "packageManager": {
