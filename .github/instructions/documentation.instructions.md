@@ -7,7 +7,9 @@ applyTo: "**/*.md"
 - Keep documentation aligned with implemented behavior.
 - Do not describe planned functionality as complete.
 - Use `INSTRUCTIONS.md` as the roadmap and Resume Point source of truth.
-- Keep the active roadmap step unchecked until its pull request is merged.
+- Update roadmap checkboxes and the Resume Point according to the workflow defined in `INSTRUCTIONS.md`.
+- Do not mark a roadmap step complete before its implementation and required validation are complete.
+- Keep status wording accurate for the current implementation, commit, push, review, and merge state.
 - Do not alter later roadmap scope unless explicitly instructed.
 - Add at most one relevant changelog entry per implementation step unless a correction requires editing the existing entry.
 - Place new changelog entries under `[Unreleased]`.
