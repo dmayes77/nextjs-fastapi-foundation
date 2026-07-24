@@ -45,6 +45,3 @@ htmlcov/
 # Playwright
 playwright-report/
 test-results/
-
-# Generated API client
-frontend/lib/api/generated/

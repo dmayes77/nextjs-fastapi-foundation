@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { healthGet } from "@/lib/api/contracts";
 import { apiRequest } from "@/lib/api/server";
 import { normalizeError } from "@/lib/errors/normalize";
 import type { AppError } from "@/lib/errors/types";
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
   const requestId = resolveRequestId(request);
 
   try {
-    const { data } = await apiRequest("/health", { requestId });
+    const data = await healthGet(apiRequest, { requestId });
 
     return NextResponse.json(data, {
       headers: { [REQUEST_ID_HEADER]: requestId },
