@@ -1151,4 +1151,4 @@ The next action is:
 
 > **Complete the Step 22 pull-request review cycle before beginning Step 23.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is committed as `08bfca8` on `feature/step-22-project-model`, the branch is pushed, and PR #16 is open. The original three Codex review findings were resolved in `c5fae59`; one follow-up finding is being addressed before completing the Step 22 pull-request cycle. Step 23 has not started.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is committed as `08bfca8` on `feature/step-22-project-model`, the branch is pushed, and PR #16 is open. The original three Codex review findings were resolved in `c5fae59`, and the database-baseline follow-up was resolved in `c1fff87`; a further finding separating the default and real-PostgreSQL test commands is being addressed before completing the Step 22 pull-request cycle. Step 23 has not started.

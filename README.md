@@ -38,7 +38,15 @@ pnpm db:history
 pnpm test:backend
 ```
 
-The default backend test suite is isolated and does not require a running PostgreSQL instance.
+The default backend test suite excludes `backend/tests/integration/` and does not require a running PostgreSQL instance.
+
+Run the real-PostgreSQL and Alembic integration suite explicitly:
+
+```bash
+pnpm test:backend:integration
+```
+
+This command requires a reachable, dedicated PostgreSQL test database whose name contains `test`.
 
 ## Environment Configuration
 
