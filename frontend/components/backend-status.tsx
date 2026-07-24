@@ -2,17 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+import type { HealthResponse } from "@/lib/api/contracts";
 import { apiRequest } from "@/lib/api/client";
 import { normalizeError } from "@/lib/errors/normalize";
 import type { AppError } from "@/lib/errors/types";
 
-interface HealthPayload {
-  status: string;
-}
-
 type BackendStatusState =
   | { phase: "loading" }
-  | { phase: "success"; data: HealthPayload }
+  | { phase: "success"; data: HealthResponse }
   | { phase: "error"; error: AppError };
 
 const buttonClassName =
@@ -31,7 +28,7 @@ export function BackendStatus() {
   useEffect(() => {
     let cancelled = false;
 
-    apiRequest<HealthPayload>("/api/backend/health")
+    apiRequest<HealthResponse>("/api/backend/health")
       .then(({ data }) => {
         if (!cancelled) {
           setState({ phase: "success", data });

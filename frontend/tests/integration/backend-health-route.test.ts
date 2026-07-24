@@ -51,7 +51,12 @@ describe("GET /api/backend/health", () => {
 
     const response = await GET(buildRequest({ "X-Request-ID": "incoming-request-id" }));
 
-    expect(mockedApiRequest).toHaveBeenCalledWith("/health", { requestId: "incoming-request-id" });
+    // healthGet() always forces `method: "GET"` (its generated method) onto
+    // whatever options it's given, so the forwarded call includes it too.
+    expect(mockedApiRequest).toHaveBeenCalledWith("/health", {
+      requestId: "incoming-request-id",
+      method: "GET",
+    });
     expect(response.headers.get("X-Request-ID")).toBe("incoming-request-id");
   });
 
@@ -174,7 +179,9 @@ describe("GET /api/backend/health", () => {
 
     const response = await GET(buildRequest({ "X-Request-ID": validId }));
 
-    expect(mockedApiRequest).toHaveBeenCalledWith("/health", { requestId: validId });
+    // healthGet() always forces `method: "GET"` (its generated method) onto
+    // whatever options it's given, so the forwarded call includes it too.
+    expect(mockedApiRequest).toHaveBeenCalledWith("/health", { requestId: validId, method: "GET" });
     expect(response.headers.get("X-Request-ID")).toBe(validId);
   });
 
