@@ -13,6 +13,8 @@ migration command can run against it.
 """
 
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from urllib.parse import urlsplit
 
 import pytest
@@ -36,35 +38,62 @@ def _looks_like_a_test_database(url: str) -> bool:
     return "test" in database_name.lower()
 
 
-if not _looks_like_a_test_database(TEST_DATABASE_URL):
-    raise RuntimeError(
-        "Refusing to run PostgreSQL integration tests against a database whose name "
-        f"does not contain \"test\": {TEST_DATABASE_URL!r}. Set TEST_DATABASE_URL to a "
-        "dedicated test database, e.g. "
-        "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test."
-    )
+def _validate_test_database_url(url: str) -> str:
+    if not _looks_like_a_test_database(url):
+        raise RuntimeError(
+            "Refusing to run PostgreSQL integration tests against a database whose "
+            f"name does not contain \"test\": {url!r}. Set TEST_DATABASE_URL to a "
+            "dedicated test database, e.g. "
+            "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test."
+        )
+    return url
+
+
+_validate_test_database_url(TEST_DATABASE_URL)
 
 
 def alembic_config() -> Config:
     return Config(os.path.join(BACKEND_DIR, "alembic.ini"))
 
 
-def upgrade_test_database(config: Config, revision: str) -> None:
-    os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-    get_settings.cache_clear()
+@contextmanager
+def _test_database_environment(database_url: str) -> Iterator[None]:
+    """Make Alembic use only a validated test URL, then restore the process env."""
+    validated_url = _validate_test_database_url(database_url)
+    variable_names = ("DATABASE_URL", "DATABASE_MIGRATION_URL")
+    previous_values = {name: os.environ.get(name) for name in variable_names}
+
     try:
-        command.upgrade(config, revision)
-    finally:
+        for name in variable_names:
+            os.environ[name] = validated_url
+
         get_settings.cache_clear()
+        settings = get_settings()
+        alembic_url = settings.database_migration_url or settings.database_url
+        _validate_test_database_url(alembic_url)
+        if alembic_url != validated_url:
+            raise RuntimeError("Alembic did not resolve the validated test database URL.")
+
+        # Ensure the Alembic environment loads settings itself from the overrides.
+        get_settings.cache_clear()
+        yield
+    finally:
+        for name, previous_value in previous_values.items():
+            if previous_value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = previous_value
+        get_settings.cache_clear()
+
+
+def upgrade_test_database(config: Config, revision: str) -> None:
+    with _test_database_environment(TEST_DATABASE_URL):
+        command.upgrade(config, revision)
 
 
 def downgrade_test_database(config: Config, revision: str) -> None:
-    os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-    get_settings.cache_clear()
-    try:
+    with _test_database_environment(TEST_DATABASE_URL):
         command.downgrade(config, revision)
-    finally:
-        get_settings.cache_clear()
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 23: Add Project repository, schemas, service, and routes.**
+> **Complete the Step 22 pull-request review cycle before beginning Step 23.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is implemented and locally validated on `feature/step-22-project-model`: the `Project` table (`backend/app/database/tables/project.py`) and its Alembic migration, registered through a deliberate table registry (`backend/app/database/tables/__init__.py`) that `backend/migrations/env.py` imports directly. Verified against a real local PostgreSQL database — upgrade, downgrade, re-upgrade, and autogeneration parity all confirmed — and covered by metadata tests requiring no database connection plus real-PostgreSQL integration tests (`backend/tests/integration/`). Not yet committed, pushed, or opened as a pull request.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is committed as `08bfca8` on `feature/step-22-project-model`, the branch is pushed, and PR #16 is open. Three Codex review findings are being addressed before completing the Step 22 pull-request cycle. Step 23 has not started.

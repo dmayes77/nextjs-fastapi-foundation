@@ -9,6 +9,7 @@ from alembic.script import ScriptDirectory
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE_REVISION = "211caf2bc442"
+PROJECT_REVISION = "66b0f4ebdc11"
 
 
 def _script_directory() -> ScriptDirectory:
@@ -24,7 +25,7 @@ def test_there_is_exactly_one_alembic_head() -> None:
 
 def test_the_projects_migration_has_the_baseline_as_its_parent() -> None:
     script = _script_directory()
-    (head,) = script.get_heads()
-    head_revision = script.get_revision(head)
+    project_revision = script.get_revision(PROJECT_REVISION)
 
-    assert head_revision.down_revision == BASELINE_REVISION
+    assert project_revision is not None
+    assert project_revision.down_revision == BASELINE_REVISION

@@ -37,6 +37,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Isolated the default CORS origins list so `Settings` instances do not share mutable state (`839b61c`).
 - Fixed Next.js Turbopack workspace-root detection for the duplex repository layout.
+- Prevented real-PostgreSQL integration migrations from being redirected by an existing `DATABASE_MIGRATION_URL`: Alembic now receives the validated test URL through both database environment variables, with prior values restored after success or failure.
 
 ### Documentation
 
