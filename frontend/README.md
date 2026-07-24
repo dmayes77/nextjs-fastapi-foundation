@@ -67,7 +67,21 @@ Feature code should call FastAPI through `lib/api/`, never with a raw `fetch()`:
 
 Both clients validate `path` with a shared helper before making a request: it must begin with exactly one `/`, must not be protocol-relative (`//host/...`), and must not itself parse as an absolute URL. This means a caller can never supply their own origin — the browser client always stays same-origin, and the server client can never be redirected away from the configured `FASTAPI_INTERNAL_URL`.
 
-No generated OpenAPI client exists yet — these clients are the reusable foundation later features build on.
+These clients are the reusable transport foundation later features build on; generated contract types (below) supplement them without replacing them.
+
+## Generated API Contract
+
+`lib/api/generated/schema.ts` is generated from the backend's committed `backend/openapi.json` using [`openapi-typescript`](https://openapi-ts.dev/) — a types-only generator with no runtime of its own, so it can never bypass `lib/api/client.ts`, `lib/api/server.ts`, or `normalizeError()`.
+
+```bash
+pnpm api:generate
+```
+
+Regenerates `lib/api/generated/schema.ts` from `../backend/openapi.json`. FastAPI does not need to be running — generation reads the committed contract file, not a live server. The generated file starts with a header comment and must never be edited by hand; regenerate it instead.
+
+`lib/api/contracts.ts` re-exports stable, named types (e.g. `HealthResponse`) from the generated schema, so feature code never imports the deeply nested generated shape directly. Feature code passes these types into the existing `apiRequest<T>()` calls — for example `apiRequest<HealthResponse>("/health")` — the generated types supplement the hand-written transport layer; they never replace it.
+
+There is no automated check yet that fails when `backend/openapi.json` changes without regenerating the client — that freshness enforcement is a later step.
 
 ## Frontend-to-Backend Integration
 
@@ -104,7 +118,7 @@ Jest runs through Next.js's built-in [`next/jest`](https://nextjs.org/docs) inte
 
 Tests live under `tests/`, mirrored by layer rather than by feature:
 
-- `tests/api/` — the API client foundation (`lib/api/`): error classes, construction, inheritance.
+- `tests/api/` — the API client foundation (`lib/api/`): error classes, construction, inheritance, and type-level checks proving the generated contract still exposes the expected operations and response shapes.
 - `tests/errors/` — the error normalization layer (`lib/errors/`): `normalizeError()` across every transport error type and unrecognized thrown value.
 - `tests/integration/` — the `/api/backend/health` route handler, run under `testEnvironment: "node"` (it constructs and reads native `Request`/`Response` objects) with `lib/api/server.ts` mocked at the module boundary, so route orchestration is tested independently of fetch, transport behavior, and any running backend.
 - `tests/components/` — `BackendStatus`, with `lib/api/client.ts` mocked at the module boundary rather than mocking `fetch`, since jsdom does not implement the Fetch API.

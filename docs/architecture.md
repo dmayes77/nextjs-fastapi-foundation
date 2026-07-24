@@ -218,22 +218,22 @@ One database session is created for each request.
 
 OpenAPI Contract
 
-FastAPI generates an OpenAPI schema from routes and Pydantic models.
+FastAPI generates an OpenAPI schema from routes and Pydantic models. That schema flows into the frontend as generated TypeScript contract types:
 
-That schema is used to generate frontend API types and request functions:
+FastAPI application
+→ backend/openapi.json
+→ OpenAPI TypeScript generator
+→ frontend/lib/api/generated/
+→ handwritten client/server transport
+→ frontend features
 
-FastAPI routes and schemas
-→ OpenAPI document
-→ Generated TypeScript client
-→ Next.js features
+FastAPI owns the contract; the OpenAPI document is exported deterministically and committed at `backend/openapi.json`, so it is the single source of truth every downstream step reads from — never the live `/openapi.json` endpoint of a running server. `backend/scripts/export_openapi.py` builds it from a fresh application instance on every run and serializes it with sorted keys, fixed indentation, UTF-8 encoding, and a trailing newline, so the output is byte-identical across machines and repeated executions whenever the API itself hasn't changed. `pnpm openapi:export` regenerates the committed file; `pnpm openapi:check` regenerates it in memory and fails with "OpenAPI specification is out of date." if it no longer matches the committed copy, without writing anything.
 
-Generated client files must not be edited manually.
+Every operation has an explicit `operation_id` set directly on its route (e.g. `health_get`, `ready_get`, `root_get`), rather than relying on FastAPI's default ID generation, which derives IDs from the Python handler function's name — a name that can be refactored without changing the route at all. Renaming a handler function must never silently change the public OpenAPI contract or the generated client. The application also configures a deterministic fallback `generate_unique_id_function` (`app/main.py`) for any route that omits an explicit `operation_id`, built only from the route's tag, path, and HTTP method — never from the handler's function name — so this guarantee holds even if a future route forgets to set one.
 
-The OpenAPI document is exported deterministically and committed at `backend/openapi.json`, so it becomes the single source of truth a future frontend client generator (Step 20) reads from — never the live `/openapi.json` endpoint of a running server. `backend/scripts/export_openapi.py` builds it from a fresh application instance on every run and serializes it with sorted keys, fixed indentation, UTF-8 encoding, and a trailing newline, so the output is byte-identical across machines and repeated executions whenever the API itself hasn't changed. `pnpm openapi:export` regenerates the committed file; `pnpm openapi:check` regenerates it in memory and fails with "OpenAPI specification is out of date." if it no longer matches the committed copy, without writing anything.
+`frontend/lib/api/generated/` owns the TypeScript representation of that contract: it is produced entirely by [`openapi-typescript`](https://openapi-ts.dev/) from `backend/openapi.json` via `pnpm api:generate`, is committed to the repository, and must never be hand-edited. `openapi-typescript` emits types only — no runtime, no fetch client — so it can never bypass or duplicate the handwritten transport layer in `frontend/lib/api/`. `frontend/lib/api/contracts.ts` re-exports stable, named types (e.g. `HealthResponse`) from the generated schema; feature code imports from there and passes the types into the existing `apiRequest<T>()` calls, so generated types constrain the data flowing through the unchanged handwritten client/server/error-normalization layers rather than replacing them.
 
-Every operation has an explicit `operation_id` set directly on its route (e.g. `health_get`, `ready_get`, `root_get`), rather than relying on FastAPI's default ID generation, which derives IDs from the Python handler function's name — a name that can be refactored without changing the route at all. Renaming a handler function must never silently change the public OpenAPI contract or any future generated client. The application also configures a deterministic fallback `generate_unique_id_function` (`app/main.py`) for any route that omits an explicit `operation_id`, built only from the route's tag, path, and HTTP method — never from the handler's function name — so this guarantee holds even if a future route forgets to set one.
-
-When a backend request or response changes, the frontend client must be regenerated.
+When a backend request or response changes, `backend/openapi.json` and the generated frontend client must both be regenerated. There is no automated enforcement yet that fails when they drift out of sync with each other — that freshness check is a later step.
 
 Environment Configuration
 

@@ -1131,7 +1131,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 17: Add Jest and React Testing Library
 - [x] Step 18: Connect Next.js and FastAPI
 - [x] Step 19: Add deterministic OpenAPI export
-- [ ] Step 20: Generate the frontend API client
+- [x] Step 20: Generate the frontend API client
 - [ ] Step 21: Add API contract freshness checks
 - [ ] Step 22: Build the Project database model and migration
 - [ ] Step 23: Add Project repository, schemas, service, and routes
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Complete the GitHub repository instruction layer.**
+> **Review and merge Step 20: Generate the frontend API client.**
 
-Step 19 has been merged. Repository-wide and path-specific GitHub instructions are being added on `chore/github-repository-instructions`. Complete this focused governance pull-request cycle before beginning Step 20.
+The GitHub repository instruction layer has been merged. Step 20 has been implemented and validated locally on `feature/step-20-generated-api-client`, but it is not yet committed, pushed, reviewed, or merged. Complete the Step 20 pull-request cycle before beginning Step 21.
