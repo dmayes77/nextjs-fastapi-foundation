@@ -1130,7 +1130,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 16: Add frontend error normalization
 - [x] Step 17: Add Jest and React Testing Library
 - [x] Step 18: Connect Next.js and FastAPI
-- [ ] Step 19: Add deterministic OpenAPI export
+- [x] Step 19: Add deterministic OpenAPI export
 - [ ] Step 20: Generate the frontend API client
 - [ ] Step 21: Add API contract freshness checks
 - [ ] Step 22: Build the Project database model and migration
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Review and merge Step 19: Add deterministic OpenAPI export.**
+> **Complete the GitHub repository instruction layer.**
 
-Step 19 has been implemented, validated, and committed on `feature/step-19-deterministic-openapi`, but it has not yet been pushed, reviewed, or merged. Complete the Step 19 pull-request cycle before beginning Step 20.
+Step 19 has been merged. Repository-wide and path-specific GitHub instructions are being added on `chore/github-repository-instructions`. Complete this focused governance pull-request cycle before beginning Step 20.

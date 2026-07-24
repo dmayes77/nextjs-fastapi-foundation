@@ -392,6 +392,12 @@ These extensions should not change the core frontend-to-backend communication pa
 
 The Project Management reference feature is not a required permanent domain. It exists to demonstrate the architecture end to end and may be removed or replaced.
 
+## Repository Automation Instructions
+
+GitHub Copilot, Codex review, and repository agents are guided by `.github/copilot-instructions.md` plus path-specific instruction files under `.github/instructions/`.
+
+These files define stable engineering constraints for backend, frontend, and documentation work. They do not replace `INSTRUCTIONS.md`, which remains the source of truth for the numbered roadmap and active Resume Point.
+
 ## Architecture Decision Records
 
 Long-lived architectural decisions, including the reasoning behind the technology choices described in this document, are recorded in `docs/adr/`.
