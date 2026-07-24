@@ -16,10 +16,25 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
-from app.main import create_app
+# The application validates DATABASE_URL while importing app.main (pulled in
+# transitively through app.database.engine). OpenAPI schema generation needs
+# no database connection at all, so seed a deliberately unreachable
+# placeholder — only for this process, only if a real value isn't already
+# configured — mirroring the same pattern tests/conftest.py uses for the
+# same reason. This never touches how the running application itself
+# validates settings: Settings.database_url remains a required field with
+# no default there, so `uv run fastapi dev` and the production entrypoint
+# still fail immediately on a genuinely missing DATABASE_URL.
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql+psycopg://invalid:invalid@127.0.0.1:1/invalid",
+)
+
+from app.main import create_app  # noqa: E402
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "openapi.json"
 

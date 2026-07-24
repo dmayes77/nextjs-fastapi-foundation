@@ -1,4 +1,7 @@
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI, routing
@@ -149,3 +152,40 @@ def test_drift_check_fails_when_the_file_is_missing(tmp_path: Path):
     missing_file = tmp_path / "does-not-exist.json"
 
     assert is_up_to_date(missing_file, generated) is False
+
+
+def test_export_check_succeeds_without_database_url(monkeypatch, tmp_path: Path):
+    """Regression test for a Codex-flagged portability bug: exporting the
+    OpenAPI schema required `DATABASE_URL`, because importing `app.main`
+    validates application settings as an import-time side effect
+    (transitively, through `app.database.engine`) — even though OpenAPI
+    generation needs no database connection at all.
+
+    A fresh subprocess is required to genuinely reproduce this: `app.main`
+    is already imported and cached in this test process, so removing
+    `DATABASE_URL` here in-process could never re-trigger the import-time
+    validation the original bug depended on. The subprocess also runs with
+    `cwd` set to an empty temporary directory rather than `backend/`, so a
+    developer's local, gitignored `backend/.env` — which would otherwise
+    silently supply a real `DATABASE_URL` and mask a regression, exactly as
+    it did while manually reproducing this bug — can never paper over a
+    real failure here; `app`/`scripts` still resolve via `PYTHONPATH`.
+    """
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    backend_dir = Path(__file__).resolve().parent.parent
+
+    env = dict(os.environ)
+    env.pop("DATABASE_URL", None)
+    env["PYTHONPATH"] = str(backend_dir)
+
+    result = subprocess.run(
+        [sys.executable, "-m", "scripts.export_openapi", "--check"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "up to date" in result.stdout
