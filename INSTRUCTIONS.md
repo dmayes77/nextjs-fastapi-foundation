@@ -1133,7 +1133,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 19: Add deterministic OpenAPI export
 - [x] Step 20: Generate the frontend API client
 - [x] Step 21: Add API contract freshness checks
-- [ ] Step 22: Build the Project database model and migration
+- [x] Step 22: Build the Project database model and migration
 - [ ] Step 23: Add Project repository, schemas, service, and routes
 - [ ] Step 24: Add the Project Management frontend
 - [ ] Step 25: Add Project Management Playwright coverage
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 22: Build the Project database model and migration.**
+> **Begin Step 23: Add Project repository, schemas, service, and routes.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. The root `pnpm api:check` workflow is now available: it runs `pnpm openapi:check`, then regenerates the frontend contract into a temporary directory and compares it byte-for-byte against the committed `frontend/lib/api/generated/` files, without ever writing to them. Step 22 has not started.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is implemented and locally validated on `feature/step-22-project-model`: the `Project` table (`backend/app/database/tables/project.py`) and its Alembic migration, registered through a deliberate table registry (`backend/app/database/tables/__init__.py`) that `backend/migrations/env.py` imports directly. Verified against a real local PostgreSQL database — upgrade, downgrade, re-upgrade, and autogeneration parity all confirmed — and covered by metadata tests requiring no database connection plus real-PostgreSQL integration tests (`backend/tests/integration/`). Not yet committed, pushed, or opened as a pull request.

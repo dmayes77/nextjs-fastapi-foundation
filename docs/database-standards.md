@@ -161,6 +161,8 @@ The project should choose one standard generation method and document it.
 
 Application-generated UUIDs are acceptable when they simplify creation before a database flush.
 
+This template's standard method is an application-generated UUID4: a Python-side SQLAlchemy column default (`default=uuid4`, from `uuid.uuid4`), not a PostgreSQL server default and not the `pgcrypto`/`uuid-ossp` extensions. It requires no PostgreSQL UUID extension. The value is generated when SQLAlchemy builds the row's `INSERT` (at flush, not at object construction), so a freshly constructed model instance has `id is None` until it is added to a session and flushed. The `Project` table (`backend/app/database/tables/project.py`) is the reference example.
+
 Timestamps
 
 Store timestamps as timezone-aware PostgreSQL timestamps.
@@ -178,6 +180,8 @@ The API may expose them as:
 
 createdAt
 updatedAt
+
+`updated_at` should use a PostgreSQL `server_default` for its initial value on insert (so it is always set, regardless of which application writes the row) and a SQLAlchemy `onupdate` callable for refreshing it on later writes. `onupdate` only fires for an `UPDATE` that SQLAlchemy itself builds through the ORM — it is not a database trigger. A raw external `UPDATE` issued outside the application (a manual SQL statement, a different service, a database console) will not refresh `updated_at`. Add a database trigger instead if that guarantee is ever required; the `Project` table does not need it.
 
 Naming Convention
 
@@ -246,6 +250,8 @@ They provide strong constraints but require migrations when values change.
 A string column with a check constraint may be simpler for values expected to evolve frequently.
 
 The decision should be documented for each domain.
+
+The `Project` table's `status` column uses this string-plus-`CHECK` approach rather than a PostgreSQL enum: a bounded `VARCHAR`, a named constraint (`ck_projects_status_allowed`), and a database `server_default` of `planned`. Adding a future allowed status is an ordinary migration adding a value to the constraint's list, never a PostgreSQL `ALTER TYPE ... ADD VALUE` enum migration (which cannot run inside a transaction in older PostgreSQL versions). The model and the migration must always list the same allowed values in the same order.
 
 JSONB
 
