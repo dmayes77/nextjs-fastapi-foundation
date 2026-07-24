@@ -28,9 +28,15 @@ export async function healthGet<Options extends { method?: string } = { method?:
   request: ApiTransport<Options>,
   options?: Options,
 ): Promise<operations["health_get"]["responses"]["200"]["content"]["application/json"]> {
-  // The shared transport already defaults to GET (this operation's
-  // declared method), so `options` is forwarded to it unchanged.
-  const response = await request<operations["health_get"]["responses"]["200"]["content"]["application/json"]>(healthGetOperation.path, options);
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through `options` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<operations["health_get"]["responses"]["200"]["content"]["application/json"]>(healthGetOperation.path, {
+    ...options,
+    method: healthGetOperation.method,
+  } as Options);
   return response.data;
 }
 
@@ -44,9 +50,15 @@ export async function readyGet<Options extends { method?: string } = { method?: 
   request: ApiTransport<Options>,
   options?: Options,
 ): Promise<operations["ready_get"]["responses"]["200"]["content"]["application/json"]> {
-  // The shared transport already defaults to GET (this operation's
-  // declared method), so `options` is forwarded to it unchanged.
-  const response = await request<operations["ready_get"]["responses"]["200"]["content"]["application/json"]>(readyGetOperation.path, options);
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through `options` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<operations["ready_get"]["responses"]["200"]["content"]["application/json"]>(readyGetOperation.path, {
+    ...options,
+    method: readyGetOperation.method,
+  } as Options);
   return response.data;
 }
 
@@ -60,8 +72,14 @@ export async function rootGet<Options extends { method?: string } = { method?: s
   request: ApiTransport<Options>,
   options?: Options,
 ): Promise<operations["root_get"]["responses"]["200"]["content"]["application/json"]> {
-  // The shared transport already defaults to GET (this operation's
-  // declared method), so `options` is forwarded to it unchanged.
-  const response = await request<operations["root_get"]["responses"]["200"]["content"]["application/json"]>(rootGetOperation.path, options);
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through `options` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<operations["root_get"]["responses"]["200"]["content"]["application/json"]>(rootGetOperation.path, {
+    ...options,
+    method: rootGetOperation.method,
+  } as Options);
   return response.data;
 }

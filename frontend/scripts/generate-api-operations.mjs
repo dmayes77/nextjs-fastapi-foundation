@@ -22,10 +22,6 @@ const OUTPUT_PATH = path.resolve(__dirname, "../lib/api/generated/operations.ts"
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
 const SUCCESS_STATUS_PATTERN = /^2\d{2}$/;
-// Matches the default in frontend/lib/api/shared.ts's `request()`
-// (`const { method = "GET", ... } = options`), so a GET operation never
-// needs to inject a redundant `method` into the call.
-const TRANSPORT_DEFAULT_METHOD = "GET";
 
 function toCamelCase(operationId) {
   return operationId.replace(/_([a-zA-Z0-9])/g, (_match, char) => char.toUpperCase());
@@ -89,21 +85,6 @@ function renderOperation({ operationId, functionName, method, path: requestPath,
     `operations["${operationId}"]["responses"]["${successCode}"]` +
     `["content"]["application/json"]`;
 
-  // The metadata object below always states the method explicitly (and is
-  // asserted on directly in tests), independent of whether the call itself
-  // needs to pass `method` through: the shared transport already defaults
-  // to GET, so a GET operation forwards `options` completely unchanged
-  // rather than injecting a redundant, test-breaking `method: "GET"`. Any
-  // non-GET operation must still pass its method explicitly, since the
-  // transport would otherwise silently default to GET.
-  const isDefaultMethod = method === TRANSPORT_DEFAULT_METHOD;
-  const callOptionsExpr = isDefaultMethod
-    ? "options"
-    : `{\n    ...options,\n    method: ${functionName}Operation.method,\n  } as Options`;
-  const methodComment = isDefaultMethod
-    ? `  // The shared transport already defaults to GET (this operation's\n  // declared method), so \`options\` is forwarded to it unchanged.\n`
-    : `  // The caller's own options are spread first, then \`method\` is always\n  // forced to this operation's declared method, so a caller can never\n  // override the contract's HTTP method through \`options\`.\n`;
-
   return `export const ${functionName}Operation = {
   operationId: "${operationId}",
   method: "${method}",
@@ -114,7 +95,15 @@ export async function ${functionName}<Options extends { method?: string } = { me
   request: ApiTransport<Options>,
   options?: Options,
 ): Promise<${responseType}> {
-${methodComment}  const response = await request<${responseType}>(${functionName}Operation.path, ${callOptionsExpr});
+  // The caller's own options are spread first, then \`method\` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through \`options\` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<${responseType}>(${functionName}Operation.path, {
+    ...options,
+    method: ${functionName}Operation.method,
+  } as Options);
   return response.data;
 }`;
 }

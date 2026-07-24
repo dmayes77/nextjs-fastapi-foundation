@@ -51,22 +51,44 @@ describe("healthGet", () => {
     expect(transport.mock.calls[0][0]).toBe("/health");
   });
 
-  it("forwards request options unchanged, since GET is already the shared transport's default method", async () => {
+  it("preserves unrelated caller options while forcing the generated method", async () => {
     const transport = mockTransport();
     const options = { requestId: "req-2", headers: { "X-Test": "1" } };
 
     await healthGet(transport, options);
 
     const [, forwardedOptions] = transport.mock.calls[0];
-    expect(forwardedOptions).toBe(options);
+    // A new object, not the original reference: `method` is always merged
+    // in, so every other option must still be checked individually rather
+    // than relying on reference equality to the caller's own object.
+    expect(forwardedOptions).toEqual({ ...options, method: "GET" });
   });
 
-  it("works with no options argument at all", async () => {
+  it("works with no options argument at all, still forcing the generated method", async () => {
     const transport = mockTransport();
 
     await healthGet(transport);
 
-    expect(transport).toHaveBeenCalledWith("/health", undefined);
+    expect(transport).toHaveBeenCalledWith("/health", { method: "GET" });
+  });
+
+  it("regression: a caller cannot override the generated method, e.g. to POST", async () => {
+    const transport = mockTransport();
+
+    const result = await healthGet(transport, { method: "POST", requestId: "request-123" });
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    const [calledPath, calledOptions] = transport.mock.calls[0];
+    expect(calledPath).toBe("/health");
+    expect(calledOptions).toEqual({ method: "GET", requestId: "request-123" });
+    expect(result).toEqual({ status: "ok" });
+
+    // Generated metadata and runtime execution must agree.
+    expect(healthGetOperation).toEqual({
+      operationId: "health_get",
+      method: "GET",
+      path: "/health",
+    });
   });
 
   it("returns the transport's response data, not the full { status, data } envelope", async () => {
