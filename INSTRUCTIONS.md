@@ -1133,7 +1133,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 19: Add deterministic OpenAPI export
 - [x] Step 20: Generate the frontend API client
 - [x] Step 21: Add API contract freshness checks
-- [ ] Step 22: Build the Project database model and migration
+- [x] Step 22: Build the Project database model and migration
 - [ ] Step 23: Add Project repository, schemas, service, and routes
 - [ ] Step 24: Add the Project Management frontend
 - [ ] Step 25: Add Project Management Playwright coverage
@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 22: Build the Project database model and migration.**
+> **Complete the Step 22 pull-request review cycle before beginning Step 23.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. The root `pnpm api:check` workflow is now available: it runs `pnpm openapi:check`, then regenerates the frontend contract into a temporary directory and compares it byte-for-byte against the committed `frontend/lib/api/generated/` files, without ever writing to them. Step 22 has not started.
+Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is committed as `08bfca8` on `feature/step-22-project-model`, the branch is pushed, and PR #16 is open. The original three Codex review findings were resolved in `c5fae59`, the database-baseline follow-up in `c1fff87`, the test-command separation follow-up in `2139384`, the integration reachability follow-up in `9d877f2`, the Backend CI alignment in `7242545`, and the test-name and credential-redaction safety findings in `a2d0d7c`; a database-target query-override finding is being addressed before completing the Step 22 pull-request cycle. Step 23 has not started.

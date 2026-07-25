@@ -36,7 +36,7 @@ Unit tests should avoid real external services.
 
 Use fakes, stubs, or dependency overrides when practical.
 
-The default backend suite uses pytest, pytest-asyncio, and `httpx.AsyncClient` over `httpx.ASGITransport` — never the synchronous FastAPI `TestClient`. Each test builds a fresh application from `create_app()` and gets its own async client, so middleware, exception handlers, and dependency overrides never leak between tests; an autouse fixture also clears the `get_settings()` cache before and after every test. This default suite must not require PostgreSQL or run Alembic migrations.
+The default backend suite runs with `pnpm test:backend`, which explicitly passes `--ignore=tests/integration` to pytest. It uses pytest, pytest-asyncio, and `httpx.AsyncClient` over `httpx.ASGITransport` — never the synchronous FastAPI `TestClient`. Each test builds a fresh application from `create_app()` and gets its own async client, so middleware, exception handlers, and dependency overrides never leak between tests; an autouse fixture also clears the `get_settings()` cache before and after every test. This default suite must not require PostgreSQL, collect tests from `backend/tests/integration/`, or run Alembic migrations.
 
 Database readiness is verified by monkeypatching `app.services.system.check_database` directly (it is a plain function call inside `check_readiness()`, not a FastAPI dependency, so `app.dependency_overrides` has no effect on it). Test-only routes needed to exercise error handling (unique paths such as `/__test__/...`) may be attached to the per-test application instance inside a test; they are never added to the production route table.
 
@@ -58,7 +58,7 @@ Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
 
-Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13, and are added later.
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. Database-target query parameters (`dbname`, `database`, `service`, and `servicefile`, matched case-insensitively) are forbidden even when their value is another test-named database, because SQLAlchemy or Psycopg may use them instead of the URL path; harmless options such as `sslmode`, `connect_timeout`, and `application_name` remain supported. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
 
 Frontend Unit Tests
 
@@ -176,11 +176,20 @@ The project may use:
 
 The chosen strategy must be documented and used consistently.
 
-The test database name should make its purpose obvious.
+The test database name must contain `test` as a complete, case-insensitive
+underscore-delimited segment.
 
-Example:
+Valid examples:
 
+test
+test_projects
 next_fastapi_test
+
+Incidental substring matches such as `latest`, `contest`, `attestation`,
+and `productiontest` are not test database names and must be rejected.
+The URL path is the only permitted source of the database name. Query
+parameters named `dbname`, `database`, `service`, or `servicefile` are
+forbidden, matched case-insensitively after URL decoding.
 
 Environment Safety
 
@@ -334,10 +343,11 @@ The final root commands should include:
 pnpm test
 pnpm test:frontend
 pnpm test:backend
+pnpm test:backend:integration
 pnpm test:e2e
 pnpm check
 
-The exact commands must be documented in the README after they are verified. `pnpm test:backend` is implemented and verified; the remaining commands are added with their respective testing layers.
+The exact commands must be documented in the README after they are verified. `pnpm test:backend` is the PostgreSQL-free default and `pnpm test:backend:integration` explicitly runs the real-PostgreSQL Alembic suite; the remaining commands are added with their respective testing layers.
 
 Local Test Workflow
 

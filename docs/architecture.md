@@ -85,7 +85,7 @@ SQLAlchemy handles:
 - Relationships
 - Transactions
 
-The database foundation uses SQLAlchemy 2 with the async Psycopg 3 driver: one async engine and one `async_sessionmaker` are created at startup, and a FastAPI dependency yields one `AsyncSession` per request. The dependency never commits automatically; transaction ownership belongs to the service layer. `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names across every future table. No models exist yet — this foundation is domain-neutral until the Project Management vertical slice.
+The database foundation uses SQLAlchemy 2 with the async Psycopg 3 driver: one async engine and one `async_sessionmaker` are created at startup, and a FastAPI dependency yields one `AsyncSession` per request. The dependency never commits automatically; transaction ownership belongs to the service layer. `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names across every future table. `Project` (`backend/app/database/tables/project.py`) is the first domain table, registered through `backend/app/database/tables/__init__.py` — the deliberate registry `backend/migrations/env.py` imports so Alembic sees every table without depending on the application having imported one indirectly. No repository, service, or route exists for it yet; that is a later step.
 
 Alembic handles:
 
@@ -96,7 +96,7 @@ Alembic handles:
 
 The application must not use Base.metadata.create_all() as a replacement for Alembic migrations.
 
-Alembic sits beside the FastAPI application, inside `backend/`, rather than inside `app/`. Its migration environment (`backend/migrations/env.py`) imports the same `Base.metadata` and naming convention the application uses, so migrations and models never drift apart. Migration connections use `NullPool`, since each migration run opens a connection once and does not need pooling; this is separate from the application's own runtime engine and pooling configured in `app/database/engine.py`. Migrations run only through the Alembic CLI or root `db:*` commands, never automatically during FastAPI startup. The baseline migration makes no schema changes; domain migrations begin later with the Project Management vertical slice.
+Alembic sits beside the FastAPI application, inside `backend/`, rather than inside `app/`. Its migration environment (`backend/migrations/env.py`) imports the same `Base.metadata` and naming convention the application uses, so migrations and models never drift apart. Migration connections use `NullPool`, since each migration run opens a connection once and does not need pooling; this is separate from the application's own runtime engine and pooling configured in `app/database/engine.py`. Migrations run only through the Alembic CLI or root `db:*` commands, never automatically during FastAPI startup. The baseline migration makes no schema changes; it exists only to give migration history a starting point before the first domain table. The first domain migration (`add projects table`) follows it directly.
 
 Frontend and Backend Communication
 
