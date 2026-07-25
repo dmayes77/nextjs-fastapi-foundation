@@ -91,6 +91,19 @@ async def test_archive_persists_the_service_transition_with_a_flush() -> None:
     session.flush.assert_awaited_once_with()
 
 
+async def test_restore_persists_the_service_transition_with_a_flush() -> None:
+    project = Project(name="Restored", status="planned")
+    session = Mock()
+    session.flush = AsyncMock()
+    repository = ProjectRepository(session)
+
+    returned = await repository.restore(project)
+
+    assert returned is project
+    assert project.status == "planned"
+    session.flush.assert_awaited_once_with()
+
+
 async def test_commit_and_refresh_delegate_to_the_session() -> None:
     project = Project(name="Committed")
     session = Mock()

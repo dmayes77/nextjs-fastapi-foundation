@@ -168,6 +168,7 @@ GET /api/v1/projects/{project_id}
 POST /api/v1/projects
 PATCH /api/v1/projects/{project_id}
 POST /api/v1/projects/{project_id}/archive
+POST /api/v1/projects/{project_id}/restore
 
 Using a versioned prefix allows future API changes without immediately breaking existing consumers.
 
@@ -220,7 +221,7 @@ Repositories handle only persistence operations:
 - Adding and flushing changes
 - Delegating commit and refresh when the service chooses the transaction boundary
 
-Repositories do not raise HTTP exceptions, build response schemas, or decide lifecycle policy. Project update and archive operations load their target through `SELECT ... FOR UPDATE`; the service then evaluates lifecycle rules, mutates, and commits in the same request-scoped session, so the lock remains held through commit. Read-only list and retrieve operations use lock-free repository paths. The Project repository is deliberately concrete; no generic base repository is introduced for a single domain.
+Repositories do not raise HTTP exceptions, build response schemas, or decide lifecycle policy. Project update, archive, and restore operations load their target through `SELECT ... FOR UPDATE`; the service then evaluates lifecycle rules, mutates, and commits in the same request-scoped session, so the lock remains held through commit. Read-only list and retrieve operations use lock-free repository paths. The Project repository is deliberately concrete; no generic base repository is introduced for a single domain.
 
 Database Layer
 
@@ -344,6 +345,34 @@ Jest and React Testing Library test:
 - Error states
 
 Jest runs through Next.js's built-in `next/jest` integration (`frontend/jest.config.ts`), with a shared setup file (`frontend/jest.setup.ts`) that loads `@testing-library/jest-dom` matchers for every test. Tests live under `frontend/tests/`, organized by layer (e.g. `tests/api/`, `tests/errors/`, `tests/integration/`, `tests/components/`) rather than by feature, and stay shallow until a feature needs its own folder. Route handler tests run under `testEnvironment: "node"` (they construct and read native `Request`/`Response` objects) with `lib/api/server.ts` mocked at the module boundary, keeping them focused on route orchestration rather than transport behavior; component tests run under the default jsdom environment with `lib/api/client.ts` mocked at the same kind of module boundary, since jsdom does not implement the Fetch API.
+
+### Project Management frontend
+
+The frontend application shell is visually informed by the MIT-licensed
+Shadcn Admin project, but its implementation remains native to this
+repository. The dashboard route group uses an App Router layout, `next/link`,
+and `usePathname`; it does not adopt Shadcn Admin's Vite setup, TanStack
+Router, Clerk integration, Axios client, global stores, demo routes, or mock
+data. The shell is a Server Component except for the active navigation and
+mobile Radix Sheet, which require the current pathname and browser
+interaction.
+
+`/projects` loads its initial `ProjectResponse[]` in a Server Component with
+the existing server API client and generated `projectsList` operation. It
+passes that serializable result to a focused `ProjectsWorkspace` Client
+Component. That client owns only the dialog state and the current displayed
+collection needed for immediate create, edit, and archive feedback. Every
+mutation calls the generated operation with the existing same-origin browser
+transport; successful responses replace the corresponding generated response
+object locally, and failures pass through `normalizeError()`. No second fetch
+layer, global state library, client cache, or duplicated API type is present.
+
+The shadcn/ui CLI generated only the Radix-based primitives used by the shell
+and Project workflow. The runtime additions are limited to the primitives,
+class composition utilities, Lucide icons, and Tailwind animation support.
+The project deliberately does not include TanStack Query, TanStack Table,
+Zustand, Axios, React Hook Form, Zod, charts, or toast infrastructure for this
+feature.
 
 End-to-End
 

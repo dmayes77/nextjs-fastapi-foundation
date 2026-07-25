@@ -813,11 +813,13 @@ Tasks:
   - `POST /api/v1/projects`
   - `PATCH /api/v1/projects/{project_id}`
   - `POST /api/v1/projects/{project_id}/archive`
+  - `POST /api/v1/projects/{project_id}/restore`
 - Enforce business rules:
   - Project name is required.
   - Status defaults to `planned`.
   - Archived projects cannot be edited.
   - Any non-archived project may be archived.
+  - Archived projects may be restored to `planned` only through the dedicated restore action.
   - Due date is optional.
   - Invalid lifecycle actions return `409 Conflict`.
 - Return consistent errors and validation responses
@@ -1134,7 +1136,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 20: Generate the frontend API client
 - [x] Step 21: Add API contract freshness checks
 - [x] Step 22: Build the Project database model and migration
-- [ ] Step 23: Add Project repository, schemas, service, and routes
+- [x] Step 23: Add Project repository, schemas, service, and routes
 - [ ] Step 24: Add the Project Management frontend
 - [ ] Step 25: Add Project Management Playwright coverage
 - [ ] Step 26: Add root quality and validation commands
@@ -1149,6 +1151,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Complete and commit Step 23 before beginning Step 24.**
+> **Complete and validate Step 24 without beginning Step 25.**
 
-Step 20 (PR #13), Step 21 (PR #14), and Step 22 (PR #16) are merged into `main`. Step 23 is in progress on `feature/step-23-project-api`, adding the Project repository, schemas, service, routes, tests, and generated API contract. Step 24 has not started.
+Step 20 (PR #13), Step 21 (PR #14), Step 22 (PR #16), and Step 23 (PR #17) are merged into `main`. Step 24 is in progress on `feature/step-24-project-frontend`, adding the Shadcn Admin-inspired application shell and the Project list, create, edit, and archive workflows while preserving the native Next.js App Router and generated API client. The Project API now also exposes a dedicated restore action that returns archived demo records to `planned`; Step 25 has not started.

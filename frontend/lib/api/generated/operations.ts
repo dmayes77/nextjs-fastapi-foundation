@@ -179,6 +179,33 @@ export async function projectsList<Options extends { method?: string } = { metho
   return response.data;
 }
 
+export const projectsRestoreOperation = {
+  operationId: "projects_restore",
+  method: "POST",
+  path: "/api/v1/projects/{project_id}/restore",
+} as const;
+
+export async function projectsRestore<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  args: {
+    path: NonNullable<operations["projects_restore"]["parameters"]["path"]>;
+    options?: Options;
+  },
+): Promise<operations["projects_restore"]["responses"]["200"]["content"]["application/json"]> {
+  // Path parameters are interpolated into the runtime URL before the
+  // request is made, so a caller can never send an unresolved
+  // "{parameter}" placeholder or bypass validation of a required value.
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, applied
+  // uniformly with every other generated operation.
+  const resolvedPath = interpolatePath(projectsRestoreOperation.path, args.path);
+  const response = await request<operations["projects_restore"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, {
+    ...args.options,
+    method: projectsRestoreOperation.method,
+  } as Options);
+  return response.data;
+}
+
 export const projectsUpdateOperation = {
   operationId: "projects_update",
   method: "PATCH",

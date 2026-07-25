@@ -89,3 +89,16 @@ async def archive_project(
     project_id: UUID, service: ProjectServiceDependency
 ) -> ProjectResponse:
     return await service.archive_project(project_id)
+
+
+@router.post(
+    "/{project_id}/restore",
+    summary="Restore Project",
+    response_model=ProjectResponse,
+    responses=PROJECT_CONFLICT_RESPONSES,
+    operation_id="projects_restore",
+)
+async def restore_project(
+    project_id: UUID, service: ProjectServiceDependency
+) -> ProjectResponse:
+    return await service.restore_project(project_id)

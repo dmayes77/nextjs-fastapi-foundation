@@ -12,6 +12,7 @@ type ProjectsArchiveOperation = operations["projects_archive"];
 type ProjectsCreateOperation = operations["projects_create"];
 type ProjectsGetOperation = operations["projects_get"];
 type ProjectsListOperation = operations["projects_list"];
+type ProjectsRestoreOperation = operations["projects_restore"];
 type ProjectsUpdateOperation = operations["projects_update"];
 type ReadyOperation = operations["ready_get"];
 
@@ -28,6 +29,7 @@ describe("generated OpenAPI contract", () => {
       ProjectsCreateOperation["responses"],
       ProjectsGetOperation["responses"],
       ProjectsListOperation["responses"],
+      ProjectsRestoreOperation["responses"],
       ProjectsUpdateOperation["responses"],
       ReadyOperation["responses"],
     ] = [
@@ -37,11 +39,12 @@ describe("generated OpenAPI contract", () => {
       {} as ProjectsCreateOperation["responses"],
       {} as ProjectsGetOperation["responses"],
       {} as ProjectsListOperation["responses"],
+      {} as ProjectsRestoreOperation["responses"],
       {} as ProjectsUpdateOperation["responses"],
       {} as ReadyOperation["responses"],
     ];
 
-    expect(operationIds).toHaveLength(8);
+    expect(operationIds).toHaveLength(9);
   });
 
   it("HealthResponse meaningfully constrains the /health payload shape", () => {

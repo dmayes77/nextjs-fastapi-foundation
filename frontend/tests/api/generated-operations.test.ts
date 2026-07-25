@@ -14,6 +14,8 @@ import {
   projectsGet,
   projectsGetOperation,
   projectsListOperation,
+  projectsRestore,
+  projectsRestoreOperation,
   projectsUpdate,
   projectsUpdateOperation,
   readyGetOperation,
@@ -72,6 +74,11 @@ describe("generated API operation metadata", () => {
       operationId: "projects_archive",
       method: "POST",
       path: "/api/v1/projects/{project_id}/archive",
+    });
+    expect(projectsRestoreOperation).toEqual({
+      operationId: "projects_restore",
+      method: "POST",
+      path: "/api/v1/projects/{project_id}/restore",
     });
   });
 });
@@ -286,6 +293,26 @@ describe("projectsGet", () => {
     ).rejects.toThrow('Missing required path parameter: "project_id"');
 
     expect(transport).not.toHaveBeenCalled();
+  });
+});
+
+describe("projectsRestore", () => {
+  it("interpolates the Project path and forces the dedicated POST action", async () => {
+    const transport = mockProjectTransport();
+
+    const result = await projectsRestore(transport, {
+      path: { project_id: "a/b c" },
+      options: { method: "PATCH", requestId: "restore-1" },
+    });
+
+    expect(result).toEqual({ id: "proj-1" });
+    expect(transport).toHaveBeenCalledWith(
+      "/api/v1/projects/a%2Fb%20c/restore",
+      {
+        method: "POST",
+        requestId: "restore-1",
+      },
+    );
   });
 });
 

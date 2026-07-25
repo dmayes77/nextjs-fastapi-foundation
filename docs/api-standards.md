@@ -142,7 +142,10 @@ array.
 Projects may be created as `planned`, `active`, or `completed`. The `archived`
 state is a lifecycle transition and must be reached through
 `POST /api/v1/projects/{project_id}/archive`, not through create or generic
-update requests.
+update requests. Archived projects remain readable and may be returned to the
+editable `planned` state only through
+`POST /api/v1/projects/{project_id}/restore`. Restoring a project that is not
+archived is a `409 Conflict`.
 
 Use:
 

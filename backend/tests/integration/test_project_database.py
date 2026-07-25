@@ -198,12 +198,44 @@ async def test_project_repository_and_service_persist_the_project_lifecycle(
                 ProjectUpdate(description="Persisted", status="active"),
             )
             archived = await service.archive_project(created.id)
+            restored = await service.restore_project(created.id)
 
             assert [project.id for project in listed] == [created.id]
             assert retrieved.id == created.id
             assert updated.description == "Persisted"
             assert updated.status is ProjectStatus.ACTIVE
             assert archived.status is ProjectStatus.ARCHIVED
+            assert restored.status is ProjectStatus.PLANNED
+    finally:
+        await engine.dispose()
+
+
+async def test_repeated_restore_returns_conflict_and_remains_planned(
+    project_schema_at_head: None,
+) -> None:
+    engine = create_async_engine(TEST_DATABASE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    try:
+        async with session_factory() as session:
+            service = ProjectService(ProjectRepository(session))
+            created = await service.create_project(
+                ProjectCreate(name="Repeated restore")
+            )
+            await service.archive_project(created.id)
+
+            restored = await service.restore_project(created.id)
+
+            assert restored.status is ProjectStatus.PLANNED
+
+            with pytest.raises(ConflictError) as exc_info:
+                await service.restore_project(created.id)
+
+            assert exc_info.value.code == "project_not_archived"
+            assert exc_info.value.status_code == 409
+
+            persisted = await service.get_project(created.id)
+            assert persisted.status is ProjectStatus.PLANNED
     finally:
         await engine.dispose()
 

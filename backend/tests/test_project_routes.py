@@ -36,6 +36,7 @@ def project_service(app) -> Mock:
     service.create_project = AsyncMock()
     service.update_project = AsyncMock()
     service.archive_project = AsyncMock()
+    service.restore_project = AsyncMock()
     app.dependency_overrides[get_project_service] = lambda: service
     return service
 
@@ -139,6 +140,17 @@ async def test_archive_project_returns_200(app, client, project_service) -> None
     project_service.archive_project.assert_awaited_once_with(project.id)
 
 
+async def test_restore_project_returns_200(app, client, project_service) -> None:
+    project = project_response(status=ProjectStatus.PLANNED)
+    project_service.restore_project.return_value = project
+
+    response = await client.post(f"/api/v1/projects/{project.id}/restore")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "planned"
+    project_service.restore_project.assert_awaited_once_with(project.id)
+
+
 async def test_missing_project_uses_the_standard_404_envelope(
     app, client, project_service
 ) -> None:
@@ -156,14 +168,21 @@ async def test_missing_project_uses_the_standard_404_envelope(
     assert error["requestId"]
 
 
-@pytest.mark.parametrize("operation", ["update", "archive"])
+@pytest.mark.parametrize("operation", ["update", "archive", "restore"])
 async def test_invalid_lifecycle_action_uses_the_standard_409_envelope(
     operation, app, client, project_service
 ) -> None:
     project_id = uuid4()
+    error_code = (
+        "project_not_archived" if operation == "restore" else "project_archived"
+    )
     conflict = ConflictError(
-        code="project_archived",
-        message="Archived projects cannot be edited.",
+        code=error_code,
+        message=(
+            "Only archived projects can be restored."
+            if operation == "restore"
+            else "Archived projects cannot be edited."
+        ),
     )
     if operation == "update":
         project_service.update_project.side_effect = conflict
@@ -171,13 +190,17 @@ async def test_invalid_lifecycle_action_uses_the_standard_409_envelope(
             f"/api/v1/projects/{project_id}",
             json={"name": "Changed"},
         )
-    else:
+    elif operation == "archive":
         project_service.archive_project.side_effect = conflict
         response = await client.post(f"/api/v1/projects/{project_id}/archive")
+    else:
+        project_service.restore_project.side_effect = conflict
+        response = await client.post(f"/api/v1/projects/{project_id}/restore")
 
     assert response.status_code == 409
     error = response.json()["error"]
-    assert error["code"] == "project_archived"
+    assert error["code"] == error_code
+    assert error["message"] == conflict.message
     assert error["requestId"]
 
 
