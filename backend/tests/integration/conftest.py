@@ -9,13 +9,14 @@ Never targets the development or production database. `TEST_DATABASE_URL`
 defaults to a database whose name makes its purpose obvious
 (`next_fastapi_test`, per docs/testing-standards.md). The database name
 must contain `test` as a complete underscore-delimited segment; all other
-names are rejected before any migration command can run.
+names are rejected before any migration command can run. Query parameters
+that can override the database target are forbidden.
 """
 
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 import pytest
 from alembic import command
@@ -26,6 +27,9 @@ from app.core.config import get_settings
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASELINE_REVISION = "211caf2bc442"
+DATABASE_TARGET_QUERY_PARAMETERS = frozenset(
+    {"database", "dbname", "service", "servicefile"}
+)
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
@@ -39,6 +43,16 @@ def _looks_like_a_test_database(url: str) -> bool:
 
 
 def _validate_test_database_url(url: str) -> str:
+    query_parameter_names = {
+        name.casefold()
+        for name, _ in parse_qsl(urlsplit(url).query, keep_blank_values=True)
+    }
+    if query_parameter_names & DATABASE_TARGET_QUERY_PARAMETERS:
+        raise RuntimeError(
+            "Refusing to run PostgreSQL integration tests: database-target query "
+            "parameters are forbidden."
+        )
+
     if not _looks_like_a_test_database(url):
         raise RuntimeError(
             "Refusing to run PostgreSQL integration tests: the database name must "
@@ -102,9 +116,10 @@ def reset_test_database_to_baseline(config: Config) -> None:
 
 
 def _assert_test_database_is_reachable() -> None:
+    validated_url = _validate_test_database_url(TEST_DATABASE_URL)
     engine = None
     try:
-        engine = create_engine(TEST_DATABASE_URL)
+        engine = create_engine(validated_url)
         with engine.connect():
             pass
     except Exception as exc:

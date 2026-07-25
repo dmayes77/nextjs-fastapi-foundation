@@ -118,6 +118,39 @@ def test_database_safety_guard_accepts_unambiguous_test_names(url: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql+psycopg://user:password@localhost:5432/"
+        "safe_test?sslmode=require&connect_timeout=5",
+        "postgresql://user:password@localhost:5432/"
+        "safe_test?application_name=integration_tests",
+    ],
+)
+def test_database_safety_guard_accepts_harmless_query_parameters(url: str) -> None:
+    assert _validate_test_database_url(url) == url
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql+psycopg://host/safe_test?dbname=production",
+        "postgresql://host/safe_test?database=production",
+        "postgresql+psycopg://host/safe_test?dbname=another_test",
+        "postgresql://host/safe_test?DbNaMe=production",
+        "postgresql+psycopg://host/safe_test?db%6Eame=production",
+        "postgresql://host/safe_test?database=pro%64uction",
+        "postgresql+psycopg://host/safe_test?service=production",
+        "postgresql://host/safe_test?service%66ile=%2Ftmp%2Fpg_service.conf",
+    ],
+)
+def test_database_safety_guard_rejects_database_target_query_overrides(
+    url: str,
+) -> None:
+    with pytest.raises(RuntimeError, match="query parameters are forbidden"):
+        _validate_test_database_url(url)
+
+
+@pytest.mark.parametrize(
     "database_name",
     ["latest", "contest", "attestation", "productiontest"],
 )
@@ -149,6 +182,50 @@ def test_database_safety_error_never_exposes_connection_credentials() -> None:
     assert username not in message
     assert password not in message
     assert url not in message
+
+
+def test_database_target_override_error_never_exposes_connection_details() -> None:
+    username = "sensitive_user"
+    password = "sensitive_password"
+    hostname = "production.database.example.com"
+    url = (
+        f"postgresql+psycopg://{username}:{password}@{hostname}:5432/"
+        "safe_test?dbname=production"
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _validate_test_database_url(url)
+
+    message = str(exc_info.value)
+    assert username not in message
+    assert password not in message
+    assert hostname not in message
+    assert url not in message
+
+
+def test_database_target_override_is_rejected_before_engine_creation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine_created = False
+
+    def track_engine_creation(url: str):
+        nonlocal engine_created
+        engine_created = True
+        raise AssertionError("create_engine must not receive an unsafe URL")
+
+    monkeypatch.setattr(
+        "tests.integration.conftest.TEST_DATABASE_URL",
+        "postgresql+psycopg://host/safe_test?dbname=production",
+    )
+    monkeypatch.setattr(
+        "tests.integration.conftest.create_engine",
+        track_engine_creation,
+    )
+
+    with pytest.raises(RuntimeError, match="query parameters are forbidden"):
+        _assert_test_database_is_reachable()
+
+    assert engine_created is False
 
 
 def test_unreachable_integration_database_fails_instead_of_skipping(

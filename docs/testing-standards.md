@@ -58,7 +58,7 @@ Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
 
-Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. Database-target query parameters (`dbname`, `database`, `service`, and `servicefile`, matched case-insensitively) are forbidden even when their value is another test-named database, because SQLAlchemy or Psycopg may use them instead of the URL path; harmless options such as `sslmode`, `connect_timeout`, and `application_name` remain supported. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
 
 Frontend Unit Tests
 
@@ -187,6 +187,9 @@ next_fastapi_test
 
 Incidental substring matches such as `latest`, `contest`, `attestation`,
 and `productiontest` are not test database names and must be rejected.
+The URL path is the only permitted source of the database name. Query
+parameters named `dbname`, `database`, `service`, or `servicefile` are
+forbidden, matched case-insensitively after URL decoding.
 
 Environment Safety
 

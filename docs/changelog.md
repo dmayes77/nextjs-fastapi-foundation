@@ -37,7 +37,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Isolated the default CORS origins list so `Settings` instances do not share mutable state (`839b61c`).
 - Fixed Next.js Turbopack workspace-root detection for the duplex repository layout.
-- Hardened real-PostgreSQL integration migrations: Alembic receives the validated test URL through both database environment variables, prior values are restored after success or failure, session setup resets any preexisting migration state before establishing the baseline revision, destructive commands require `test` as a complete underscore-delimited database-name segment, and rejected URLs never expose credentials.
+- Hardened real-PostgreSQL integration migrations: Alembic receives the validated test URL through both database environment variables, prior values are restored after success or failure, session setup resets any preexisting migration state before establishing the baseline revision, destructive commands require `test` as a complete underscore-delimited database-name segment, database-target query overrides are forbidden, and rejected URLs never expose credentials.
 - Separated the canonical PostgreSQL-free backend test command from the real-PostgreSQL Alembic suite: `pnpm test:backend` excludes `backend/tests/integration/`, while `pnpm test:backend:integration` runs that suite explicitly and fails rather than reports false-green skips when its database is unreachable.
 - Aligned Backend CI with the canonical PostgreSQL-free pytest selection so the default Actions job cannot discover or execute the real-PostgreSQL integration suite.
 
