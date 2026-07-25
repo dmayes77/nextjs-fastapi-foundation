@@ -7,6 +7,7 @@ from alembic.config import Config
 from app.core.config import get_settings
 from tests.integration.conftest import (
     _assert_test_database_is_reachable,
+    _looks_like_a_test_database,
     _test_database_environment,
     _validate_test_database_url,
     upgrade_test_database,
@@ -99,9 +100,55 @@ def test_previous_database_environment_is_restored_after_failure(
     assert settings.database_migration_url == PREVIOUS_MIGRATION_URL
 
 
-def test_database_safety_guard_rejects_a_non_test_database() -> None:
-    with pytest.raises(RuntimeError, match='name does not contain "test"'):
-        _validate_test_database_url(PREVIOUS_DATABASE_URL)
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql+psycopg://user:password@localhost:5432/next_fastapi_test",
+        "postgresql://user:password@localhost:5432/test?sslmode=require",
+        "postgresql+psycopg://user:password@localhost:5432/test_projects",
+        "postgresql+psycopg://user:password@localhost:5432/projects_test",
+        "postgresql+psycopg://user:password@localhost:5432/next_test_database",
+        "postgresql+psycopg://user:password@localhost:5432/"
+        "next%5Ffastapi%5Ftest?sslmode=require",
+    ],
+)
+def test_database_safety_guard_accepts_unambiguous_test_names(url: str) -> None:
+    assert _looks_like_a_test_database(url) is True
+    assert _validate_test_database_url(url) == url
+
+
+@pytest.mark.parametrize(
+    "database_name",
+    ["latest", "contest", "attestation", "productiontest"],
+)
+def test_database_safety_guard_rejects_incidental_substring_matches(
+    database_name: str,
+) -> None:
+    url = (
+        "postgresql+psycopg://user:password@localhost:5432/"
+        f"{database_name}?sslmode=require"
+    )
+
+    assert _looks_like_a_test_database(url) is False
+    with pytest.raises(RuntimeError, match="underscore-delimited segment"):
+        _validate_test_database_url(url)
+
+
+def test_database_safety_error_never_exposes_connection_credentials() -> None:
+    username = "sensitive_user"
+    password = "sensitive_password"
+    url = (
+        f"postgresql+psycopg://{username}:{password}@database.example.com:5432/"
+        "production?sslmode=require"
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _validate_test_database_url(url)
+
+    message = str(exc_info.value)
+    assert username not in message
+    assert password not in message
+    assert url not in message
 
 
 def test_unreachable_integration_database_fails_instead_of_skipping(

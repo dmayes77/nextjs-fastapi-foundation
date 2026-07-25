@@ -46,7 +46,7 @@ Run the real-PostgreSQL and Alembic integration suite explicitly:
 pnpm test:backend:integration
 ```
 
-This command requires a reachable, dedicated PostgreSQL test database whose name contains `test`. It fails rather than skips when the database cannot be reached.
+This command requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment, such as `test`, `test_projects`, or `next_fastapi_test`. Names where those letters are only incidental, such as `latest` or `productiontest`, are rejected. The command fails rather than skips when the database cannot be reached.
 
 ## Environment Configuration
 

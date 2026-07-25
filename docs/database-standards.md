@@ -428,7 +428,10 @@ Testing Databases
 
 Automated tests must not use the production database.
 
-Use a dedicated test database.
+Use a dedicated test database. Its name must contain `test` as a complete,
+case-insensitive underscore-delimited segment, such as `test`,
+`test_projects`, or `next_fastapi_test`. Incidental substring matches such
+as `latest`, `contest`, or `productiontest` must be rejected.
 
 Test configuration should make accidental production access difficult.
 

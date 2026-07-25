@@ -58,7 +58,7 @@ Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
 
-Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL test database whose name contains `test`. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
 
 Frontend Unit Tests
 
@@ -176,11 +176,17 @@ The project may use:
 
 The chosen strategy must be documented and used consistently.
 
-The test database name should make its purpose obvious.
+The test database name must contain `test` as a complete, case-insensitive
+underscore-delimited segment.
 
-Example:
+Valid examples:
 
+test
+test_projects
 next_fastapi_test
+
+Incidental substring matches such as `latest`, `contest`, `attestation`,
+and `productiontest` are not test database names and must be rejected.
 
 Environment Safety
 

@@ -7,15 +7,15 @@ is unreachable so it cannot report false-green migration coverage.
 
 Never targets the development or production database. `TEST_DATABASE_URL`
 defaults to a database whose name makes its purpose obvious
-(`next_fastapi_test`, per docs/testing-standards.md); a resolved URL whose
-database name does not contain "test" is rejected outright, before any
-migration command can run against it.
+(`next_fastapi_test`, per docs/testing-standards.md). The database name
+must contain `test` as a complete underscore-delimited segment; all other
+names are rejected before any migration command can run.
 """
 
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 import pytest
 from alembic import command
@@ -34,17 +34,16 @@ TEST_DATABASE_URL = os.environ.get(
 
 
 def _looks_like_a_test_database(url: str) -> bool:
-    database_name = urlsplit(url).path.lstrip("/")
-    return "test" in database_name.lower()
+    database_name = unquote(urlsplit(url).path.removeprefix("/"))
+    return "test" in database_name.lower().split("_")
 
 
 def _validate_test_database_url(url: str) -> str:
     if not _looks_like_a_test_database(url):
         raise RuntimeError(
-            "Refusing to run PostgreSQL integration tests against a database whose "
-            f"name does not contain \"test\": {url!r}. Set TEST_DATABASE_URL to a "
-            "dedicated test database, e.g. "
-            "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test."
+            "Refusing to run PostgreSQL integration tests: the database name must "
+            "contain 'test' as a complete underscore-delimited segment, for example "
+            "'test', 'test_projects', or 'next_fastapi_test'."
         )
     return url
 
