@@ -35,6 +35,7 @@ def repository_mock() -> Mock:
     repository = Mock()
     repository.list = AsyncMock()
     repository.get = AsyncMock()
+    repository.get_for_update = AsyncMock()
     repository.create = AsyncMock()
     repository.update = AsyncMock()
     repository.archive = AsyncMock()
@@ -104,7 +105,7 @@ async def test_create_rejects_archived_status_and_does_not_persist() -> None:
 async def test_update_changes_only_explicitly_provided_fields() -> None:
     project = project_record()
     repository = repository_mock()
-    repository.get.return_value = project
+    repository.get_for_update.return_value = project
     service = ProjectService(repository)
 
     response = await service.update_project(
@@ -119,6 +120,8 @@ async def test_update_changes_only_explicitly_provided_fields() -> None:
     repository.update.assert_awaited_once_with(project)
     repository.commit.assert_awaited_once_with()
     repository.refresh.assert_awaited_once_with(project)
+    repository.get_for_update.assert_awaited_once_with(project.id)
+    repository.get.assert_not_awaited()
 
 
 async def test_missing_project_raises_the_standard_not_found_error() -> None:
@@ -135,10 +138,32 @@ async def test_missing_project_raises_the_standard_not_found_error() -> None:
     repository.get.assert_awaited_once_with(project_id)
 
 
+@pytest.mark.parametrize("operation", ["update", "archive"])
+async def test_missing_mutation_target_uses_locked_lookup_and_returns_not_found(
+    operation: str,
+) -> None:
+    repository = repository_mock()
+    repository.get_for_update.return_value = None
+    service = ProjectService(repository)
+    project_id = uuid4()
+
+    with pytest.raises(ResourceNotFoundError) as exc_info:
+        if operation == "update":
+            await service.update_project(project_id, ProjectUpdate(name="Changed"))
+        else:
+            await service.archive_project(project_id)
+
+    assert exc_info.value.code == "project_not_found"
+    assert exc_info.value.status_code == 404
+    repository.get_for_update.assert_awaited_once_with(project_id)
+    repository.get.assert_not_awaited()
+    repository.commit.assert_not_awaited()
+
+
 async def test_archived_project_cannot_be_edited() -> None:
     project = project_record(status="archived")
     repository = repository_mock()
-    repository.get.return_value = project
+    repository.get_for_update.return_value = project
     service = ProjectService(repository)
 
     with pytest.raises(ConflictError) as exc_info:
@@ -148,12 +173,13 @@ async def test_archived_project_cannot_be_edited() -> None:
     assert exc_info.value.status_code == 409
     repository.update.assert_not_awaited()
     repository.commit.assert_not_awaited()
+    repository.get_for_update.assert_awaited_once_with(project.id)
 
 
 async def test_generic_update_cannot_replace_the_archive_action() -> None:
     project = project_record()
     repository = repository_mock()
-    repository.get.return_value = project
+    repository.get_for_update.return_value = project
     service = ProjectService(repository)
 
     with pytest.raises(ConflictError) as exc_info:
@@ -167,7 +193,7 @@ async def test_generic_update_cannot_replace_the_archive_action() -> None:
 async def test_archive_transitions_a_non_archived_project_and_commits() -> None:
     project = project_record(status="completed")
     repository = repository_mock()
-    repository.get.return_value = project
+    repository.get_for_update.return_value = project
     service = ProjectService(repository)
 
     response = await service.archive_project(project.id)
@@ -177,12 +203,14 @@ async def test_archive_transitions_a_non_archived_project_and_commits() -> None:
     repository.archive.assert_awaited_once_with(project)
     repository.commit.assert_awaited_once_with()
     repository.refresh.assert_awaited_once_with(project)
+    repository.get_for_update.assert_awaited_once_with(project.id)
+    repository.get.assert_not_awaited()
 
 
 async def test_archiving_an_already_archived_project_is_a_conflict() -> None:
     project = project_record(status="archived")
     repository = repository_mock()
-    repository.get.return_value = project
+    repository.get_for_update.return_value = project
     service = ProjectService(repository)
 
     with pytest.raises(ConflictError) as exc_info:
@@ -192,3 +220,4 @@ async def test_archiving_an_already_archived_project_is_a_conflict() -> None:
     assert exc_info.value.status_code == 409
     repository.archive.assert_not_awaited()
     repository.commit.assert_not_awaited()
+    repository.get_for_update.assert_awaited_once_with(project.id)

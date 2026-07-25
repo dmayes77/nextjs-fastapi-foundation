@@ -20,6 +20,13 @@ class ProjectRepository:
     async def get(self, project_id: UUID) -> Project | None:
         return await self._session.get(Project, project_id)
 
+    async def get_for_update(self, project_id: UUID) -> Project | None:
+        statement = (
+            select(Project).where(Project.id == project_id).with_for_update()
+        )
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def create(self, project: Project) -> Project:
         self._session.add(project)
         await self._session.flush()

@@ -47,6 +47,17 @@ export function interpolatePath(
   return resolved;
 }
 
+/**
+ * Merges generated request fields after caller options so contract-owned
+ * method and body values cannot be overridden.
+ */
+function mergeRequestOptions<
+  Options extends { method?: string },
+  Overrides extends { method: string },
+>(options: Options | undefined, overrides: Overrides): Options & Overrides {
+  return Object.assign({}, options, overrides);
+}
+
 export const healthGetOperation = {
   operationId: "health_get",
   method: "GET",
@@ -104,6 +115,7 @@ export const projectsCreateOperation = {
 
 export async function projectsCreate<Options extends { method?: string } = { method?: string }>(
   request: ApiTransport<Options>,
+  body: NonNullable<operations["projects_create"]["requestBody"]>["content"]["application/json"],
   options?: Options,
 ): Promise<operations["projects_create"]["responses"]["201"]["content"]["application/json"]> {
   // The caller's own options are spread first, then `method` is always
@@ -111,10 +123,10 @@ export async function projectsCreate<Options extends { method?: string } = { met
   // never override the contract's HTTP method through `options` — applied
   // uniformly for every operation, GET included, so generated metadata and
   // runtime execution can never disagree.
-  const response = await request<operations["projects_create"]["responses"]["201"]["content"]["application/json"]>(projectsCreateOperation.path, {
-    ...options,
+  const response = await request<operations["projects_create"]["responses"]["201"]["content"]["application/json"]>(projectsCreateOperation.path, mergeRequestOptions(options, {
+    body,
     method: projectsCreateOperation.method,
-  } as Options);
+  }));
   return response.data;
 }
 
@@ -177,6 +189,7 @@ export async function projectsUpdate<Options extends { method?: string } = { met
   request: ApiTransport<Options>,
   args: {
     path: NonNullable<operations["projects_update"]["parameters"]["path"]>;
+    body: NonNullable<operations["projects_update"]["requestBody"]>["content"]["application/json"];
     options?: Options;
   },
 ): Promise<operations["projects_update"]["responses"]["200"]["content"]["application/json"]> {
@@ -187,10 +200,10 @@ export async function projectsUpdate<Options extends { method?: string } = { met
   // forced to this operation's declared method afterward, applied
   // uniformly with every other generated operation.
   const resolvedPath = interpolatePath(projectsUpdateOperation.path, args.path);
-  const response = await request<operations["projects_update"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, {
-    ...args.options,
+  const response = await request<operations["projects_update"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, mergeRequestOptions(args.options, {
+    body: args.body,
     method: projectsUpdateOperation.method,
-  } as Options);
+  }));
   return response.data;
 }
 

@@ -32,6 +32,10 @@ interface OpenApiParameter {
 interface OpenApiOperation {
   operationId: string;
   parameters?: OpenApiParameter[];
+  requestBody?: {
+    required?: boolean;
+    content?: Record<string, unknown>;
+  };
   responses: Record<string, unknown>;
 }
 
@@ -111,6 +115,18 @@ function buildStaticFixtureOpenapi(): OpenApiDocument {
   };
 }
 
+function loadRequestBodyFixtureOpenapi(): OpenApiDocument {
+  return JSON.parse(
+    readFileSync(
+      path.resolve(
+        __dirname,
+        "../fixtures/request-body-operation/openapi.json",
+      ),
+      "utf8",
+    ),
+  ) as OpenApiDocument;
+}
+
 describe("toCamelCase", () => {
   it("converts a snake_case operationId to camelCase", () => {
     expect(toCamelCase("project_get")).toBe("projectGet");
@@ -128,7 +144,67 @@ describe("collectOperations: static operations", () => {
       method: "GET",
       path: "/health",
       pathParamNames: [],
+      requestBody: null,
     });
+  });
+});
+
+describe("collectOperations: request bodies", () => {
+  it("records required JSON bodies for static and templated operations", () => {
+    const operations = collectOperations(loadRequestBodyFixtureOpenapi());
+
+    expect(operations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          operationId: "project_create",
+          pathParamNames: [],
+          requestBody: { required: true },
+        }),
+        expect.objectContaining({
+          operationId: "project_update",
+          pathParamNames: ["project_id"],
+          requestBody: { required: true },
+        }),
+      ]),
+    );
+  });
+
+  it("keeps an optional JSON request body optional", () => {
+    const openapi = loadRequestBodyFixtureOpenapi();
+    const requestBody =
+      openapi.paths["/api/v1/projects"].post.requestBody;
+    if (!requestBody) {
+      throw new Error("fixture is missing its request body");
+    }
+    requestBody.required = false;
+
+    const operation = collectOperations(openapi).find(
+      ({ operationId }) => operationId === "project_create",
+    );
+    if (!operation) {
+      throw new Error("fixture is missing project_create");
+    }
+
+    expect(operation.requestBody).toEqual({ required: false });
+    expect(render([operation])).toContain(
+      'body?: NonNullable<operations["project_create"]["requestBody"]>["content"]["application/json"]',
+    );
+  });
+
+  it("rejects request bodies without JSON content", () => {
+    const openapi = loadRequestBodyFixtureOpenapi();
+    const requestBody =
+      openapi.paths["/api/v1/projects"].post.requestBody;
+    if (!requestBody) {
+      throw new Error("fixture is missing its request body");
+    }
+    requestBody.content = {
+      "application/xml": { schema: { type: "string" } },
+    };
+
+    expect(() => collectOperations(openapi)).toThrow(
+      'Cannot generate operation "project_create": its request body has no "application/json" content',
+    );
   });
 });
 
@@ -237,6 +313,23 @@ describe("committed templated-operation fixture", () => {
     const generated = render(collectOperations(buildTemplatedFixtureOpenapi()));
     const committed = readFileSync(
       path.resolve(__dirname, "../fixtures/templated-operation/generated.ts"),
+      "utf8",
+    );
+
+    expect(generated).toBe(committed);
+  });
+});
+
+describe("committed request-body-operation fixture", () => {
+  it("matches generator output for required bodies, typed paths, and bodyless operations", () => {
+    const generated = render(
+      collectOperations(loadRequestBodyFixtureOpenapi()),
+    );
+    const committed = readFileSync(
+      path.resolve(
+        __dirname,
+        "../fixtures/request-body-operation/generated.ts",
+      ),
       "utf8",
     );
 

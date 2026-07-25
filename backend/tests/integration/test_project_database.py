@@ -5,19 +5,30 @@ SQLite (SQLite cannot validate PostgreSQL-specific behavior such as the
 native UUID type or the CHECK constraint's exact rendering).
 """
 
+import asyncio
 from uuid import UUID
 
 import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import ConflictError
 from app.database.base import Base
 from app.database.tables import Project
 from app.repositories.project import ProjectRepository
-from app.schemas.project import ProjectCreate, ProjectStatus, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectResponse,
+    ProjectStatus,
+    ProjectUpdate,
+)
 from app.services.project import ProjectService
 from tests.integration.conftest import (
     BASELINE_REVISION,
@@ -31,6 +42,43 @@ from tests.integration.conftest import (
 
 def _table_exists(engine) -> bool:
     return inspect(engine).has_table("projects")
+
+
+class CommitGateProjectRepository(ProjectRepository):
+    """Hold a mutation lock immediately before commit for concurrency tests."""
+
+    def __init__(
+        self,
+        session: AsyncSession,
+        commit_reached: asyncio.Event,
+        allow_commit: asyncio.Event,
+    ) -> None:
+        super().__init__(session)
+        self._commit_reached = commit_reached
+        self._allow_commit = allow_commit
+
+    async def commit(self) -> None:
+        self._commit_reached.set()
+        await self._allow_commit.wait()
+        await super().commit()
+
+
+async def _wait_until_postgres_reports_blocked(
+    session_factory: async_sessionmaker[AsyncSession],
+    backend_pid: int,
+) -> None:
+    async with asyncio.timeout(5):
+        while True:
+            async with session_factory() as monitor:
+                is_blocked = await monitor.scalar(
+                    text(
+                        "SELECT cardinality(pg_blocking_pids(:backend_pid)) > 0"
+                    ),
+                    {"backend_pid": backend_pid},
+                )
+            if is_blocked:
+                return
+            await asyncio.sleep(0)
 
 
 @pytest.fixture
@@ -156,5 +204,65 @@ async def test_project_repository_and_service_persist_the_project_lifecycle(
             assert updated.description == "Persisted"
             assert updated.status is ProjectStatus.ACTIVE
             assert archived.status is ProjectStatus.ARCHIVED
+    finally:
+        await engine.dispose()
+
+
+async def test_concurrent_archives_serialize_with_one_success_and_one_conflict(
+    project_schema_at_head: None,
+) -> None:
+    engine = create_async_engine(TEST_DATABASE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    try:
+        async with session_factory() as setup_session:
+            created = await ProjectService(
+                ProjectRepository(setup_session)
+            ).create_project(ProjectCreate(name="Concurrent archive"))
+
+        commit_reached = asyncio.Event()
+        allow_commit = asyncio.Event()
+
+        async with (
+            session_factory() as first_session,
+            session_factory() as second_session,
+        ):
+            first_service = ProjectService(
+                CommitGateProjectRepository(
+                    first_session,
+                    commit_reached,
+                    allow_commit,
+                )
+            )
+            second_service = ProjectService(ProjectRepository(second_session))
+            second_backend_pid = await second_session.scalar(
+                text("SELECT pg_backend_pid()")
+            )
+            assert second_backend_pid is not None
+
+            first_archive = asyncio.create_task(
+                first_service.archive_project(created.id)
+            )
+            await asyncio.wait_for(commit_reached.wait(), timeout=5)
+
+            second_archive = asyncio.create_task(
+                second_service.archive_project(created.id)
+            )
+            try:
+                await _wait_until_postgres_reports_blocked(
+                    session_factory,
+                    second_backend_pid,
+                )
+            finally:
+                allow_commit.set()
+
+            first_result = await asyncio.wait_for(first_archive, timeout=5)
+            assert isinstance(first_result, ProjectResponse)
+            assert first_result.status is ProjectStatus.ARCHIVED
+
+            with pytest.raises(ConflictError) as exc_info:
+                await asyncio.wait_for(second_archive, timeout=5)
+            assert exc_info.value.code == "project_already_archived"
+            assert exc_info.value.status_code == 409
     finally:
         await engine.dispose()

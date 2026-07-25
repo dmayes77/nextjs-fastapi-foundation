@@ -5,12 +5,13 @@
  * Unlike openapi-typescript (which infers TypeScript shapes from the schema
  * itself), this script only extracts unambiguous, purely structural
  * metadata directly from the OpenAPI document: each operation's
- * operationId, HTTP method, path, and success status code. It never
- * attempts to independently resolve `$ref`s or guess a response shape —
+ * operationId, HTTP method, path, success status code, and whether a JSON
+ * request body is present and required. It never attempts to independently
+ * resolve `$ref`s or guess request or response shapes —
  * the emitted functions reference openapi-typescript's own generated
  * `operations["<operationId>"]["responses"]["<code>"]["content"]["application/json"]`
- * type via TypeScript indexing, so response-type correctness is always
- * delegated to openapi-typescript, never re-derived here.
+ * type via TypeScript indexing, so request- and response-type correctness
+ * are always delegated to openapi-typescript, never re-derived here.
  *
  * Templated paths (e.g. "/api/v1/projects/{project_id}") work the same
  * way: the required path-parameter type is referenced via
@@ -138,6 +139,22 @@ export function validatePathParameterContract(operationId, placeholderNames, dec
   }
 }
 
+export function collectRequestBody(operation, operationId) {
+  const requestBody = operation.requestBody;
+  if (!requestBody) {
+    return null;
+  }
+
+  if (!requestBody.content || !("application/json" in requestBody.content)) {
+    throw new Error(
+      `Cannot generate operation "${operationId}": its request body has no ` +
+        `"application/json" content, so no request body type can be referenced safely.`,
+    );
+  }
+
+  return { required: requestBody.required === true };
+}
+
 export function collectOperations(openapi) {
   const operations = [];
 
@@ -179,6 +196,7 @@ export function collectOperations(openapi) {
       const placeholderNames = extractPathPlaceholders(requestPath, operationId);
       const declaredPathParams = collectDeclaredPathParameters(operation, operationId);
       validatePathParameterContract(operationId, placeholderNames, declaredPathParams);
+      const requestBody = collectRequestBody(operation, operationId);
 
       operations.push({
         operationId,
@@ -189,6 +207,7 @@ export function collectOperations(openapi) {
         // Sorted so generated output never depends on the source
         // document's own parameter ordering.
         pathParamNames: [...placeholderNames].sort(),
+        requestBody,
       });
     }
   }
@@ -205,12 +224,26 @@ function renderOperation({
   path: requestPath,
   successCode,
   pathParamNames,
+  requestBody,
 }) {
   const responseType =
     `operations["${operationId}"]["responses"]["${successCode}"]` +
     `["content"]["application/json"]`;
+  const requestBodyType = requestBody
+    ? `NonNullable<operations["${operationId}"]["requestBody"]>` +
+      `["content"]["application/json"]`
+    : null;
 
   if (pathParamNames.length === 0) {
+    const bodyParameter = requestBody
+      ? `  body${requestBody.required ? "" : "?"}: ${requestBodyType},\n`
+      : "";
+    const bodyOption = requestBody ? "    body,\n" : "";
+    const requestOptionsStart = requestBody
+      ? "mergeRequestOptions(options, {\n"
+      : "{\n";
+    const requestOptionsEnd = requestBody ? "  })" : "  } as Options";
+
     return `export const ${functionName}Operation = {
   operationId: "${operationId}",
   method: "${method}",
@@ -219,6 +252,7 @@ function renderOperation({
 
 export async function ${functionName}<Options extends { method?: string } = { method?: string }>(
   request: ApiTransport<Options>,
+${bodyParameter}\
   options?: Options,
 ): Promise<${responseType}> {
   // The caller's own options are spread first, then \`method\` is always
@@ -226,15 +260,24 @@ export async function ${functionName}<Options extends { method?: string } = { me
   // never override the contract's HTTP method through \`options\` — applied
   // uniformly for every operation, GET included, so generated metadata and
   // runtime execution can never disagree.
-  const response = await request<${responseType}>(${functionName}Operation.path, {
-    ...options,
+  const response = await request<${responseType}>(${functionName}Operation.path, ${requestOptionsStart}\
+${requestBody ? "" : "    ...options,\n"}\
+${bodyOption}\
     method: ${functionName}Operation.method,
-  } as Options);
+${requestOptionsEnd});
   return response.data;
 }`;
   }
 
   const pathParamsType = `NonNullable<operations["${operationId}"]["parameters"]["path"]>`;
+  const bodyProperty = requestBody
+    ? `    body${requestBody.required ? "" : "?"}: ${requestBodyType};\n`
+    : "";
+  const bodyOption = requestBody ? "    body: args.body,\n" : "";
+  const requestOptionsStart = requestBody
+    ? "mergeRequestOptions(args.options, {\n"
+    : "{\n";
+  const requestOptionsEnd = requestBody ? "  })" : "  } as Options";
 
   return `export const ${functionName}Operation = {
   operationId: "${operationId}",
@@ -246,6 +289,7 @@ export async function ${functionName}<Options extends { method?: string } = { me
   request: ApiTransport<Options>,
   args: {
     path: ${pathParamsType};
+${bodyProperty}\
     options?: Options;
   },
 ): Promise<${responseType}> {
@@ -256,10 +300,11 @@ export async function ${functionName}<Options extends { method?: string } = { me
   // forced to this operation's declared method afterward, applied
   // uniformly with every other generated operation.
   const resolvedPath = interpolatePath(${functionName}Operation.path, args.path);
-  const response = await request<${responseType}>(resolvedPath, {
-    ...args.options,
+  const response = await request<${responseType}>(resolvedPath, ${requestOptionsStart}\
+${requestBody ? "" : "    ...args.options,\n"}\
+${bodyOption}\
     method: ${functionName}Operation.method,
-  } as Options);
+${requestOptionsEnd});
   return response.data;
 }`;
 }
@@ -294,9 +339,27 @@ export function interpolatePath(
 }
 `;
 
+const MERGE_REQUEST_OPTIONS_HELPER = `/**
+ * Merges generated request fields after caller options so contract-owned
+ * method and body values cannot be overridden.
+ */
+function mergeRequestOptions<
+  Options extends { method?: string },
+  Overrides extends { method: string },
+>(options: Options | undefined, overrides: Overrides): Options & Overrides {
+  return Object.assign({}, options, overrides);
+}
+`;
+
 export function render(operations) {
   const body = operations.map(renderOperation).join("\n\n");
   const hasTemplatedOperations = operations.some((op) => op.pathParamNames.length > 0);
+  const hasRequestBodies = operations.some((op) => op.requestBody !== null);
+  const helpers = [
+    hasTemplatedOperations ? INTERPOLATE_PATH_HELPER : null,
+    hasRequestBodies ? MERGE_REQUEST_OPTIONS_HELPER : null,
+  ].filter(Boolean);
+  const helperBlock = helpers.length > 0 ? `\n${helpers.join("\n")}` : "";
 
   return `/**
  * This file was auto-generated by frontend/scripts/generate-api-operations.mjs.
@@ -317,18 +380,21 @@ export type ApiTransport<Options extends { method?: string } = { method?: string
   path: string,
   options?: Options,
 ) => Promise<{ status: number; data: T }>;
-${hasTemplatedOperations ? `\n${INTERPOLATE_PATH_HELPER}` : ""}
+${helperBlock}
 ${body}
 `;
 }
 
 function main() {
-  const openapi = JSON.parse(readFileSync(OPENAPI_PATH, "utf8"));
+  const [inputArgument, outputArgument] = process.argv.slice(2);
+  const inputPath = inputArgument ? path.resolve(inputArgument) : OPENAPI_PATH;
+  const outputPath = outputArgument ? path.resolve(outputArgument) : OUTPUT_PATH;
+  const openapi = JSON.parse(readFileSync(inputPath, "utf8"));
   const operations = collectOperations(openapi);
   const output = render(operations);
 
-  writeFileSync(OUTPUT_PATH, output, "utf8");
-  console.log(`Wrote ${path.relative(process.cwd(), OUTPUT_PATH)} (${operations.length} operations)`);
+  writeFileSync(outputPath, output, "utf8");
+  console.log(`Wrote ${path.relative(process.cwd(), outputPath)} (${operations.length} operations)`);
 }
 
 const isMainModule = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;

@@ -9,10 +9,12 @@ import {
   healthGetOperation,
   interpolatePath,
   projectsArchiveOperation,
+  projectsCreate,
   projectsCreateOperation,
   projectsGet,
   projectsGetOperation,
   projectsListOperation,
+  projectsUpdate,
   projectsUpdateOperation,
   readyGetOperation,
   rootGetOperation,
@@ -25,6 +27,7 @@ import {
 interface TestTransportOptions {
   method?: string;
   headers?: HeadersInit;
+  body?: unknown;
   requestId?: string;
 }
 
@@ -283,5 +286,40 @@ describe("projectsGet", () => {
     ).rejects.toThrow('Missing required path parameter: "project_id"');
 
     expect(transport).not.toHaveBeenCalled();
+  });
+});
+
+describe("generated Project request bodies", () => {
+  it("projectsCreate requires and forwards its typed body", async () => {
+    const transport = mockProjectTransport();
+    const body = { name: "Generated create", status: "active" as const };
+
+    await projectsCreate(transport, body, { requestId: "create-1" });
+
+    expect(transport).toHaveBeenCalledWith("/api/v1/projects", {
+      body,
+      method: "POST",
+      requestId: "create-1",
+    });
+  });
+
+  it("projectsUpdate forwards its typed path, body, and options", async () => {
+    const transport = mockProjectTransport();
+    const body = { description: null };
+
+    await projectsUpdate(transport, {
+      path: { project_id: "a/b c" },
+      body,
+      options: { requestId: "update-1" },
+    });
+
+    expect(transport).toHaveBeenCalledWith(
+      "/api/v1/projects/a%2Fb%20c",
+      {
+        body,
+        method: "PATCH",
+        requestId: "update-1",
+      },
+    );
   });
 });

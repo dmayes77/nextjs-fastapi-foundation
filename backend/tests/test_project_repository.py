@@ -34,6 +34,24 @@ async def test_get_loads_a_project_by_uuid() -> None:
     session.get.assert_awaited_once_with(Project, project_id)
 
 
+async def test_get_for_update_loads_a_project_with_a_row_lock() -> None:
+    project_id = uuid4()
+    project = Project(id=project_id, name="Locked")
+    result = Mock()
+    result.scalar_one_or_none.return_value = project
+    session = Mock()
+    session.execute = AsyncMock(return_value=result)
+    repository = ProjectRepository(session)
+
+    returned = await repository.get_for_update(project_id)
+
+    assert returned is project
+    statement = session.execute.await_args.args[0]
+    assert statement._for_update_arg is not None
+    assert str(statement.whereclause) == "projects.id = :id_1"
+    result.scalar_one_or_none.assert_called_once_with()
+
+
 async def test_create_adds_and_flushes_the_project() -> None:
     project = Project(name="Created")
     session = Mock()

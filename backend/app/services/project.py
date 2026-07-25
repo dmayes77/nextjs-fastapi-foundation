@@ -46,7 +46,7 @@ class ProjectService:
     async def update_project(
         self, project_id: UUID, data: ProjectUpdate
     ) -> ProjectResponse:
-        project = await self._get_project(project_id)
+        project = await self._get_project_for_update(project_id)
         if project.status == ProjectStatus.ARCHIVED.value:
             raise ConflictError(
                 code="project_archived",
@@ -71,7 +71,7 @@ class ProjectService:
         return ProjectResponse.model_validate(project)
 
     async def archive_project(self, project_id: UUID) -> ProjectResponse:
-        project = await self._get_project(project_id)
+        project = await self._get_project_for_update(project_id)
         if project.status == ProjectStatus.ARCHIVED.value:
             raise ConflictError(
                 code="project_already_archived",
@@ -86,6 +86,14 @@ class ProjectService:
 
     async def _get_project(self, project_id: UUID) -> Project:
         project = await self._repository.get(project_id)
+        return self._require_project(project)
+
+    async def _get_project_for_update(self, project_id: UUID) -> Project:
+        project = await self._repository.get_for_update(project_id)
+        return self._require_project(project)
+
+    @staticmethod
+    def _require_project(project: Project | None) -> Project:
         if project is None:
             raise ResourceNotFoundError(
                 code="project_not_found",
