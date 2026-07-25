@@ -134,6 +134,16 @@ Collection Response
 
 Collection endpoints should not return an undocumented raw list once pagination is added.
 
+The initial Project collection is intentionally unpaginated and returns a
+documented `ProjectResponse[]`. When pagination is introduced, it must move
+to the wrapper below rather than adding pagination metadata alongside a raw
+array.
+
+Projects may be created as `planned`, `active`, or `completed`. The `archived`
+state is a lifecycle transition and must be reached through
+`POST /api/v1/projects/{project_id}/archive`, not through create or generic
+update requests.
+
 Use:
 
 {

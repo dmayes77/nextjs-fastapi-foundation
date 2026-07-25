@@ -18,6 +18,35 @@ export type ApiTransport<Options extends { method?: string } = { method?: string
   options?: Options,
 ) => Promise<{ status: number; data: T }>;
 
+/**
+ * Interpolates a templated OpenAPI path (e.g. "/api/v1/projects/{project_id}")
+ * with the given parameter values. Every value is URL-encoded, a missing or
+ * nullish value throws before any request is made, and no unresolved
+ * "{parameter}" placeholder can ever reach the transport.
+ */
+export function interpolatePath(
+  template: string,
+  parameters: Record<string, string | number | boolean | null | undefined>,
+): string {
+  const resolved = template.replace(/\{([^}]+)\}/g, (_match, name: string) => {
+    if (!(name in parameters)) {
+      throw new Error(`Missing required path parameter: "${name}"`);
+    }
+    const value = parameters[name];
+    if (value === undefined || value === null) {
+      throw new Error(`Missing required path parameter: "${name}"`);
+    }
+    return encodeURIComponent(String(value));
+  });
+
+  const unresolved = resolved.match(/\{[^}]*\}/);
+  if (unresolved) {
+    throw new Error(`Unresolved path parameter placeholder: "${unresolved[0]}"`);
+  }
+
+  return resolved;
+}
+
 export const healthGetOperation = {
   operationId: "health_get",
   method: "GET",
@@ -36,6 +65,131 @@ export async function healthGet<Options extends { method?: string } = { method?:
   const response = await request<operations["health_get"]["responses"]["200"]["content"]["application/json"]>(healthGetOperation.path, {
     ...options,
     method: healthGetOperation.method,
+  } as Options);
+  return response.data;
+}
+
+export const projectsArchiveOperation = {
+  operationId: "projects_archive",
+  method: "POST",
+  path: "/api/v1/projects/{project_id}/archive",
+} as const;
+
+export async function projectsArchive<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  args: {
+    path: NonNullable<operations["projects_archive"]["parameters"]["path"]>;
+    options?: Options;
+  },
+): Promise<operations["projects_archive"]["responses"]["200"]["content"]["application/json"]> {
+  // Path parameters are interpolated into the runtime URL before the
+  // request is made, so a caller can never send an unresolved
+  // "{parameter}" placeholder or bypass validation of a required value.
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, applied
+  // uniformly with every other generated operation.
+  const resolvedPath = interpolatePath(projectsArchiveOperation.path, args.path);
+  const response = await request<operations["projects_archive"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, {
+    ...args.options,
+    method: projectsArchiveOperation.method,
+  } as Options);
+  return response.data;
+}
+
+export const projectsCreateOperation = {
+  operationId: "projects_create",
+  method: "POST",
+  path: "/api/v1/projects",
+} as const;
+
+export async function projectsCreate<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  options?: Options,
+): Promise<operations["projects_create"]["responses"]["201"]["content"]["application/json"]> {
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through `options` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<operations["projects_create"]["responses"]["201"]["content"]["application/json"]>(projectsCreateOperation.path, {
+    ...options,
+    method: projectsCreateOperation.method,
+  } as Options);
+  return response.data;
+}
+
+export const projectsGetOperation = {
+  operationId: "projects_get",
+  method: "GET",
+  path: "/api/v1/projects/{project_id}",
+} as const;
+
+export async function projectsGet<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  args: {
+    path: NonNullable<operations["projects_get"]["parameters"]["path"]>;
+    options?: Options;
+  },
+): Promise<operations["projects_get"]["responses"]["200"]["content"]["application/json"]> {
+  // Path parameters are interpolated into the runtime URL before the
+  // request is made, so a caller can never send an unresolved
+  // "{parameter}" placeholder or bypass validation of a required value.
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, applied
+  // uniformly with every other generated operation.
+  const resolvedPath = interpolatePath(projectsGetOperation.path, args.path);
+  const response = await request<operations["projects_get"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, {
+    ...args.options,
+    method: projectsGetOperation.method,
+  } as Options);
+  return response.data;
+}
+
+export const projectsListOperation = {
+  operationId: "projects_list",
+  method: "GET",
+  path: "/api/v1/projects",
+} as const;
+
+export async function projectsList<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  options?: Options,
+): Promise<operations["projects_list"]["responses"]["200"]["content"]["application/json"]> {
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, so a caller can
+  // never override the contract's HTTP method through `options` — applied
+  // uniformly for every operation, GET included, so generated metadata and
+  // runtime execution can never disagree.
+  const response = await request<operations["projects_list"]["responses"]["200"]["content"]["application/json"]>(projectsListOperation.path, {
+    ...options,
+    method: projectsListOperation.method,
+  } as Options);
+  return response.data;
+}
+
+export const projectsUpdateOperation = {
+  operationId: "projects_update",
+  method: "PATCH",
+  path: "/api/v1/projects/{project_id}",
+} as const;
+
+export async function projectsUpdate<Options extends { method?: string } = { method?: string }>(
+  request: ApiTransport<Options>,
+  args: {
+    path: NonNullable<operations["projects_update"]["parameters"]["path"]>;
+    options?: Options;
+  },
+): Promise<operations["projects_update"]["responses"]["200"]["content"]["application/json"]> {
+  // Path parameters are interpolated into the runtime URL before the
+  // request is made, so a caller can never send an unresolved
+  // "{parameter}" placeholder or bypass validation of a required value.
+  // The caller's own options are spread first, then `method` is always
+  // forced to this operation's declared method afterward, applied
+  // uniformly with every other generated operation.
+  const resolvedPath = interpolatePath(projectsUpdateOperation.path, args.path);
+  const response = await request<operations["projects_update"]["responses"]["200"]["content"]["application/json"]>(resolvedPath, {
+    ...args.options,
+    method: projectsUpdateOperation.method,
   } as Options);
   return response.data;
 }

@@ -8,6 +8,11 @@ import type { operations } from "@/lib/api/generated/schema";
 // this constrains the generated contract itself, not just this test file.
 type RootOperation = operations["root_get"];
 type HealthOperation = operations["health_get"];
+type ProjectsArchiveOperation = operations["projects_archive"];
+type ProjectsCreateOperation = operations["projects_create"];
+type ProjectsGetOperation = operations["projects_get"];
+type ProjectsListOperation = operations["projects_list"];
+type ProjectsUpdateOperation = operations["projects_update"];
 type ReadyOperation = operations["ready_get"];
 
 describe("generated OpenAPI contract", () => {
@@ -19,14 +24,24 @@ describe("generated OpenAPI contract", () => {
     const operationIds: [
       RootOperation["responses"],
       HealthOperation["responses"],
+      ProjectsArchiveOperation["responses"],
+      ProjectsCreateOperation["responses"],
+      ProjectsGetOperation["responses"],
+      ProjectsListOperation["responses"],
+      ProjectsUpdateOperation["responses"],
       ReadyOperation["responses"],
     ] = [
       {} as RootOperation["responses"],
       {} as HealthOperation["responses"],
+      {} as ProjectsArchiveOperation["responses"],
+      {} as ProjectsCreateOperation["responses"],
+      {} as ProjectsGetOperation["responses"],
+      {} as ProjectsListOperation["responses"],
+      {} as ProjectsUpdateOperation["responses"],
       {} as ReadyOperation["responses"],
     ];
 
-    expect(operationIds).toHaveLength(3);
+    expect(operationIds).toHaveLength(8);
   });
 
   it("HealthResponse meaningfully constrains the /health payload shape", () => {

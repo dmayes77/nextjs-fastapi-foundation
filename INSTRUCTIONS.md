@@ -1149,6 +1149,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Complete the Step 22 pull-request review cycle before beginning Step 23.**
+> **Complete and commit Step 23 before beginning Step 24.**
 
-Step 20 (PR #13, `feature/step-20-generated-api-client`) and Step 21 (PR #14, `feature/step-21-api-contract-freshness`) are both merged into `main`. Step 22 is committed as `08bfca8` on `feature/step-22-project-model`, the branch is pushed, and PR #16 is open. The original three Codex review findings were resolved in `c5fae59`, the database-baseline follow-up in `c1fff87`, the test-command separation follow-up in `2139384`, the integration reachability follow-up in `9d877f2`, the Backend CI alignment in `7242545`, and the test-name and credential-redaction safety findings in `a2d0d7c`; a database-target query-override finding is being addressed before completing the Step 22 pull-request cycle. Step 23 has not started.
+Step 20 (PR #13), Step 21 (PR #14), and Step 22 (PR #16) are merged into `main`. Step 23 is in progress on `feature/step-23-project-api`, adding the Project repository, schemas, service, routes, tests, and generated API contract. Step 24 has not started.

@@ -85,7 +85,7 @@ SQLAlchemy handles:
 - Relationships
 - Transactions
 
-The database foundation uses SQLAlchemy 2 with the async Psycopg 3 driver: one async engine and one `async_sessionmaker` are created at startup, and a FastAPI dependency yields one `AsyncSession` per request. The dependency never commits automatically; transaction ownership belongs to the service layer. `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names across every future table. `Project` (`backend/app/database/tables/project.py`) is the first domain table, registered through `backend/app/database/tables/__init__.py` — the deliberate registry `backend/migrations/env.py` imports so Alembic sees every table without depending on the application having imported one indirectly. No repository, service, or route exists for it yet; that is a later step.
+The database foundation uses SQLAlchemy 2 with the async Psycopg 3 driver: one async engine and one `async_sessionmaker` are created at startup, and a FastAPI dependency yields one `AsyncSession` per request. The dependency never commits automatically; transaction ownership belongs to the service layer. `Base` uses a deterministic constraint naming convention so indexes, unique constraints, checks, foreign keys, and primary keys get predictable names across every future table. `Project` (`backend/app/database/tables/project.py`) is the first domain table, registered through `backend/app/database/tables/__init__.py` — the deliberate registry `backend/migrations/env.py` imports so Alembic sees every table without depending on the application having imported one indirectly. Its API vertical slice keeps persistence in `app/repositories/project.py`, lifecycle policy and transaction timing in `app/services/project.py`, public validation in `app/schemas/project.py`, and HTTP behavior in `app/api/routes/projects.py`.
 
 Alembic handles:
 
@@ -177,6 +177,7 @@ Backend requests follow this direction:
 
 Route
 → Service
+→ Repository
 → SQLAlchemy session
 → PostgreSQL
 
@@ -198,11 +199,21 @@ Services handle:
 
 - Business rules
 - Application workflows
-- Database operations
 - Transaction boundaries
 - Resource validation
 
 Business logic should not be duplicated across route handlers.
+
+Repositories
+
+Repositories handle only persistence operations:
+
+- Building SQLAlchemy queries
+- Loading and listing table objects
+- Adding and flushing changes
+- Delegating commit and refresh when the service chooses the transaction boundary
+
+Repositories do not raise HTTP exceptions, build response schemas, or decide lifecycle policy. The Project repository is deliberately concrete; no generic base repository is introduced for a single domain.
 
 Database Layer
 
