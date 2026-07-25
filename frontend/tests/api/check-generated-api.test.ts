@@ -151,6 +151,34 @@ describe("generateFreshSchema", () => {
     expect(content).toContain("health_get");
   });
 
+  it("keeps properties with server defaults optional", () => {
+    const openapiPath = writeOpenapiFixture(tempRoot, {
+      ...VALID_OPENAPI_DOCUMENT,
+      components: {
+        schemas: {
+          CreateRequest: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              status: { type: "string", default: "planned" },
+            },
+            required: ["name"],
+          },
+        },
+      },
+    });
+
+    const outputPath = generateFreshSchema(
+      openapiPath,
+      tempRoot,
+      OPENAPI_TYPESCRIPT_BIN,
+    );
+
+    const content = readFileSync(outputPath, "utf8");
+    expect(content).toContain("name: string");
+    expect(content).toContain("status?: string");
+  });
+
   it("throws (via execFileSync) when the OpenAPI document does not exist", () => {
     const missingPath = path.join(tempRoot, "does-not-exist.json");
 

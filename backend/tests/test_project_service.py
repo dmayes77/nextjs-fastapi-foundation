@@ -46,13 +46,17 @@ def repository_mock() -> Mock:
 
 async def test_create_applies_defaults_and_commits_the_repository_work() -> None:
     repository = repository_mock()
+    calls: list[str] = []
 
     async def assign_database_values(project: Project) -> None:
+        calls.append("refresh")
         project.id = uuid4()
         project.created_at = TIMESTAMP
         project.updated_at = TIMESTAMP
 
+    repository.create.side_effect = lambda _project: calls.append("create")
     repository.refresh.side_effect = assign_database_values
+    repository.commit.side_effect = lambda: calls.append("commit")
     service = ProjectService(repository)
 
     response = await service.create_project(ProjectCreate(name="  New project  "))
@@ -64,6 +68,7 @@ async def test_create_applies_defaults_and_commits_the_repository_work() -> None
     assert response.status is ProjectStatus.PLANNED
     repository.commit.assert_awaited_once_with()
     repository.refresh.assert_awaited_once_with(created)
+    assert calls == ["create", "refresh", "commit"]
 
 
 async def test_create_accepts_a_non_archived_status() -> None:
@@ -105,7 +110,13 @@ async def test_create_rejects_archived_status_and_does_not_persist() -> None:
 async def test_update_changes_only_explicitly_provided_fields() -> None:
     project = project_record()
     repository = repository_mock()
-    repository.get_for_update.return_value = project
+    calls: list[str] = []
+    repository.get_for_update.side_effect = lambda _project_id: (
+        calls.append("get_for_update") or project
+    )
+    repository.update.side_effect = lambda _project: calls.append("update")
+    repository.refresh.side_effect = lambda _project: calls.append("refresh")
+    repository.commit.side_effect = lambda: calls.append("commit")
     service = ProjectService(repository)
 
     response = await service.update_project(
@@ -122,6 +133,7 @@ async def test_update_changes_only_explicitly_provided_fields() -> None:
     repository.refresh.assert_awaited_once_with(project)
     repository.get_for_update.assert_awaited_once_with(project.id)
     repository.get.assert_not_awaited()
+    assert calls == ["get_for_update", "update", "refresh", "commit"]
 
 
 async def test_missing_project_raises_the_standard_not_found_error() -> None:
@@ -193,7 +205,13 @@ async def test_generic_update_cannot_replace_the_archive_action() -> None:
 async def test_archive_transitions_a_non_archived_project_and_commits() -> None:
     project = project_record(status="completed")
     repository = repository_mock()
-    repository.get_for_update.return_value = project
+    calls: list[str] = []
+    repository.get_for_update.side_effect = lambda _project_id: (
+        calls.append("get_for_update") or project
+    )
+    repository.archive.side_effect = lambda _project: calls.append("archive")
+    repository.refresh.side_effect = lambda _project: calls.append("refresh")
+    repository.commit.side_effect = lambda: calls.append("commit")
     service = ProjectService(repository)
 
     response = await service.archive_project(project.id)
@@ -205,6 +223,7 @@ async def test_archive_transitions_a_non_archived_project_and_commits() -> None:
     repository.refresh.assert_awaited_once_with(project)
     repository.get_for_update.assert_awaited_once_with(project.id)
     repository.get.assert_not_awaited()
+    assert calls == ["get_for_update", "archive", "refresh", "commit"]
 
 
 async def test_archiving_an_already_archived_project_is_a_conflict() -> None:
@@ -221,3 +240,47 @@ async def test_archiving_an_already_archived_project_is_a_conflict() -> None:
     repository.archive.assert_not_awaited()
     repository.commit.assert_not_awaited()
     repository.get_for_update.assert_awaited_once_with(project.id)
+
+
+@pytest.mark.parametrize("operation", ["create", "update", "archive"])
+async def test_refresh_failure_prevents_a_durable_commit(operation: str) -> None:
+    repository = repository_mock()
+    project = project_record()
+    repository.get_for_update.return_value = project
+    repository.refresh.side_effect = RuntimeError("refresh failed")
+    service = ProjectService(repository)
+
+    with pytest.raises(RuntimeError, match="refresh failed"):
+        if operation == "create":
+            await service.create_project(ProjectCreate(name="Refresh failure"))
+        elif operation == "update":
+            await service.update_project(
+                project.id,
+                ProjectUpdate(description="Changed"),
+            )
+        else:
+            await service.archive_project(project.id)
+
+    repository.refresh.assert_awaited_once()
+    repository.commit.assert_not_awaited()
+
+
+async def test_update_returns_the_response_captured_before_commit() -> None:
+    project = project_record(description="Captured before commit")
+    repository = repository_mock()
+    repository.get_for_update.return_value = project
+
+    async def mutate_after_response_capture() -> None:
+        project.description = "Changed during commit"
+
+    repository.commit.side_effect = mutate_after_response_capture
+    service = ProjectService(repository)
+
+    response = await service.update_project(
+        project.id,
+        ProjectUpdate(status="active"),
+    )
+
+    assert project.description == "Changed during commit"
+    assert response.description == "Captured before commit"
+    repository.commit.assert_awaited_once_with()

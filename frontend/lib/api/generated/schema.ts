@@ -141,7 +141,7 @@ export interface components {
             /** Name */
             name: string;
             /** @default planned */
-            status: components["schemas"]["ProjectStatus"];
+            status?: components["schemas"]["ProjectStatus"];
         };
         /** ProjectResponse */
         ProjectResponse: {

@@ -290,9 +290,9 @@ describe("projectsGet", () => {
 });
 
 describe("generated Project request bodies", () => {
-  it("projectsCreate requires and forwards its typed body", async () => {
+  it("projectsCreate forwards a body that relies on the default status", async () => {
     const transport = mockProjectTransport();
-    const body = { name: "Generated create", status: "active" as const };
+    const body = { name: "New project" };
 
     await projectsCreate(transport, body, { requestId: "create-1" });
 

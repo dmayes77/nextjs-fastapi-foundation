@@ -39,9 +39,10 @@ class ProjectService:
             due_date=data.due_date,
         )
         await self._repository.create(project)
-        await self._repository.commit()
         await self._repository.refresh(project)
-        return ProjectResponse.model_validate(project)
+        response = ProjectResponse.model_validate(project)
+        await self._repository.commit()
+        return response
 
     async def update_project(
         self, project_id: UUID, data: ProjectUpdate
@@ -66,9 +67,10 @@ class ProjectService:
             setattr(project, field, value)
 
         await self._repository.update(project)
-        await self._repository.commit()
         await self._repository.refresh(project)
-        return ProjectResponse.model_validate(project)
+        response = ProjectResponse.model_validate(project)
+        await self._repository.commit()
+        return response
 
     async def archive_project(self, project_id: UUID) -> ProjectResponse:
         project = await self._get_project_for_update(project_id)
@@ -80,9 +82,10 @@ class ProjectService:
 
         project.status = ProjectStatus.ARCHIVED.value
         await self._repository.archive(project)
-        await self._repository.commit()
         await self._repository.refresh(project)
-        return ProjectResponse.model_validate(project)
+        response = ProjectResponse.model_validate(project)
+        await self._repository.commit()
+        return response
 
     async def _get_project(self, project_id: UUID) -> Project:
         project = await self._repository.get(project_id)
