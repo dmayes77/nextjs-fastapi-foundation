@@ -9,8 +9,10 @@ jest.mock("@/lib/api/client", () => ({
   apiRequest: jest.fn(),
 }));
 
+const mockRefresh = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: jest.fn() }),
+  useRouter: () => ({ refresh: mockRefresh }),
 }));
 
 const mockApiRequest = jest.mocked(apiRequest);
@@ -41,6 +43,7 @@ function response<T>(data: T, status = 200) {
 describe("Projects workspace", () => {
   beforeEach(() => {
     mockApiRequest.mockReset();
+    mockRefresh.mockReset();
   });
 
   it("renders project details, optional-field fallbacks, and archived presentation", () => {
@@ -70,7 +73,8 @@ describe("Projects workspace", () => {
     expect(screen.getByRole("button", { name: "Create project" })).toBeInTheDocument();
   });
 
-  it("renders normalized initial-load errors without transport details", () => {
+  it("renders normalized initial-load errors without transport details and retries", async () => {
+    const user = userEvent.setup();
     render(
       <ProjectsWorkspace
         initialProjects={[]}
@@ -85,6 +89,28 @@ describe("Projects workspace", () => {
     expect(screen.getByText("Unable to connect to the server.")).toBeInTheDocument();
     expect(screen.getByText("Request ID: request-safe-123")).toBeInTheDocument();
     expect(screen.queryByText(/traceback|psycopg|database_url/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("reconciles projects returned by a successful server retry", async () => {
+    const { rerender } = render(
+      <ProjectsWorkspace
+        initialProjects={[]}
+        initialError={{
+          message: "Unable to connect to the server.",
+          requestId: "request-safe-123",
+          retryable: true,
+        }}
+      />,
+    );
+
+    rerender(<ProjectsWorkspace initialProjects={[plannedProject]} initialError={null} />);
+
+    expect(await screen.findByText("Foundation launch")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "No projects yet" })).not.toBeInTheDocument();
   });
 
   it("validates a required non-blank name before create submission", async () => {
@@ -103,7 +129,7 @@ describe("Projects workspace", () => {
     const user = userEvent.setup();
     const created = { ...plannedProject, name: "New project" };
     mockApiRequest.mockReturnValueOnce(response(created, 201));
-    render(<ProjectsWorkspace initialProjects={[]} />);
+    const { rerender } = render(<ProjectsWorkspace initialProjects={[]} />);
 
     await user.click(screen.getByRole("button", { name: "New project" }));
     await user.type(screen.getByLabelText("Name"), "  New project  ");
@@ -115,6 +141,12 @@ describe("Projects workspace", () => {
     });
     expect(
       within(await screen.findByLabelText("Project list")).getByText("New project"),
+    ).toBeInTheDocument();
+
+    rerender(<ProjectsWorkspace initialProjects={[]} />);
+
+    expect(
+      within(screen.getByLabelText("Project list")).getByText("New project"),
     ).toBeInTheDocument();
   });
 

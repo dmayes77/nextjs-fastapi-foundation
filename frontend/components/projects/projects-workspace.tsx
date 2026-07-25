@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FolderPlus, Plus } from "lucide-react";
 
 import { ArchiveProjectDialog } from "@/components/projects/archive-project-dialog";
@@ -37,12 +37,37 @@ function replaceProject(projects: ProjectResponse[], updated: ProjectResponse) {
   return projects.map((project) => (project.id === updated.id ? updated : project));
 }
 
+function projectListSnapshot(projects: ProjectResponse[]): string {
+  return JSON.stringify(
+    projects.map((project) => [
+      project.id,
+      project.name,
+      project.description,
+      project.status,
+      project.dueDate,
+      project.createdAt,
+      project.updatedAt,
+    ]),
+  );
+}
+
 export function ProjectsWorkspace({
   initialProjects,
   initialError = null,
 }: ProjectsWorkspaceProps) {
   const [projects, setProjects] = useState(initialProjects);
   const [dialog, setDialog] = useState<DialogState>(null);
+  const incomingProjectSnapshot = projectListSnapshot(initialProjects);
+  const previousProjectSnapshot = useRef(incomingProjectSnapshot);
+
+  useEffect(() => {
+    if (incomingProjectSnapshot === previousProjectSnapshot.current) {
+      return;
+    }
+
+    previousProjectSnapshot.current = incomingProjectSnapshot;
+    setProjects(initialProjects);
+  }, [incomingProjectSnapshot, initialProjects]);
 
   async function createProject(input: ProjectCreate) {
     const created = await projectsCreate(apiRequest, input);

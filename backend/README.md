@@ -10,14 +10,7 @@ A project created with FastAPI CLI.
 uv run fastapi dev
 ```
 
-Keep that process running and visit http://127.0.0.1:8000/docs. Swagger uses
-the relative `/openapi.json` URL and sends API requests back to the same origin
-that served the documentation. `http://localhost:8000/docs` also works, but use
-one hostname consistently when troubleshooting local browser requests.
-
-Swagger's `Failed to fetch` message indicates a browser transport failure, not
-an API 404. First confirm the development server is still running and that
-`curl -i http://127.0.0.1:8000/health` returns an HTTP response.
+Visit http://localhost:8000
 
 ## Environment
 
