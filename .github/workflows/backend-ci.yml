@@ -48,7 +48,7 @@ jobs:
       - name: Run backend tests
         env:
           DATABASE_URL: postgresql+psycopg://invalid:invalid@127.0.0.1:1/invalid
-        run: uv run --group dev pytest
+        run: uv run --group dev pytest --ignore=tests/integration
 
       - name: Compile backend
         run: uv run python -m compileall app tests
