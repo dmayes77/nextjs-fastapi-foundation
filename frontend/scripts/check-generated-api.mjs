@@ -47,9 +47,19 @@ const EXPECTED_FILE_NAMES = ["schema.ts", "operations.ts"];
  */
 export function generateFreshSchema(openapiPath, tempDir, openapiTypescriptBin) {
   const tempSchemaPath = path.join(tempDir, "schema.ts");
-  execFileSync(openapiTypescriptBin, [openapiPath, "-o", tempSchemaPath], {
-    stdio: ["ignore", "ignore", "pipe"],
-  });
+  execFileSync(
+    openapiTypescriptBin,
+    [
+      openapiPath,
+      "--default-non-nullable",
+      "false",
+      "-o",
+      tempSchemaPath,
+    ],
+    {
+      stdio: ["ignore", "ignore", "pipe"],
+    },
+  );
   return tempSchemaPath;
 }
 

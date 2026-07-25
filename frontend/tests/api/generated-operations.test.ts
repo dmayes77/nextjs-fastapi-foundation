@@ -7,22 +7,19 @@
 import {
   healthGet,
   healthGetOperation,
+  interpolatePath,
+  projectsArchiveOperation,
+  projectsCreate,
+  projectsCreateOperation,
+  projectsGet,
+  projectsGetOperation,
+  projectsListOperation,
+  projectsUpdate,
+  projectsUpdateOperation,
   readyGetOperation,
   rootGetOperation,
   type ApiTransport,
 } from "@/lib/api/generated/operations";
-
-// The real OpenAPI contract has no templated path yet (Step 22 hasn't
-// started), so templated-operation runtime behavior is proven against a
-// committed fixture pair that mirrors exactly what the generator would
-// produce for one — see the header comment in
-// tests/fixtures/templated-operation/schema.ts for how it was captured.
-import {
-  interpolatePath,
-  projectGet,
-  projectGetOperation,
-  type ApiTransport as FixtureApiTransport,
-} from "../fixtures/templated-operation/generated";
 
 // Mirrors the shape of `ServerRequestOptions` (`lib/api/server.ts`) without
 // importing it, since a generated operation's transport parameter must work
@@ -30,6 +27,7 @@ import {
 interface TestTransportOptions {
   method?: string;
   headers?: HeadersInit;
+  body?: unknown;
   requestId?: string;
 }
 
@@ -49,6 +47,31 @@ describe("generated API operation metadata", () => {
       operationId: "ready_get",
       method: "GET",
       path: "/ready",
+    });
+    expect(projectsListOperation).toEqual({
+      operationId: "projects_list",
+      method: "GET",
+      path: "/api/v1/projects",
+    });
+    expect(projectsCreateOperation).toEqual({
+      operationId: "projects_create",
+      method: "POST",
+      path: "/api/v1/projects",
+    });
+    expect(projectsGetOperation).toEqual({
+      operationId: "projects_get",
+      method: "GET",
+      path: "/api/v1/projects/{project_id}",
+    });
+    expect(projectsUpdateOperation).toEqual({
+      operationId: "projects_update",
+      method: "PATCH",
+      path: "/api/v1/projects/{project_id}",
+    });
+    expect(projectsArchiveOperation).toEqual({
+      operationId: "projects_archive",
+      method: "POST",
+      path: "/api/v1/projects/{project_id}/archive",
     });
   });
 });
@@ -184,22 +207,22 @@ describe("interpolatePath", () => {
   });
 });
 
-function mockProjectTransport(): jest.MockedFunction<FixtureApiTransport<TestTransportOptions>> {
+function mockProjectTransport(): jest.MockedFunction<ApiTransport<TestTransportOptions>> {
   return jest.fn().mockResolvedValue({ status: 200, data: { id: "proj-1" } });
 }
 
-describe("projectGet (templated operation, via the committed fixture)", () => {
+describe("projectsGet", () => {
   it("is a callable generated function that resolves with the transport's response data", async () => {
     const transport = mockProjectTransport();
 
-    const result = await projectGet(transport, { path: { project_id: "abc-123" } });
+    const result = await projectsGet(transport, { path: { project_id: "abc-123" } });
 
     expect(result).toEqual({ id: "proj-1" });
   });
 
   it("retains the original operation ID, method, and path template in its metadata", () => {
-    expect(projectGetOperation).toEqual({
-      operationId: "project_get",
+    expect(projectsGetOperation).toEqual({
+      operationId: "projects_get",
       method: "GET",
       path: "/api/v1/projects/{project_id}",
     });
@@ -208,7 +231,7 @@ describe("projectGet (templated operation, via the committed fixture)", () => {
   it("interpolates the path parameter into the URL passed to the transport", async () => {
     const transport = mockProjectTransport();
 
-    await projectGet(transport, { path: { project_id: "abc-123" } });
+    await projectsGet(transport, { path: { project_id: "abc-123" } });
 
     const [calledPath] = transport.mock.calls[0];
     expect(calledPath).toBe("/api/v1/projects/abc-123");
@@ -218,7 +241,7 @@ describe("projectGet (templated operation, via the committed fixture)", () => {
   it("forces the generated method to GET even when the caller supplies POST", async () => {
     const transport = mockProjectTransport();
 
-    await projectGet(transport, {
+    await projectsGet(transport, {
       path: { project_id: "abc-123" },
       options: { method: "POST", requestId: "request-456" },
     });
@@ -230,7 +253,7 @@ describe("projectGet (templated operation, via the committed fixture)", () => {
   it("preserves unrelated caller options alongside the forced method", async () => {
     const transport = mockProjectTransport();
 
-    await projectGet(transport, {
+    await projectsGet(transport, {
       path: { project_id: "abc-123" },
       options: { requestId: "request-789", headers: { "X-Test": "1" } },
     });
@@ -247,7 +270,7 @@ describe("projectGet (templated operation, via the committed fixture)", () => {
     const transport = mockProjectTransport();
 
     await expect(
-      projectGet(transport, { path: {} as unknown as { project_id: string } }),
+      projectsGet(transport, { path: {} as unknown as { project_id: string } }),
     ).rejects.toThrow('Missing required path parameter: "project_id"');
 
     expect(transport).not.toHaveBeenCalled();
@@ -257,11 +280,46 @@ describe("projectGet (templated operation, via the committed fixture)", () => {
     const transport = mockProjectTransport();
 
     await expect(
-      projectGet(transport, {
+      projectsGet(transport, {
         path: { project_id: null as unknown as string },
       }),
     ).rejects.toThrow('Missing required path parameter: "project_id"');
 
     expect(transport).not.toHaveBeenCalled();
+  });
+});
+
+describe("generated Project request bodies", () => {
+  it("projectsCreate forwards a body that relies on the default status", async () => {
+    const transport = mockProjectTransport();
+    const body = { name: "New project" };
+
+    await projectsCreate(transport, body, { requestId: "create-1" });
+
+    expect(transport).toHaveBeenCalledWith("/api/v1/projects", {
+      body,
+      method: "POST",
+      requestId: "create-1",
+    });
+  });
+
+  it("projectsUpdate forwards its typed path, body, and options", async () => {
+    const transport = mockProjectTransport();
+    const body = { description: null };
+
+    await projectsUpdate(transport, {
+      path: { project_id: "a/b c" },
+      body,
+      options: { requestId: "update-1" },
+    });
+
+    expect(transport).toHaveBeenCalledWith(
+      "/api/v1/projects/a%2Fb%20c",
+      {
+        body,
+        method: "PATCH",
+        requestId: "update-1",
+      },
+    );
   });
 });

@@ -10,7 +10,16 @@ from fastapi.routing import APIRoute
 from app.main import create_app
 from scripts.export_openapi import OUTPUT_PATH, build_openapi_json, is_up_to_date
 
-EXPECTED_OPERATION_IDS = {"root_get", "health_get", "ready_get"}
+EXPECTED_OPERATION_IDS = {
+    "root_get",
+    "health_get",
+    "ready_get",
+    "projects_list",
+    "projects_get",
+    "projects_create",
+    "projects_update",
+    "projects_archive",
+}
 
 # Methods FastAPI/Starlette add automatically and that a route's own author
 # never explicitly declared.
@@ -103,6 +112,22 @@ def test_export_produces_a_valid_openapi_document():
     assert schema["openapi"].startswith("3.")
     assert "/health" in schema["paths"]
     assert schema["paths"]["/health"]["get"]["operationId"] == "health_get"
+    assert schema["paths"]["/api/v1/projects"]["get"]["operationId"] == "projects_list"
+    assert schema["paths"]["/api/v1/projects"]["post"]["operationId"] == "projects_create"
+    project_path = schema["paths"]["/api/v1/projects/{project_id}"]
+    assert project_path["get"]["operationId"] == "projects_get"
+    assert project_path["patch"]["operationId"] == "projects_update"
+    assert (
+        schema["paths"]["/api/v1/projects/{project_id}/archive"]["post"][
+            "operationId"
+        ]
+        == "projects_archive"
+    )
+    update_properties = schema["components"]["schemas"]["ProjectUpdate"]["properties"]
+    assert update_properties["name"]["type"] == "string"
+    assert update_properties["status"]["$ref"].endswith("/ProjectStatus")
+    assert {"type": "null"} in update_properties["description"]["anyOf"]
+    assert {"type": "null"} in update_properties["dueDate"]["anyOf"]
 
 
 def test_export_is_deterministic_json_formatting():
