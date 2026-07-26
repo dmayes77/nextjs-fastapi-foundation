@@ -38,6 +38,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Restored the local Homebrew PostgreSQL 17 service by safely removing a proven-stale `postmaster.pid` without reinitializing the existing cluster, documented the user-level startup and recovery workflow, and centralized safe `503 database_unavailable` responses for SQLAlchemy operational and pool-acquisition failures while preserving unexpected exceptions as `500`.
 - Isolated the default CORS origins list so `Settings` instances do not share mutable state (`839b61c`).
 - Fixed Next.js Turbopack workspace-root detection for the duplex repository layout.
 - Hardened real-PostgreSQL integration migrations: Alembic receives the validated test URL through both database environment variables, prior values are restored after success or failure, session setup resets any preexisting migration state before establishing the baseline revision, destructive commands require `test` as a complete underscore-delimited database-name segment, database-target query overrides are forbidden, and rejected URLs never expose credentials.

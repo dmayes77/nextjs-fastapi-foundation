@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from pydantic import BaseModel
+from sqlalchemy.exc import OperationalError, TimeoutError as SQLAlchemyTimeoutError
 
 from app.core.exceptions import ResourceNotFoundError
 
@@ -70,3 +71,45 @@ async def test_unexpected_exception_uses_safe_error_envelope(app, client):
     assert error["details"] is None
     assert "private test failure" not in response.text
     assert response.headers.get("x-request-id") == error["requestId"]
+
+
+async def test_database_operational_error_uses_safe_503_envelope(app, client):
+    @app.get("/__test__/database-operational-error")
+    def _raise_database_operational_error():
+        raise OperationalError(
+            "SELECT private_column FROM private_table",
+            {},
+            ConnectionRefusedError(
+                "connection to 127.0.0.1:5432 failed for private-user"
+            ),
+        )
+
+    response = await client.get(
+        "/__test__/database-operational-error",
+        headers={"X-Request-ID": "database-test-503"},
+    )
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error == {
+        "code": "database_unavailable",
+        "message": "The database is temporarily unavailable.",
+        "details": None,
+        "requestId": "database-test-503",
+    }
+    assert response.headers.get("x-request-id") == "database-test-503"
+    assert "private_column" not in response.text
+    assert "127.0.0.1" not in response.text
+    assert "private-user" not in response.text
+
+
+async def test_database_pool_timeout_uses_safe_503_envelope(app, client):
+    @app.get("/__test__/database-pool-timeout")
+    def _raise_database_pool_timeout():
+        raise SQLAlchemyTimeoutError("private pool state")
+
+    response = await client.get("/__test__/database-pool-timeout")
+
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "database_unavailable"
+    assert "private pool state" not in response.text
