@@ -1137,7 +1137,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 21: Add API contract freshness checks
 - [x] Step 22: Build the Project database model and migration
 - [x] Step 23: Add Project repository, schemas, service, and routes
-- [ ] Step 24: Add the Project Management frontend
+- [x] Step 24: Add the Project Management frontend
 - [ ] Step 25: Add Project Management Playwright coverage
 - [ ] Step 26: Add root quality and validation commands
 - [ ] Step 27: Add GitHub Actions
@@ -1151,6 +1151,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Complete and validate Step 24 without beginning Step 25.**
+> **Complete this PostgreSQL and database-outage correction before beginning Step 25.**
 
-Step 20 (PR #13), Step 21 (PR #14), Step 22 (PR #16), and Step 23 (PR #17) are merged into `main`. Step 24 is in progress on `feature/step-24-project-frontend`, adding the Shadcn Admin-inspired application shell and the Project list, create, edit, and archive workflows while preserving the native Next.js App Router and generated API client. The Project API now also exposes a dedicated restore action that returns archived demo records to `planned`; Step 25 has not started.
+Steps 20 through 24 are merged into `main`. Complete and validate the local PostgreSQL startup and database-outage correction on `fix/postgresql-startup-and-db-errors` before beginning Step 25. Step 25 has not started.

@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.exc import OperationalError
 
 from app.api.dependencies import get_project_service
 from app.core.exceptions import ConflictError, ResourceNotFoundError
@@ -59,6 +60,48 @@ async def test_list_projects_returns_200(app, client, project_service) -> None:
             "updatedAt": "2026-07-25T12:00:00Z",
         }
     ]
+    project_service.list_projects.assert_awaited_once_with()
+
+
+async def test_list_projects_returns_an_empty_list(
+    app, client, project_service
+) -> None:
+    project_service.list_projects.return_value = []
+
+    response = await client.get("/api/v1/projects")
+
+    assert response.status_code == 200
+    assert response.json() == []
+    project_service.list_projects.assert_awaited_once_with()
+
+
+async def test_list_projects_returns_safe_503_when_database_is_unavailable(
+    app, client, project_service
+) -> None:
+    project_service.list_projects.side_effect = OperationalError(
+        "SELECT projects.secret FROM projects",
+        {},
+        ConnectionRefusedError(
+            "connection to 127.0.0.1:5432 failed for private-user"
+        ),
+    )
+
+    response = await client.get(
+        "/api/v1/projects",
+        headers={"X-Request-ID": "projects-database-test"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["error"] == {
+        "code": "database_unavailable",
+        "message": "The database is temporarily unavailable.",
+        "details": None,
+        "requestId": "projects-database-test",
+    }
+    assert response.headers.get("x-request-id") == "projects-database-test"
+    assert "projects.secret" not in response.text
+    assert "127.0.0.1" not in response.text
+    assert "private-user" not in response.text
     project_service.list_projects.assert_awaited_once_with()
 
 

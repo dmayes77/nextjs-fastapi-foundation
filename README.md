@@ -32,6 +32,41 @@ pnpm db:history
 
 `db:revision` always runs with `--autogenerate`; pass the message directly (no `--` separator — the underlying script is already a compound shell command, and pnpm forwards trailing arguments to it as-is).
 
+## Local PostgreSQL 17
+
+Start the Homebrew-managed server as your normal macOS user, then verify it before
+running migrations or starting the application:
+
+```bash
+brew services start postgresql@17
+brew services list
+pg_isready -h localhost -p 5432
+pnpm db:upgrade
+pnpm db:current
+```
+
+PostgreSQL must never be started as root or through `sudo brew services`.
+On Apple Silicon Homebrew, the default PostgreSQL 17 cluster is
+`/opt/homebrew/var/postgresql@17`. Never run `initdb` over that directory when it
+already contains `PG_VERSION` or user data.
+
+If the service fails, inspect its status and log before changing anything:
+
+```bash
+launchctl print gui/$(id -u)/homebrew.mxcl.postgresql@17
+tail -n 200 /opt/homebrew/var/log/postgresql@17.log
+```
+
+A stale `postmaster.pid` may be removed only after both `pg_ctl status` and the
+host process/port state prove that no PostgreSQL server is using the cluster.
+Stop the Homebrew service before removing a proven-stale lock, then restart it
+normally. Do not delete or reinitialize the data directory as a recovery shortcut.
+
+When PostgreSQL is temporarily unreachable, `/ready` and database-backed API
+operations return `503 Service Unavailable` using the standard safe
+`database_unavailable` error envelope and request ID. `/health` remains a
+process-only liveness check.
+
 ## Backend Tests
 
 ```bash

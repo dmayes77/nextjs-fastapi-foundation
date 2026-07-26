@@ -360,6 +360,23 @@ pnpm db:history
 
 db:revision always runs with --autogenerate; pass the message directly (no -- separator).
 
+Local PostgreSQL 17 is managed as the current macOS user with
+brew services start postgresql@17. Never use sudo brew services or run the server
+as root. Verify readiness with pg_isready -h localhost -p 5432 before applying
+migrations. On Apple Silicon Homebrew, the validated default cluster path is
+/opt/homebrew/var/postgresql@17.
+
+When startup fails, inspect brew services list, the user LaunchAgent, and
+/opt/homebrew/var/log/postgresql@17.log before making changes. Never run initdb
+over a directory containing an existing cluster. Remove postmaster.pid only after
+pg_ctl status, the host process table, and port ownership prove that no PostgreSQL
+server is using the cluster.
+
+Expected SQLAlchemy operational failures and connection-pool acquisition
+timeouts are translated centrally into a safe 503 database_unavailable response.
+Constraint violations, lifecycle errors, validation failures, and unexpected
+programming errors retain their own error behavior.
+
 The baseline migration is intentionally empty and contains no domain schema. It exists only to establish migration history before the first domain table is added.
 
 Migration Review

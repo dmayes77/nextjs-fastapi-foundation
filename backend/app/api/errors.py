@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, TimeoutError as SQLAlchemyTimeoutError
 
 from app.core.exceptions import AppException
 from app.core.request_context import REQUEST_ID_HEADER, get_request_id, set_request_id
@@ -97,6 +98,23 @@ async def validation_exception_handler(
     )
 
 
+async def database_unavailable_exception_handler(
+    request: Request, _exc: OperationalError | SQLAlchemyTimeoutError
+) -> JSONResponse:
+    logger.warning(
+        "database unavailable method=%s path=%s",
+        request.method,
+        request.url.path,
+    )
+    return _error_response(
+        request=request,
+        code="database_unavailable",
+        message="The database is temporarily unavailable.",
+        details=None,
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
+
+
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     # Restore the request ID into context so the log line below is
     # correlated correctly; the middleware already reset it by this point.
@@ -115,4 +133,8 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppException, app_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(OperationalError, database_unavailable_exception_handler)
+    app.add_exception_handler(
+        SQLAlchemyTimeoutError, database_unavailable_exception_handler
+    )
     app.add_exception_handler(Exception, unhandled_exception_handler)
