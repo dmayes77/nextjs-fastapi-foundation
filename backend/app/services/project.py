@@ -87,6 +87,21 @@ class ProjectService:
         await self._repository.commit()
         return response
 
+    async def restore_project(self, project_id: UUID) -> ProjectResponse:
+        project = await self._get_project_for_update(project_id)
+        if project.status != ProjectStatus.ARCHIVED.value:
+            raise ConflictError(
+                code="project_not_archived",
+                message="Only archived projects can be restored.",
+            )
+
+        project.status = ProjectStatus.PLANNED.value
+        await self._repository.restore(project)
+        await self._repository.refresh(project)
+        response = ProjectResponse.model_validate(project)
+        await self._repository.commit()
+        return response
+
     async def _get_project(self, project_id: UUID) -> Project:
         project = await self._repository.get(project_id)
         return self._require_project(project)

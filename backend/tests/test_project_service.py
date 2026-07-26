@@ -39,6 +39,7 @@ def repository_mock() -> Mock:
     repository.create = AsyncMock()
     repository.update = AsyncMock()
     repository.archive = AsyncMock()
+    repository.restore = AsyncMock()
     repository.commit = AsyncMock()
     repository.refresh = AsyncMock()
     return repository
@@ -150,7 +151,7 @@ async def test_missing_project_raises_the_standard_not_found_error() -> None:
     repository.get.assert_awaited_once_with(project_id)
 
 
-@pytest.mark.parametrize("operation", ["update", "archive"])
+@pytest.mark.parametrize("operation", ["update", "archive", "restore"])
 async def test_missing_mutation_target_uses_locked_lookup_and_returns_not_found(
     operation: str,
 ) -> None:
@@ -162,8 +163,10 @@ async def test_missing_mutation_target_uses_locked_lookup_and_returns_not_found(
     with pytest.raises(ResourceNotFoundError) as exc_info:
         if operation == "update":
             await service.update_project(project_id, ProjectUpdate(name="Changed"))
-        else:
+        elif operation == "archive":
             await service.archive_project(project_id)
+        else:
+            await service.restore_project(project_id)
 
     assert exc_info.value.code == "project_not_found"
     assert exc_info.value.status_code == 404
@@ -242,10 +245,52 @@ async def test_archiving_an_already_archived_project_is_a_conflict() -> None:
     repository.get_for_update.assert_awaited_once_with(project.id)
 
 
-@pytest.mark.parametrize("operation", ["create", "update", "archive"])
+async def test_restore_transitions_an_archived_project_to_planned_and_commits() -> None:
+    project = project_record(status="archived")
+    repository = repository_mock()
+    calls: list[str] = []
+    repository.get_for_update.side_effect = lambda _project_id: (
+        calls.append("get_for_update") or project
+    )
+    repository.restore.side_effect = lambda _project: calls.append("restore")
+    repository.refresh.side_effect = lambda _project: calls.append("refresh")
+    repository.commit.side_effect = lambda: calls.append("commit")
+    service = ProjectService(repository)
+
+    response = await service.restore_project(project.id)
+
+    assert project.status == "planned"
+    assert response.status is ProjectStatus.PLANNED
+    repository.restore.assert_awaited_once_with(project)
+    repository.commit.assert_awaited_once_with()
+    repository.refresh.assert_awaited_once_with(project)
+    repository.get_for_update.assert_awaited_once_with(project.id)
+    repository.get.assert_not_awaited()
+    assert calls == ["get_for_update", "restore", "refresh", "commit"]
+
+
+async def test_restoring_a_non_archived_project_is_a_conflict() -> None:
+    project = project_record(status="active")
+    repository = repository_mock()
+    repository.get_for_update.return_value = project
+    service = ProjectService(repository)
+
+    with pytest.raises(ConflictError) as exc_info:
+        await service.restore_project(project.id)
+
+    assert exc_info.value.code == "project_not_archived"
+    assert exc_info.value.status_code == 409
+    repository.restore.assert_not_awaited()
+    repository.commit.assert_not_awaited()
+    repository.get_for_update.assert_awaited_once_with(project.id)
+
+
+@pytest.mark.parametrize("operation", ["create", "update", "archive", "restore"])
 async def test_refresh_failure_prevents_a_durable_commit(operation: str) -> None:
     repository = repository_mock()
-    project = project_record()
+    project = project_record(
+        status="archived" if operation == "restore" else "planned"
+    )
     repository.get_for_update.return_value = project
     repository.refresh.side_effect = RuntimeError("refresh failed")
     service = ProjectService(repository)
@@ -258,8 +303,10 @@ async def test_refresh_failure_prevents_a_durable_commit(operation: str) -> None
                 project.id,
                 ProjectUpdate(description="Changed"),
             )
-        else:
+        elif operation == "archive":
             await service.archive_project(project.id)
+        else:
+            await service.restore_project(project.id)
 
     repository.refresh.assert_awaited_once()
     repository.commit.assert_not_awaited()

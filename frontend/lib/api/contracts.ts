@@ -1,5 +1,12 @@
 import type { components } from "./generated/schema";
-import { healthGet } from "./generated/operations";
+import {
+  healthGet,
+  projectsArchive,
+  projectsCreate,
+  projectsGet,
+  projectsList,
+  projectsUpdate,
+} from "./generated/operations";
 
 /**
  * Stable, named re-exports of generated FastAPI response contracts.
@@ -13,5 +20,16 @@ import { healthGet } from "./generated/operations";
  */
 export type HealthResponse = components["schemas"]["HealthResponse"];
 export type ReadyResponse = components["schemas"]["ReadyResponse"];
+export type ProjectCreate = components["schemas"]["ProjectCreate"];
+export type ProjectResponse = components["schemas"]["ProjectResponse"];
+export type ProjectStatus = components["schemas"]["ProjectStatus"];
+export type ProjectUpdate = components["schemas"]["ProjectUpdate"];
 
-export { healthGet };
+export {
+  healthGet,
+  projectsArchive,
+  projectsCreate,
+  projectsGet,
+  projectsList,
+  projectsUpdate,
+};

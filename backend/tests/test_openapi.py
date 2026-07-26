@@ -19,6 +19,7 @@ EXPECTED_OPERATION_IDS = {
     "projects_create",
     "projects_update",
     "projects_archive",
+    "projects_restore",
 }
 
 # Methods FastAPI/Starlette add automatically and that a route's own author
@@ -110,6 +111,7 @@ def test_export_produces_a_valid_openapi_document():
     schema = json.loads(build_openapi_json())
 
     assert schema["openapi"].startswith("3.")
+    assert "servers" not in schema
     assert "/health" in schema["paths"]
     assert schema["paths"]["/health"]["get"]["operationId"] == "health_get"
     assert schema["paths"]["/api/v1/projects"]["get"]["operationId"] == "projects_list"
@@ -123,11 +125,29 @@ def test_export_produces_a_valid_openapi_document():
         ]
         == "projects_archive"
     )
+    assert (
+        schema["paths"]["/api/v1/projects/{project_id}/restore"]["post"][
+            "operationId"
+        ]
+        == "projects_restore"
+    )
     update_properties = schema["components"]["schemas"]["ProjectUpdate"]["properties"]
     assert update_properties["name"]["type"] == "string"
     assert update_properties["status"]["$ref"].endswith("/ProjectStatus")
     assert {"type": "null"} in update_properties["description"]["anyOf"]
     assert {"type": "null"} in update_properties["dueDate"]["anyOf"]
+
+
+async def test_swagger_uses_relative_same_origin_openapi_url(app, client):
+    assert app.docs_url == "/docs"
+    assert app.openapi_url == "/openapi.json"
+
+    response = await client.get("/docs")
+
+    assert response.status_code == 200
+    assert "url: '/openapi.json'" in response.text
+    assert "http://127.0.0.1:8000/openapi.json" not in response.text
+    assert "http://localhost:8000/openapi.json" not in response.text
 
 
 def test_export_is_deterministic_json_formatting():

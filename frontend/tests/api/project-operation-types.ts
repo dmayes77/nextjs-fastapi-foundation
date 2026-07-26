@@ -5,6 +5,7 @@
  */
 import {
   projectsCreate,
+  projectsRestore,
   projectsUpdate,
   type ApiTransport,
 } from "@/lib/api/generated/operations";
@@ -49,3 +50,11 @@ void projectsUpdate(transport, {
 void projectsUpdate(transport, {
   path: { project_id: "project-1" },
 });
+
+// The restore operation requires its generated UUID path contract and no body.
+void projectsRestore(transport, {
+  path: { project_id: "project-1" },
+});
+
+// @ts-expect-error projectsRestore requires its typed path argument.
+void projectsRestore(transport);

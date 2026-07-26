@@ -40,6 +40,10 @@ class ProjectRepository:
         await self._session.flush()
         return project
 
+    async def restore(self, project: Project) -> Project:
+        await self._session.flush()
+        return project
+
     async def commit(self) -> None:
         await self._session.commit()
 
