@@ -70,6 +70,9 @@ def test_normalization_preserves_permitted_query_parameters() -> None:
         "postgresql+psycopg://postgres:secret@localhost:5432/next%ZZtest",
         f"{SAFE_URL}?dbname=production",
         f"{SAFE_URL}?database=production",
+        f"{SAFE_URL}?host=production.example.com",
+        f"{SAFE_URL}?hostaddr=203.0.113.10",
+        f"{SAFE_URL}?port=6432",
         f"{SAFE_URL}?service=production",
         f"{SAFE_URL}?servicefile=/tmp/pg_service.conf",
     ],
@@ -92,6 +95,22 @@ def test_normalization_error_never_exposes_credentials() -> None:
         normalize_test_database_url(unsafe_url)
     assert password not in str(exc_info.value)
     assert unsafe_url not in str(exc_info.value)
+
+
+def test_server_target_override_error_never_exposes_connection_details() -> None:
+    password = "server_override_secret"
+    override_host = "production.database.example.com"
+    unsafe_url = (
+        f"postgresql://sensitive_user:{password}@localhost:5432/safe_test"
+        f"?host={override_host}"
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        normalize_test_database_url(unsafe_url)
+    message = str(exc_info.value)
+    assert password not in message
+    assert override_host not in message
+    assert unsafe_url not in message
 
 
 def _operational_error(sqlstate: str | None) -> OperationalError:
@@ -333,6 +352,23 @@ def test_unsafe_cleanup_fails_before_database_access(
             "postgresql+psycopg://postgres:secret@localhost:5432/production"
         )
     assert accessed is False
+
+
+def test_server_target_override_fails_before_engine_creation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine_created = False
+
+    def track_engine_creation(url: str):
+        nonlocal engine_created
+        engine_created = True
+        raise AssertionError("create_engine must not receive an unsafe URL")
+
+    monkeypatch.setattr(e2e_database, "create_engine", track_engine_creation)
+
+    with pytest.raises(RuntimeError, match="query parameters are forbidden"):
+        e2e_database.cleanup(f"{SAFE_URL}?host=production.example.com")
+    assert engine_created is False
 
 
 def test_errors_do_not_expose_credentials(

@@ -11,8 +11,16 @@ from sqlalchemy.exc import ArgumentError
 
 from app.core.config import get_settings
 
-DATABASE_TARGET_QUERY_PARAMETERS = frozenset(
-    {"database", "dbname", "service", "servicefile"}
+CONNECTION_TARGET_QUERY_PARAMETERS = frozenset(
+    {
+        "database",
+        "dbname",
+        "host",
+        "hostaddr",
+        "port",
+        "service",
+        "servicefile",
+    }
 )
 POSTGRESQL_DRIVERS = frozenset({"postgresql", "postgresql+psycopg"})
 
@@ -37,9 +45,9 @@ def parse_test_database_url(url: str) -> URL:
             "Refusing to use the test database: the database URL is malformed."
         ) from exc
 
-    if query_parameter_names & DATABASE_TARGET_QUERY_PARAMETERS:
+    if query_parameter_names & CONNECTION_TARGET_QUERY_PARAMETERS:
         raise RuntimeError(
-            "Refusing to use the test database: database-target query parameters "
+            "Refusing to use the test database: connection-target query parameters "
             "are forbidden."
         )
 

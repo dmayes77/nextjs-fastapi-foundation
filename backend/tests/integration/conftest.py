@@ -21,17 +21,19 @@ from alembic.config import Config
 from sqlalchemy import create_engine
 
 from scripts.database_safety import (
-    DATABASE_TARGET_QUERY_PARAMETERS,
     looks_like_a_test_database,
+    normalize_test_database_url,
     test_database_environment,
     validate_test_database_url,
 )
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASELINE_REVISION = "211caf2bc442"
-TEST_DATABASE_URL = os.environ.get(
-    "TEST_DATABASE_URL",
-    "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test",
+TEST_DATABASE_URL = normalize_test_database_url(
+    os.environ.get(
+        "TEST_DATABASE_URL",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test",
+    )
 )
 
 
@@ -64,7 +66,7 @@ def reset_test_database_to_baseline(config: Config) -> None:
 
 
 def _assert_test_database_is_reachable() -> None:
-    validated_url = _validate_test_database_url(TEST_DATABASE_URL)
+    validated_url = normalize_test_database_url(TEST_DATABASE_URL)
     engine = None
     try:
         engine = create_engine(validated_url)

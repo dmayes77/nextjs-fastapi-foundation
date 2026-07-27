@@ -144,6 +144,12 @@ def test_database_safety_guard_accepts_harmless_query_parameters(url: str) -> No
         "postgresql://host/safe_test?database=pro%64uction",
         "postgresql+psycopg://host/safe_test?service=production",
         "postgresql://host/safe_test?service%66ile=%2Ftmp%2Fpg_service.conf",
+        "postgresql+psycopg://user:password@localhost:5432/"
+        "safe_test?host=production.example.com",
+        "postgresql://user:password@localhost:5432/"
+        "safe_test?HOSTADDR=203.0.113.10",
+        "postgresql+psycopg://user:password@localhost:5432/"
+        "safe_test?po%72t=6432",
     ],
 )
 def test_database_safety_guard_rejects_database_target_query_overrides(
@@ -229,6 +235,48 @@ def test_database_target_override_is_rejected_before_engine_creation(
         _assert_test_database_is_reachable()
 
     assert engine_created is False
+
+
+def test_plain_integration_url_is_normalized_before_engine_creation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    received_urls: list[str] = []
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback) -> None:
+            pass
+
+    class Engine:
+        disposed = False
+
+        def connect(self) -> Connection:
+            return Connection()
+
+        def dispose(self) -> None:
+            self.disposed = True
+
+    engine = Engine()
+
+    def capture_engine(url: str) -> Engine:
+        received_urls.append(url)
+        return engine
+
+    monkeypatch.setattr(
+        "tests.integration.conftest.TEST_DATABASE_URL",
+        TEST_URL,
+    )
+    monkeypatch.setattr(
+        "tests.integration.conftest.create_engine",
+        capture_engine,
+    )
+
+    _assert_test_database_is_reachable()
+
+    assert received_urls == [CANONICAL_TEST_URL]
+    assert engine.disposed is True
 
 
 def test_unreachable_integration_database_fails_instead_of_skipping(
