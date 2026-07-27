@@ -3,13 +3,21 @@ import os
 
 import pytest
 from alembic.config import Config
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import OperationalError
 
 from scripts import e2e_database
-from scripts.database_safety import validate_test_database_url
+from scripts.database_safety import (
+    normalize_test_database_url,
+    validate_test_database_url,
+)
 
 SAFE_URL = (
     "postgresql+psycopg://postgres:secret@localhost:5432/"
+    "next_fastapi_e2e_test"
+)
+PLAIN_URL = (
+    "postgresql://postgres:secret@localhost:5432/"
     "next_fastapi_e2e_test"
 )
 
@@ -23,6 +31,30 @@ SAFE_URL = (
 )
 def test_safe_database_urls_are_accepted(url: str) -> None:
     assert validate_test_database_url(url) == url
+
+
+def test_plain_postgresql_url_is_normalized_to_psycopg_3() -> None:
+    normalized = normalize_test_database_url(PLAIN_URL)
+    original = make_url(PLAIN_URL)
+    canonical = make_url(normalized)
+
+    assert canonical.drivername == "postgresql+psycopg"
+    assert canonical.username == original.username
+    assert canonical.password == original.password
+    assert canonical.host == original.host
+    assert canonical.port == original.port
+    assert canonical.database == original.database
+
+
+def test_explicit_psycopg_3_url_remains_unchanged() -> None:
+    assert normalize_test_database_url(SAFE_URL) == SAFE_URL
+
+
+def test_normalization_preserves_permitted_query_parameters() -> None:
+    plain_url = f"{PLAIN_URL}?sslmode=require&application_name=playwright"
+    normalized = normalize_test_database_url(plain_url)
+
+    assert make_url(normalized).query == make_url(plain_url).query
 
 
 @pytest.mark.parametrize(
@@ -45,6 +77,21 @@ def test_safe_database_urls_are_accepted(url: str) -> None:
 def test_unsafe_or_malformed_database_urls_are_rejected(url: str) -> None:
     with pytest.raises(RuntimeError):
         validate_test_database_url(url)
+    with pytest.raises(RuntimeError):
+        normalize_test_database_url(url)
+
+
+def test_normalization_error_never_exposes_credentials() -> None:
+    password = "normalization_secret"
+    unsafe_url = (
+        f"postgresql://sensitive_user:{password}@localhost:5432/production"
+        "?sslmode=require"
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        normalize_test_database_url(unsafe_url)
+    assert password not in str(exc_info.value)
+    assert unsafe_url not in str(exc_info.value)
 
 
 def _operational_error(sqlstate: str | None) -> OperationalError:
@@ -100,23 +147,86 @@ def test_non_missing_connection_failure_never_attempts_creation(
     assert created is False
 
 
+def test_target_connectivity_receives_the_canonical_psycopg_3_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    targets: list[str] = []
+    monkeypatch.setattr(
+        e2e_database,
+        "_connect_to_target",
+        lambda url: targets.append(url),
+    )
+
+    e2e_database.ensure_database_exists(PLAIN_URL)
+    assert targets == [normalize_test_database_url(PLAIN_URL)]
+
+
 def test_missing_database_creates_only_the_validated_target(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     created_database = None
+    created_driver = None
 
     def fail_connection(database_url: str) -> None:
         raise _operational_error("3D000")
 
     def capture_creation(target) -> None:
-        nonlocal created_database
+        nonlocal created_database, created_driver
         created_database = target.database
+        created_driver = target.drivername
 
     monkeypatch.setattr(e2e_database, "_connect_to_target", fail_connection)
     monkeypatch.setattr(e2e_database, "_create_target_database", capture_creation)
 
-    e2e_database.ensure_database_exists(SAFE_URL)
+    e2e_database.ensure_database_exists(PLAIN_URL)
     assert created_database == "next_fastapi_e2e_test"
+    assert created_driver == "postgresql+psycopg"
+
+
+def test_database_creation_derives_same_server_admin_url_from_canonical_target(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection_urls: list[str] = []
+
+    class Cursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback) -> None:
+            pass
+
+        def execute(self, statement) -> None:
+            pass
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback) -> None:
+            pass
+
+        def cursor(self) -> Cursor:
+            return Cursor()
+
+    def capture_connection(connection_url: str, *, autocommit: bool) -> Connection:
+        assert autocommit is True
+        connection_urls.append(connection_url)
+        return Connection()
+
+    monkeypatch.setattr(e2e_database.psycopg, "connect", capture_connection)
+    canonical_target = make_url(f"{SAFE_URL}?sslmode=require")
+
+    e2e_database._create_target_database(canonical_target)
+
+    admin_target = make_url(connection_urls[0])
+    assert canonical_target.drivername == "postgresql+psycopg"
+    assert admin_target.drivername == "postgresql"
+    assert admin_target.username == canonical_target.username
+    assert admin_target.password == canonical_target.password
+    assert admin_target.host == canonical_target.host
+    assert admin_target.port == canonical_target.port
+    assert admin_target.database == "postgres"
+    assert admin_target.query == canonical_target.query
 
 
 def test_prepare_uses_exact_url_for_runtime_and_migrations(
@@ -142,7 +252,7 @@ def test_prepare_uses_exact_url_for_runtime_and_migrations(
         lambda url: "expected-head",
     )
 
-    e2e_database.prepare(SAFE_URL)
+    e2e_database.prepare(PLAIN_URL)
     assert observed == {"runtime": SAFE_URL, "migration": SAFE_URL}
 
 
@@ -156,8 +266,51 @@ def test_cleanup_uses_only_the_exact_validated_target(
         lambda url: targets.append(url),
     )
 
-    e2e_database.cleanup(SAFE_URL)
+    e2e_database.cleanup(PLAIN_URL)
     assert targets == [SAFE_URL]
+
+
+def test_sqlalchemy_engines_always_receive_the_canonical_psycopg_3_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine_urls: list[str] = []
+
+    class ScalarResult:
+        def scalar_one_or_none(self) -> str:
+            return "expected-head"
+
+    class Connection:
+        def execute(self, statement):
+            return ScalarResult()
+
+    class Context:
+        def __enter__(self) -> Connection:
+            return Connection()
+
+        def __exit__(self, exc_type, exc, traceback) -> None:
+            pass
+
+    class Engine:
+        def connect(self) -> Context:
+            return Context()
+
+        def begin(self) -> Context:
+            return Context()
+
+        def dispose(self) -> None:
+            pass
+
+    def capture_engine(database_url: str) -> Engine:
+        engine_urls.append(database_url)
+        return Engine()
+
+    monkeypatch.setattr(e2e_database, "create_engine", capture_engine)
+
+    e2e_database._connect_to_target(PLAIN_URL)
+    e2e_database._delete_projects_and_read_revision(PLAIN_URL)
+
+    assert engine_urls == [SAFE_URL, SAFE_URL]
+    assert all(make_url(url).drivername == "postgresql+psycopg" for url in engine_urls)
 
 
 def test_unsafe_cleanup_fails_before_database_access(
@@ -219,6 +372,27 @@ def test_cli_hides_unexpected_exception_details(
     assert "sensitive_user" not in captured.err
     assert "sensitive_password" not in captured.err
     assert "postgresql://" not in captured.err
+
+
+def test_normalize_command_returns_the_canonical_url_for_the_typescript_bridge(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        e2e_database,
+        "_parse_args",
+        lambda: type("Args", (), {"command": "normalize"})(),
+    )
+    monkeypatch.setattr(
+        e2e_database,
+        "get_playwright_database_url",
+        lambda: PLAIN_URL,
+    )
+
+    assert e2e_database.main() == 0
+    captured = capsys.readouterr()
+    assert captured.out.strip() == SAFE_URL
+    assert captured.err == ""
 
 
 def test_lifecycle_has_no_schema_creation_or_database_destruction() -> None:

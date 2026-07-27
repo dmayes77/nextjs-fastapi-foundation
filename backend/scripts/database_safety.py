@@ -98,22 +98,31 @@ def validate_test_database_url(url: str) -> str:
     return url
 
 
+def normalize_test_database_url(url: str) -> str:
+    """Return a validated URL that explicitly selects the installed Psycopg 3 driver."""
+    parsed = parse_test_database_url(url)
+    if parsed.drivername == "postgresql+psycopg":
+        return url
+    return parsed.set(drivername="postgresql+psycopg").render_as_string(
+        hide_password=False
+    )
+
+
 @contextmanager
 def test_database_environment(database_url: str) -> Iterator[None]:
     """Make runtime and Alembic settings use one validated URL, then restore them."""
-    validated_url = validate_test_database_url(database_url)
+    canonical_url = normalize_test_database_url(database_url)
     variable_names = ("DATABASE_URL", "DATABASE_MIGRATION_URL")
     previous_values = {name: os.environ.get(name) for name in variable_names}
 
     try:
         for name in variable_names:
-            os.environ[name] = validated_url
+            os.environ[name] = canonical_url
 
         get_settings.cache_clear()
         settings = get_settings()
         alembic_url = settings.database_migration_url or settings.database_url
-        validate_test_database_url(alembic_url)
-        if alembic_url != validated_url:
+        if normalize_test_database_url(alembic_url) != canonical_url:
             raise RuntimeError("Alembic did not resolve the validated test database URL.")
 
         get_settings.cache_clear()

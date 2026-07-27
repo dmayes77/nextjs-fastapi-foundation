@@ -136,7 +136,10 @@ to `next_fastapi_e2e_test`. The same authoritative PostgreSQL URL guard protects
 both pytest integration infrastructure and Playwright setup/cleanup. It requires
 an explicit database whose underscore-delimited name contains a complete `test`
 segment and rejects malformed URLs, unsupported drivers, and the target-changing
-query parameters documented below.
+query parameters documented below. Both `postgresql://` and
+`postgresql+psycopg://` forms are accepted; the shared layer normalizes the plain
+form to `postgresql+psycopg://` so every lifecycle operation uses the installed
+Psycopg 3 driver.
 
 Playwright validates the target before starting either server. Setup creates the
 validated database only for PostgreSQL's specific missing-database response,

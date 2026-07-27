@@ -16,9 +16,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 from scripts.database_safety import (
+    normalize_test_database_url,
     parse_test_database_url,
     test_database_environment,
-    validate_test_database_url,
 )
 
 DEFAULT_PLAYWRIGHT_DATABASE_URL = (
@@ -80,7 +80,8 @@ def is_missing_database_error(
 
 
 def _connect_to_target(database_url: str) -> None:
-    engine = create_engine(database_url)
+    canonical_url = normalize_test_database_url(database_url)
+    engine = create_engine(canonical_url)
     try:
         with engine.connect():
             pass
@@ -105,9 +106,10 @@ def _create_target_database(target: URL) -> None:
 
 
 def ensure_database_exists(database_url: str) -> None:
-    target = parse_test_database_url(database_url)
+    canonical_url = normalize_test_database_url(database_url)
+    target = parse_test_database_url(canonical_url)
     try:
-        _connect_to_target(database_url)
+        _connect_to_target(canonical_url)
     except Exception as exc:
         if not is_missing_database_error(exc, unquote(target.database or "")):
             raise E2EDatabaseError(
@@ -128,13 +130,15 @@ def _expected_migration_head(config: Config) -> str:
 
 
 def _upgrade_to_head(database_url: str) -> None:
+    canonical_url = normalize_test_database_url(database_url)
     config = _alembic_config()
-    with test_database_environment(database_url):
+    with test_database_environment(canonical_url):
         command.upgrade(config, "head")
 
 
 def _delete_projects_and_read_revision(database_url: str) -> str | None:
-    engine = create_engine(database_url)
+    canonical_url = normalize_test_database_url(database_url)
+    engine = create_engine(canonical_url)
     try:
         with engine.begin() as connection:
             connection.execute(text("DELETE FROM projects"))
@@ -146,7 +150,7 @@ def _delete_projects_and_read_revision(database_url: str) -> str | None:
 
 
 def prepare(database_url: str | None = None) -> None:
-    target_url = validate_test_database_url(
+    target_url = normalize_test_database_url(
         database_url or get_playwright_database_url()
     )
     target = parse_test_database_url(target_url)
@@ -169,7 +173,7 @@ def prepare(database_url: str | None = None) -> None:
 
 
 def cleanup(database_url: str | None = None) -> None:
-    target_url = validate_test_database_url(
+    target_url = normalize_test_database_url(
         database_url or get_playwright_database_url()
     )
     target = parse_test_database_url(target_url)
@@ -184,7 +188,10 @@ def cleanup(database_url: str | None = None) -> None:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "prepare", "cleanup"))
+    parser.add_argument(
+        "command",
+        choices=("validate", "normalize", "prepare", "cleanup"),
+    )
     return parser.parse_args()
 
 
@@ -195,6 +202,8 @@ def main() -> int:
         if args.command == "validate":
             target = parse_test_database_url(database_url)
             print(f"Validated Playwright database: {unquote(target.database or '')}")
+        elif args.command == "normalize":
+            print(normalize_test_database_url(database_url))
         elif args.command == "prepare":
             prepare(database_url)
         else:

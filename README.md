@@ -102,7 +102,9 @@ pnpm test:e2e
 It must identify a dedicated PostgreSQL test database; the shared backend guard
 rejects unsafe database names, malformed URLs, non-PostgreSQL drivers, and
 target-changing query parameters before either development server starts. Never
-point this variable at the normal development database.
+point this variable at the normal development database. Both `postgresql://` and
+`postgresql+psycopg://` forms are accepted; the plain form is normalized
+internally to `postgresql+psycopg://` because Psycopg 3 is the installed driver.
 
 The command creates the dedicated database only when PostgreSQL specifically
 reports that it is missing, upgrades it to the Alembic head, deletes all Project

@@ -14,6 +14,9 @@ from tests.integration.conftest import (
 )
 
 TEST_URL = (
+    "postgresql://postgres:postgres@localhost:5432/focused_test_database"
+)
+CANONICAL_TEST_URL = (
     "postgresql+psycopg://postgres:postgres@localhost:5432/focused_test_database"
 )
 PREVIOUS_DATABASE_URL = (
@@ -55,9 +58,9 @@ def test_alembic_receives_the_validated_test_url_for_both_variables(
     upgrade_test_database(Config(), "head")
 
     assert received_environment == {
-        "database_url": TEST_URL,
-        "migration_url": TEST_URL,
-        "resolved_url": TEST_URL,
+        "database_url": CANONICAL_TEST_URL,
+        "migration_url": CANONICAL_TEST_URL,
+        "resolved_url": CANONICAL_TEST_URL,
     }
 
 
