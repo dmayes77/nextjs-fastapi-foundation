@@ -57,13 +57,18 @@ describe("Projects workspace", () => {
     expect(screen.getByText("No due date")).toBeInTheDocument();
     expect(screen.getByText("Archived")).toBeInTheDocument();
 
-    const archivedCard = screen.getByText("Archived reference").closest('[data-slot="card"]');
-    expect(archivedCard).not.toBeNull();
-    expect(within(archivedCard as HTMLElement).queryByRole("button", { name: "Edit" })).toBeNull();
+    const plannedCard = screen.getByRole("article", {
+      name: "Project Foundation launch",
+    });
+    const archivedCard = screen.getByRole("article", {
+      name: "Project Archived reference",
+    });
+    expect(within(plannedCard).getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(within(archivedCard).queryByRole("button", { name: "Edit" })).toBeNull();
     expect(
-      within(archivedCard as HTMLElement).queryByRole("button", { name: "Archive" }),
+      within(archivedCard).queryByRole("button", { name: "Archive" }),
     ).toBeNull();
-    expect(within(archivedCard as HTMLElement).getByText("Read only")).toBeInTheDocument();
+    expect(within(archivedCard).getByText("Read only")).toBeInTheDocument();
   });
 
   it("renders a purposeful empty state with a create action", () => {

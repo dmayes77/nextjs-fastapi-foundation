@@ -14,52 +14,30 @@ that can override the database target are forbidden.
 """
 
 import os
-from collections.abc import Iterator
-from contextlib import contextmanager
-from urllib.parse import parse_qsl, unquote, urlsplit
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine
 
-from app.core.config import get_settings
+from scripts.database_safety import (
+    DATABASE_TARGET_QUERY_PARAMETERS,
+    looks_like_a_test_database,
+    test_database_environment,
+    validate_test_database_url,
+)
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASELINE_REVISION = "211caf2bc442"
-DATABASE_TARGET_QUERY_PARAMETERS = frozenset(
-    {"database", "dbname", "service", "servicefile"}
-)
-
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
     "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_test",
 )
 
 
-def _looks_like_a_test_database(url: str) -> bool:
-    database_name = unquote(urlsplit(url).path.removeprefix("/"))
-    return "test" in database_name.lower().split("_")
-
-
-def _validate_test_database_url(url: str) -> str:
-    query_parameter_names = {
-        name.casefold()
-        for name, _ in parse_qsl(urlsplit(url).query, keep_blank_values=True)
-    }
-    if query_parameter_names & DATABASE_TARGET_QUERY_PARAMETERS:
-        raise RuntimeError(
-            "Refusing to run PostgreSQL integration tests: database-target query "
-            "parameters are forbidden."
-        )
-
-    if not _looks_like_a_test_database(url):
-        raise RuntimeError(
-            "Refusing to run PostgreSQL integration tests: the database name must "
-            "contain 'test' as a complete underscore-delimited segment, for example "
-            "'test', 'test_projects', or 'next_fastapi_test'."
-        )
-    return url
+_looks_like_a_test_database = looks_like_a_test_database
+_validate_test_database_url = validate_test_database_url
+_test_database_environment = test_database_environment
 
 
 _validate_test_database_url(TEST_DATABASE_URL)
@@ -67,36 +45,6 @@ _validate_test_database_url(TEST_DATABASE_URL)
 
 def alembic_config() -> Config:
     return Config(os.path.join(BACKEND_DIR, "alembic.ini"))
-
-
-@contextmanager
-def _test_database_environment(database_url: str) -> Iterator[None]:
-    """Make Alembic use only a validated test URL, then restore the process env."""
-    validated_url = _validate_test_database_url(database_url)
-    variable_names = ("DATABASE_URL", "DATABASE_MIGRATION_URL")
-    previous_values = {name: os.environ.get(name) for name in variable_names}
-
-    try:
-        for name in variable_names:
-            os.environ[name] = validated_url
-
-        get_settings.cache_clear()
-        settings = get_settings()
-        alembic_url = settings.database_migration_url or settings.database_url
-        _validate_test_database_url(alembic_url)
-        if alembic_url != validated_url:
-            raise RuntimeError("Alembic did not resolve the validated test database URL.")
-
-        # Ensure the Alembic environment loads settings itself from the overrides.
-        get_settings.cache_clear()
-        yield
-    finally:
-        for name, previous_value in previous_values.items():
-            if previous_value is None:
-                os.environ.pop(name, None)
-            else:
-                os.environ[name] = previous_value
-        get_settings.cache_clear()
 
 
 def upgrade_test_database(config: Config, revision: str) -> None:

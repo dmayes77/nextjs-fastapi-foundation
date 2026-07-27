@@ -109,15 +109,46 @@ End-to-end tests should verify critical user workflows rather than every small v
 
 Initial End-to-End Flow
 
-The first full-flow test should:
+The first full-flow test:
 
 1. Open the Project Management page.
-2. Create a Project.
-3. Confirm the Project appears.
-4. Update the Project.
-5. Confirm the new values appear.
-6. Archive the Project.
-7. Confirm the Project shows as archived.
+2. Confirm the dedicated database begins empty.
+3. Create a Project.
+4. Confirm the Project appears.
+5. Update its name and description.
+6. Confirm the new values appear.
+7. Archive the Project.
+8. Confirm the Project shows as archived and read-only.
+
+Run it from the repository root with:
+
+```bash
+pnpm playwright:install
+pnpm test:e2e
+```
+
+Only Chromium is installed and used in Step 25. The suite uses one worker, one
+browser project, and one lifecycle test. It uses accessibility-first selectors
+and does not rely on a page-object framework.
+
+`PLAYWRIGHT_DATABASE_URL` selects the dedicated E2E target and defaults locally
+to `next_fastapi_e2e_test`. The same authoritative PostgreSQL URL guard protects
+both pytest integration infrastructure and Playwright setup/cleanup. It requires
+an explicit database whose underscore-delimited name contains a complete `test`
+segment and rejects malformed URLs, unsupported drivers, and the target-changing
+query parameters documented below.
+
+Playwright validates the target before starting either server. Setup creates the
+validated database only for PostgreSQL's specific missing-database response,
+sets both runtime and migration URLs to that exact target, upgrades through
+Alembic to head, and deletes all Project rows. Teardown validates the target
+again and deletes all Project rows without dropping or downgrading the database.
+The normal development database is never used.
+
+Both web servers are new processes with existing-server reuse disabled. Failure
+screenshots are retained, traces are retained on local failures (and on the first
+retry in CI), and video is disabled. Step 25 adds the local workflow only; CI
+wiring remains Step 27.
 
 Test Naming
 
