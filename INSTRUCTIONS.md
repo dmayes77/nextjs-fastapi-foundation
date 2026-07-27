@@ -881,7 +881,7 @@ Checkpoint:
 
 - Full flow passes from browser to PostgreSQL
 - Test data is isolated
-- Test can run locally and in CI
+- Test runs locally; CI wiring remains Step 27
 
 Commit:
 
@@ -1138,7 +1138,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 22: Build the Project database model and migration
 - [x] Step 23: Add Project repository, schemas, service, and routes
 - [x] Step 24: Add the Project Management frontend
-- [ ] Step 25: Add Project Management Playwright coverage
+- [x] Step 25: Add Project Management Playwright coverage
 - [ ] Step 26: Add root quality and validation commands
 - [ ] Step 27: Add GitHub Actions
 - [ ] Step 28: Write the complete template README
@@ -1151,6 +1151,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Complete this PostgreSQL and database-outage correction before beginning Step 25.**
+> **Begin Step 26 without beginning Step 27.**
 
-Steps 20 through 24 are merged into `main`. Complete and validate the local PostgreSQL startup and database-outage correction on `fix/postgresql-startup-and-db-errors` before beginning Step 25. Step 25 has not started.
+Steps 20 through 25 are complete. Begin Step 26 by adding the root quality and
+validation commands. Do not begin Step 27 GitHub Actions work.

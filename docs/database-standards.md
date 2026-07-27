@@ -449,10 +449,10 @@ Use a dedicated test database. Its name must contain `test` as a complete,
 case-insensitive underscore-delimited segment, such as `test`,
 `test_projects`, or `next_fastapi_test`. Incidental substring matches such
 as `latest`, `contest`, or `productiontest` must be rejected. The database
-name must come only from the URL path: query parameters named `dbname`,
-`database`, `service`, or `servicefile` are forbidden, matched
-case-insensitively after URL decoding, because they can change the effective
-connection target.
+name and server must come only from the URL path and authority: query parameters
+named `dbname`, `database`, `host`, `hostaddr`, `port`, `service`, or
+`servicefile` are forbidden, matched case-insensitively after URL decoding,
+because they can change the effective connection target.
 
 Test configuration should make accidental production access difficult.
 

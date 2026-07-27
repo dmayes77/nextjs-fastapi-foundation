@@ -58,7 +58,7 @@ Integration tests may use a real dedicated PostgreSQL test database.
 
 They must never use the production database.
 
-Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. Database-target query parameters (`dbname`, `database`, `service`, and `servicefile`, matched case-insensitively) are forbidden even when their value is another test-named database, because SQLAlchemy or Psycopg may use them instead of the URL path; harmless options such as `sslmode`, `connect_timeout`, and `application_name` remain supported. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
+Real database and Alembic integration tests are a separate test category from the default backend suite established in Step 13. Run them explicitly with `pnpm test:backend:integration`, which selects `backend/tests/integration/` and requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment. Valid examples include `test`, `test_projects`, and `next_fastapi_test`; incidental matches such as `latest`, `contest`, and `productiontest` are rejected. Connection-target query parameters (`dbname`, `database`, `host`, `hostaddr`, `port`, `service`, and `servicefile`, matched case-insensitively) are forbidden because SQLAlchemy or Psycopg may use them instead of the authority or URL path; harmless options such as `sslmode`, `connect_timeout`, and `application_name` remain supported. The explicit command fails when the database is unreachable or its credentials are invalid; it must never skip the entire suite and report a false-green result. Direct pytest commands remain available for intentional custom selection, including full discovery; the canonical `pnpm test:backend` command is the safe PostgreSQL-free default.
 
 Frontend Unit Tests
 
@@ -109,15 +109,49 @@ End-to-end tests should verify critical user workflows rather than every small v
 
 Initial End-to-End Flow
 
-The first full-flow test should:
+The first full-flow test:
 
 1. Open the Project Management page.
-2. Create a Project.
-3. Confirm the Project appears.
-4. Update the Project.
-5. Confirm the new values appear.
-6. Archive the Project.
-7. Confirm the Project shows as archived.
+2. Confirm the dedicated database begins empty.
+3. Create a Project.
+4. Confirm the Project appears.
+5. Update its name and description.
+6. Confirm the new values appear.
+7. Archive the Project.
+8. Confirm the Project shows as archived and read-only.
+
+Run it from the repository root with:
+
+```bash
+pnpm playwright:install
+pnpm test:e2e
+```
+
+Only Chromium is installed and used in Step 25. The suite uses one worker, one
+browser project, and one lifecycle test. It uses accessibility-first selectors
+and does not rely on a page-object framework.
+
+`PLAYWRIGHT_DATABASE_URL` selects the dedicated E2E target and defaults locally
+to `next_fastapi_e2e_test`. The same authoritative PostgreSQL URL guard protects
+both pytest integration infrastructure and Playwright setup/cleanup. It requires
+an explicit database whose underscore-delimited name contains a complete `test`
+segment and rejects malformed URLs, unsupported drivers, and the target-changing
+query parameters documented below. Both `postgresql://` and
+`postgresql+psycopg://` forms are accepted; the shared layer normalizes the plain
+form to `postgresql+psycopg://` so every lifecycle operation uses the installed
+Psycopg 3 driver.
+
+Playwright validates the target before starting either server. Setup creates the
+validated database only for PostgreSQL's specific missing-database response,
+sets both runtime and migration URLs to that exact target, upgrades through
+Alembic to head, and deletes all Project rows. Teardown validates the target
+again and deletes all Project rows without dropping or downgrading the database.
+The normal development database is never used.
+
+Both web servers are new processes with existing-server reuse disabled. Failure
+screenshots are retained, traces are retained on local failures (and on the first
+retry in CI), and video is disabled. Step 25 adds the local workflow only; CI
+wiring remains Step 27.
 
 Test Naming
 
@@ -188,8 +222,8 @@ next_fastapi_test
 Incidental substring matches such as `latest`, `contest`, `attestation`,
 and `productiontest` are not test database names and must be rejected.
 The URL path is the only permitted source of the database name. Query
-parameters named `dbname`, `database`, `service`, or `servicefile` are
-forbidden, matched case-insensitively after URL decoding.
+parameters named `dbname`, `database`, `host`, `hostaddr`, `port`, `service`, or
+`servicefile` are forbidden, matched case-insensitively after URL decoding.
 
 Environment Safety
 

@@ -81,7 +81,38 @@ Run the real-PostgreSQL and Alembic integration suite explicitly:
 pnpm test:backend:integration
 ```
 
-This command requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment, such as `test`, `test_projects`, or `next_fastapi_test`. Names where those letters are only incidental, such as `latest` or `productiontest`, are rejected. Database-target query parameters (`dbname`, `database`, `service`, and `servicefile`, matched case-insensitively) are also forbidden; harmless connection options such as `sslmode` remain supported. The command fails rather than skips when the database cannot be reached.
+This command requires a reachable, dedicated PostgreSQL database whose name contains `test` as a complete, case-insensitive underscore-delimited segment, such as `test`, `test_projects`, or `next_fastapi_test`. Names where those letters are only incidental, such as `latest` or `productiontest`, are rejected. Connection-target query parameters (`dbname`, `database`, `host`, `hostaddr`, `port`, `service`, and `servicefile`, matched case-insensitively) are also forbidden; harmless connection options such as `sslmode` remain supported. The command fails rather than skips when the database cannot be reached.
+
+## End-to-End Tests
+
+Install the Chromium version managed by Playwright once:
+
+```bash
+pnpm playwright:install
+```
+
+Then run the complete Project Management browser-to-PostgreSQL flow:
+
+```bash
+pnpm test:e2e
+```
+
+`PLAYWRIGHT_DATABASE_URL` may override the safe local default,
+`postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_e2e_test`.
+It must identify a dedicated PostgreSQL test database; the shared backend guard
+rejects unsafe database names, malformed URLs, non-PostgreSQL drivers, and
+target-changing query parameters before either development server starts. Never
+point this variable at the normal development database. Both `postgresql://` and
+`postgresql+psycopg://` forms are accepted; the plain form is normalized
+internally to `postgresql+psycopg://` because Psycopg 3 is the installed driver.
+
+The command creates the dedicated database only when PostgreSQL specifically
+reports that it is missing, upgrades it to the Alembic head, deletes all Project
+rows before and after the test, and starts fresh backend and frontend processes
+that cannot reuse existing servers. The Step 25 suite runs Chromium with one
+worker. Failure screenshots and local traces are retained under the ignored
+Playwright artifact directories; video is disabled. GitHub Actions wiring remains
+Step 27 and is not included here.
 
 ## Environment Configuration
 

@@ -24,6 +24,8 @@ export function ProjectCard({ project, onEdit, onArchive }: ProjectCardProps) {
 
   return (
     <Card
+      role="article"
+      aria-label={`Project ${project.name}`}
       className={cn(
         "flex min-h-64 flex-col overflow-hidden transition-shadow hover:shadow-md",
         archived && "bg-muted/45 text-muted-foreground shadow-none hover:shadow-none",
