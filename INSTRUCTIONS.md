@@ -1140,7 +1140,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 24: Add the Project Management frontend
 - [x] Step 25: Add Project Management Playwright coverage
 - [x] Step 26: Add root quality and validation commands
-- [ ] Step 27: Add GitHub Actions
+- [x] Step 27: Add GitHub Actions
 - [ ] Step 28: Write the complete template README
 - [ ] Step 29: Prepare the GitHub template
 - [ ] Step 30: Release version 1.0.0
@@ -1151,6 +1151,6 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 27 only after the Step 26 checkpoint is reviewed and committed.**
+> **Begin Step 28 only after the Step 27 checkpoint is reviewed and committed.**
 
-Steps 20 through 26 are complete. Step 27 GitHub Actions work has not started.
+Steps 20 through 27 are complete. Step 28 README work has not started.

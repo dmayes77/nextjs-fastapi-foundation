@@ -139,8 +139,9 @@ reports that it is missing, upgrades it to the Alembic head, deletes all Project
 rows before and after the test, and starts fresh backend and frontend processes
 that cannot reuse existing servers. The Step 25 suite runs Chromium with one
 worker. Failure screenshots and local traces are retained under the ignored
-Playwright artifact directories; video is disabled. GitHub Actions wiring remains
-Step 27 and is not included here.
+Playwright artifact directories; video is disabled. GitHub Actions installs the
+managed Chromium browser and runs the same explicit E2E command against its
+PostgreSQL service container.
 
 ## Environment Configuration
 

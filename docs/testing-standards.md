@@ -150,8 +150,9 @@ The normal development database is never used.
 
 Both web servers are new processes with existing-server reuse disabled. Failure
 screenshots are retained, traces are retained on local failures (and on the first
-retry in CI), and video is disabled. Step 25 adds the local workflow only; CI
-wiring remains Step 27.
+retry in CI), and video is disabled. GitHub Actions installs managed Chromium
+with its Linux dependencies and runs this same explicit workflow against the
+dedicated CI PostgreSQL service.
 
 Test Naming
 
@@ -421,18 +422,15 @@ Run end-to-end tests when the change affects:
 
 Continuous Integration
 
-GitHub Actions should run:
+The full-stack GitHub Actions workflow runs for every pull request and push to
+`main`. One validation job shares dependency setup and caching, then runs:
 
-- Frontend lint
-- Frontend tests
-- Frontend build
-- Backend lint
-- Backend formatting check
-- Backend tests
-- PostgreSQL integration tests
-- Alembic upgrade
-- OpenAPI client freshness check
-- Playwright end-to-end tests
+- `pnpm check` for frontend lint/tests/build, backend Ruff/format/tests/compile,
+  and OpenAPI plus generated-client freshness
+- `pnpm db:upgrade` against the dedicated integration database
+- `pnpm test:backend:integration` against PostgreSQL
+- managed Chromium installation
+- `pnpm test:e2e` against the separately named E2E database
 
 A pull request should not merge while required checks are failing.
 
