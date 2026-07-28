@@ -857,8 +857,11 @@ When adapting the foundation:
 7. preserve the standard error envelope, request IDs, test-database guards, and
    test isolation;
 8. keep `pnpm check`, integration tests, E2E, and CI green;
-9. update the repository license copyright holder and retain all applicable
-   third-party notices;
+9. keep the existing MIT `LICENSE` and copyright notice while the project
+   contains substantial portions of this foundation; add your own copyright
+   notice for significant original work, and replace the original notice only
+   after completely removing the foundation or obtaining appropriate legal
+   guidance;
 10. archive or remove the foundation's `INSTRUCTIONS.md` and
     `docs/changelog.md` after establishing the new project's own roadmap and
     changelog.
@@ -883,8 +886,9 @@ create new revisions instead of rewriting history.
 - [ ] Regenerate `backend/openapi.json` and the frontend API operations after
       changing the API.
 - [ ] Review migrations and apply them to a new empty database.
-- [ ] Replace the MIT copyright owner if the new repository requires it; keep
-      applicable third-party notices separate.
+- [ ] Preserve the existing MIT `LICENSE` and copyright notice while substantial
+      portions of the foundation remain; add your own notice for significant
+      original work instead of replacing the upstream notice.
 - [ ] Update or replace the foundation roadmap and changelog.
 - [ ] Run `pnpm check`, PostgreSQL integration tests, and Playwright E2E.
 - [ ] Confirm no sample secrets, personal paths, or local data are tracked.
