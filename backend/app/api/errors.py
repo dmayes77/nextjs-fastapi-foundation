@@ -106,7 +106,7 @@ async def validation_exception_handler(
         code="validation_error",
         message="The request contains invalid values.",
         details=details,
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
     )
 
 

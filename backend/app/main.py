@@ -1,4 +1,6 @@
 import re
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -7,6 +9,7 @@ from app.api.errors import register_exception_handlers
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.database.engine import engine
 from app.middleware.request_id import RequestIdMiddleware
 from app.schemas.errors import ErrorResponse
 
@@ -32,12 +35,21 @@ def generate_operation_id(route: APIRoute) -> str:
     return f"{tag}_{path_suffix}_{method}"
 
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+    try:
+        yield
+    finally:
+        await engine.dispose()
+
+
 def create_app() -> FastAPI:
     get_settings()
     configure_logging()
     app = FastAPI(
         responses={"default": {"model": ErrorResponse}},
         generate_unique_id_function=generate_operation_id,
+        lifespan=lifespan,
     )
     register_exception_handlers(app)
     app.add_middleware(RequestIdMiddleware)
