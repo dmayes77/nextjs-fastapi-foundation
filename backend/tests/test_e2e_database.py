@@ -2,7 +2,6 @@ import inspect
 import os
 
 import pytest
-from alembic.config import Config
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import OperationalError
 
@@ -12,14 +11,8 @@ from scripts.database_safety import (
     validate_test_database_url,
 )
 
-SAFE_URL = (
-    "postgresql+psycopg://postgres:secret@localhost:5432/"
-    "next_fastapi_e2e_test"
-)
-PLAIN_URL = (
-    "postgresql://postgres:secret@localhost:5432/"
-    "next_fastapi_e2e_test"
-)
+SAFE_URL = "postgresql+psycopg://postgres:secret@localhost:5432/next_fastapi_e2e_test"
+PLAIN_URL = "postgresql://postgres:secret@localhost:5432/next_fastapi_e2e_test"
 
 
 @pytest.mark.parametrize(

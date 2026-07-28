@@ -1,22 +1,21 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
 from app.core.config import get_settings
+from app.database import tables as _tables  # noqa: F401
 from app.database.base import Base
 
-# Importing the table registry (not just `Base`) is what actually
+# Importing the table registry as `_tables` (not just `Base`) is what actually
 # registers every SQLAlchemy table against `Base.metadata` in this fresh
 # process — Alembic never imports application code on its own, so without
 # this import `Base.metadata` would be empty and autogenerate would see no
 # tables at all. Add future tables to `app.database.tables`, never import
 # an individual table module directly here.
-import app.database.tables  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -3,7 +3,9 @@ from sqlalchemy.exc import OperationalError
 from app.services import system
 
 
-async def test_ready_returns_database_status_when_database_is_reachable(client, monkeypatch):
+async def test_ready_returns_database_status_when_database_is_reachable(
+    client, monkeypatch
+):
     async def successful_check_database() -> None:
         return None
 
@@ -53,7 +55,9 @@ async def test_ready_returns_503_when_database_is_unavailable(client, monkeypatc
     assert request_id_header == error["requestId"]
 
 
-async def test_ready_preserves_request_id_when_database_is_unavailable(client, monkeypatch):
+async def test_ready_preserves_request_id_when_database_is_unavailable(
+    client, monkeypatch
+):
     async def failing_check_database() -> None:
         raise OperationalError("SELECT 1", {}, ConnectionRefusedError())
 
@@ -70,9 +74,7 @@ async def test_ready_preserves_unexpected_failures_as_500(client, monkeypatch):
     async def unexpected_check_database_failure() -> None:
         raise RuntimeError("private readiness defect")
 
-    monkeypatch.setattr(
-        system, "check_database", unexpected_check_database_failure
-    )
+    monkeypatch.setattr(system, "check_database", unexpected_check_database_failure)
 
     response = await client.get("/ready")
 

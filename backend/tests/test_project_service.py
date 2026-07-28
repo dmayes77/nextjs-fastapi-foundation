@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
@@ -9,7 +9,7 @@ from app.database.tables import Project
 from app.schemas.project import ProjectCreate, ProjectStatus, ProjectUpdate
 from app.services.project import ProjectService
 
-TIMESTAMP = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+TIMESTAMP = datetime(2026, 7, 25, 12, 0, tzinfo=UTC)
 
 
 def project_record(
@@ -288,9 +288,7 @@ async def test_restoring_a_non_archived_project_is_a_conflict() -> None:
 @pytest.mark.parametrize("operation", ["create", "update", "archive", "restore"])
 async def test_refresh_failure_prevents_a_durable_commit(operation: str) -> None:
     repository = repository_mock()
-    project = project_record(
-        status="archived" if operation == "restore" else "planned"
-    )
+    project = project_record(status="archived" if operation == "restore" else "planned")
     repository.get_for_update.return_value = project
     repository.refresh.side_effect = RuntimeError("refresh failed")
     service = ProjectService(repository)

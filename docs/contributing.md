@@ -113,9 +113,20 @@ Required Validation
 
 Before committing, run the smallest relevant validation.
 
-Before opening a pull request, run the full safe validation command once it exists:
+Before opening a pull request, run the full safe validation command:
 
 pnpm check
+
+This command performs repository linting and formatting checks, unit tests,
+contract freshness checks, the frontend production build, and backend compile
+validation. It intentionally does not run PostgreSQL integration tests,
+Playwright, database setup, migrations, or GitHub Actions. Run those explicit
+workflows when the change requires them:
+
+```text
+pnpm test:backend:integration
+pnpm test:e2e
+```
 
 A change is not complete when:
 

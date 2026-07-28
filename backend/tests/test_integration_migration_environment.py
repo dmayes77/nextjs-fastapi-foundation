@@ -13,9 +13,7 @@ from tests.integration.conftest import (
     upgrade_test_database,
 )
 
-TEST_URL = (
-    "postgresql://postgres:postgres@localhost:5432/focused_test_database"
-)
+TEST_URL = "postgresql://postgres:postgres@localhost:5432/focused_test_database"
 CANONICAL_TEST_URL = (
     "postgresql+psycopg://postgres:postgres@localhost:5432/focused_test_database"
 )
@@ -41,9 +39,7 @@ def test_alembic_receives_the_validated_test_url_for_both_variables(
 
     def capture_upgrade(config: Config, revision: str) -> None:
         received_environment["database_url"] = os.environ.get("DATABASE_URL")
-        received_environment["migration_url"] = os.environ.get(
-            "DATABASE_MIGRATION_URL"
-        )
+        received_environment["migration_url"] = os.environ.get("DATABASE_MIGRATION_URL")
         settings = get_settings()
         received_environment["resolved_url"] = (
             settings.database_migration_url or settings.database_url
@@ -146,10 +142,8 @@ def test_database_safety_guard_accepts_harmless_query_parameters(url: str) -> No
         "postgresql://host/safe_test?service%66ile=%2Ftmp%2Fpg_service.conf",
         "postgresql+psycopg://user:password@localhost:5432/"
         "safe_test?host=production.example.com",
-        "postgresql://user:password@localhost:5432/"
-        "safe_test?HOSTADDR=203.0.113.10",
-        "postgresql+psycopg://user:password@localhost:5432/"
-        "safe_test?po%72t=6432",
+        "postgresql://user:password@localhost:5432/safe_test?HOSTADDR=203.0.113.10",
+        "postgresql+psycopg://user:password@localhost:5432/safe_test?po%72t=6432",
     ],
 )
 def test_database_safety_guard_rejects_database_target_query_overrides(

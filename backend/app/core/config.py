@@ -15,9 +15,7 @@ class Settings(BaseSettings):
     database_url: str
     database_migration_url: str | None = None
     database_echo: bool = False
-    cors_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:3000"]
-    )
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
 
 @lru_cache

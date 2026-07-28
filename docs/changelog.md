@@ -58,6 +58,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Developer Experience
 
 - Added root development commands that start the frontend and backend together with clearly labeled logs (`ae5bc4a`).
+- Added repository-wide `lint`, `format`, `format:check`, `test`, `build`, and
+  canonical safe `check` commands. Backend quality checks use Ruff with Python
+  3.13 targeting, import sorting, production-oriented lint rules, formatting,
+  and a formatter-only exclusion for Alembic revision files; PostgreSQL
+  integration and Playwright remain explicit workflows.
 - Adopted pnpm for frontend and root package management (`fe47ff7`).
 - Included agent guidance files (`frontend/CLAUDE.md`, `frontend/AGENTS.md`) for AI-assisted development (`fe47ff7`).
 - Verified that the applications start independently and through the combined root command (`ae5bc4a`).

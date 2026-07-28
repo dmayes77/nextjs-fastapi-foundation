@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
@@ -9,7 +9,7 @@ from app.api.dependencies import get_project_service
 from app.core.exceptions import ConflictError, ResourceNotFoundError
 from app.schemas.project import ProjectResponse, ProjectStatus
 
-TIMESTAMP = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+TIMESTAMP = datetime(2026, 7, 25, 12, 0, tzinfo=UTC)
 
 
 def project_response(
@@ -81,9 +81,7 @@ async def test_list_projects_returns_safe_503_when_database_is_unavailable(
     project_service.list_projects.side_effect = OperationalError(
         "SELECT projects.secret FROM projects",
         {},
-        ConnectionRefusedError(
-            "connection to 127.0.0.1:5432 failed for private-user"
-        ),
+        ConnectionRefusedError("connection to 127.0.0.1:5432 failed for private-user"),
     )
 
     response = await client.get(

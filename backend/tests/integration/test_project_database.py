@@ -71,9 +71,7 @@ async def _wait_until_postgres_reports_blocked(
         while True:
             async with session_factory() as monitor:
                 is_blocked = await monitor.scalar(
-                    text(
-                        "SELECT cardinality(pg_blocking_pids(:backend_pid)) > 0"
-                    ),
+                    text("SELECT cardinality(pg_blocking_pids(:backend_pid)) > 0"),
                     {"backend_pid": backend_pid},
                 )
             if is_blocked:

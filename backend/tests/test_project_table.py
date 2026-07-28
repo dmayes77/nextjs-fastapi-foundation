@@ -97,7 +97,9 @@ def test_status_is_required_with_the_expected_server_default() -> None:
 def test_status_check_constraint_exists_with_the_expected_name_and_values() -> None:
     table = Base.metadata.tables["projects"]
     check_constraints = [
-        constraint for constraint in table.constraints if isinstance(constraint, CheckConstraint)
+        constraint
+        for constraint in table.constraints
+        if isinstance(constraint, CheckConstraint)
     ]
 
     assert len(check_constraints) == 1

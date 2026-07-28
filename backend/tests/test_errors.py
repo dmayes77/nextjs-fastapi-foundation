@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy.exc import OperationalError, TimeoutError as SQLAlchemyTimeoutError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SQLAlchemyTimeoutError
 
 from app.core.exceptions import ResourceNotFoundError
 
@@ -8,7 +9,9 @@ from app.core.exceptions import ResourceNotFoundError
 async def test_app_exception_returns_standard_envelope(app, client):
     @app.get("/__test__/not-found")
     def _raise_not_found():
-        raise ResourceNotFoundError(code="example_not_found", message="Example not found")
+        raise ResourceNotFoundError(
+            code="example_not_found", message="Example not found"
+        )
 
     response = await client.get("/__test__/not-found")
 

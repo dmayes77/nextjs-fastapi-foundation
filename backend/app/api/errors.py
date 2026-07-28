@@ -3,7 +3,8 @@ import logging
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import OperationalError, TimeoutError as SQLAlchemyTimeoutError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SQLAlchemyTimeoutError
 
 from app.core.exceptions import AppException
 from app.core.request_context import REQUEST_ID_HEADER, get_request_id, set_request_id
@@ -32,7 +33,12 @@ def _current_request_id(request: Request) -> str:
 
 
 def _error_response(
-    *, request: Request, code: str, message: str, details: object | None, status_code: int
+    *,
+    request: Request,
+    code: str,
+    message: str,
+    details: object | None,
+    status_code: int,
 ) -> JSONResponse:
     request_id = _current_request_id(request)
     body = ErrorResponse(
@@ -43,7 +49,9 @@ def _error_response(
             requestId=request_id,
         )
     )
-    response = JSONResponse(status_code=status_code, content=body.model_dump(by_alias=True))
+    response = JSONResponse(
+        status_code=status_code, content=body.model_dump(by_alias=True)
+    )
     response.headers[REQUEST_ID_HEADER] = request_id
     return response
 
@@ -67,7 +75,11 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         message = "An error occurred while processing the request."
         details = exc.detail
     return _error_response(
-        request=request, code=code, message=message, details=details, status_code=exc.status_code
+        request=request,
+        code=code,
+        message=message,
+        details=details,
+        status_code=exc.status_code,
     )
 
 
@@ -119,7 +131,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     # Restore the request ID into context so the log line below is
     # correlated correctly; the middleware already reset it by this point.
     set_request_id(_current_request_id(request))
-    logger.exception("unhandled exception method=%s path=%s", request.method, request.url.path)
+    logger.exception(
+        "unhandled exception method=%s path=%s", request.method, request.url.path
+    )
     return _error_response(
         request=request,
         code="internal_error",

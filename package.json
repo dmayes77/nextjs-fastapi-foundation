@@ -12,14 +12,27 @@
     "db:downgrade": "cd backend && uv run alembic downgrade -1",
     "db:current": "cd backend && uv run alembic current",
     "db:history": "cd backend && uv run alembic history",
+    "lint:frontend": "pnpm --dir frontend lint",
+    "lint:backend": "cd backend && uv run --group dev ruff check .",
+    "lint": "pnpm lint:frontend && pnpm lint:backend",
+    "format:backend": "cd backend && uv run --group dev ruff format .",
+    "format:check:backend": "cd backend && uv run --group dev ruff format --check .",
+    "format": "pnpm format:backend",
+    "format:check": "pnpm format:check:backend",
+    "test:frontend": "pnpm --dir frontend test",
     "test:backend": "cd backend && uv run --group dev pytest --ignore=tests/integration",
     "test:backend:integration": "cd backend && uv run --group dev pytest tests/integration",
+    "test": "pnpm test:frontend && pnpm test:backend",
     "test:e2e": "cd backend && uv run python -m scripts.e2e_database prepare && cd .. && playwright test --config=e2e/playwright.config.ts",
     "playwright:install": "playwright install chromium",
+    "build:frontend": "pnpm --dir frontend build",
+    "build:backend": "cd backend && uv run python -m compileall -q app tests",
+    "build": "pnpm build:frontend && pnpm build:backend",
     "openapi:export": "cd backend && uv run python -m scripts.export_openapi --write",
     "openapi:check": "cd backend && uv run python -m scripts.export_openapi --check",
     "api:generate": "pnpm --dir frontend api:generate",
-    "api:check": "pnpm openapi:check && pnpm --dir frontend api:check"
+    "api:check": "pnpm openapi:check && pnpm --dir frontend api:check",
+    "check": "pnpm lint && pnpm format:check && pnpm test && pnpm api:check && pnpm build"
   },
   "devEngines": {
     "packageManager": {

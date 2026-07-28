@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from uuid import uuid4
 
 import pytest
@@ -68,7 +68,7 @@ def test_project_update_rejects_null_for_required_fields(field: str) -> None:
 
 
 def test_project_response_reads_sqlalchemy_objects_and_uses_public_aliases() -> None:
-    timestamp = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    timestamp = datetime(2026, 7, 25, 12, 0, tzinfo=UTC)
     project = Project(
         id=uuid4(),
         name="Response project",

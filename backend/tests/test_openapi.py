@@ -115,20 +115,18 @@ def test_export_produces_a_valid_openapi_document():
     assert "/health" in schema["paths"]
     assert schema["paths"]["/health"]["get"]["operationId"] == "health_get"
     assert schema["paths"]["/api/v1/projects"]["get"]["operationId"] == "projects_list"
-    assert schema["paths"]["/api/v1/projects"]["post"]["operationId"] == "projects_create"
+    assert (
+        schema["paths"]["/api/v1/projects"]["post"]["operationId"] == "projects_create"
+    )
     project_path = schema["paths"]["/api/v1/projects/{project_id}"]
     assert project_path["get"]["operationId"] == "projects_get"
     assert project_path["patch"]["operationId"] == "projects_update"
     assert (
-        schema["paths"]["/api/v1/projects/{project_id}/archive"]["post"][
-            "operationId"
-        ]
+        schema["paths"]["/api/v1/projects/{project_id}/archive"]["post"]["operationId"]
         == "projects_archive"
     )
     assert (
-        schema["paths"]["/api/v1/projects/{project_id}/restore"]["post"][
-            "operationId"
-        ]
+        schema["paths"]["/api/v1/projects/{project_id}/restore"]["post"]["operationId"]
         == "projects_restore"
     )
     update_properties = schema["components"]["schemas"]["ProjectUpdate"]["properties"]

@@ -131,7 +131,9 @@ def test_database_environment(database_url: str) -> Iterator[None]:
         settings = get_settings()
         alembic_url = settings.database_migration_url or settings.database_url
         if normalize_test_database_url(alembic_url) != canonical_url:
-            raise RuntimeError("Alembic did not resolve the validated test database URL.")
+            raise RuntimeError(
+                "Alembic did not resolve the validated test database URL."
+            )
 
         get_settings.cache_clear()
         yield

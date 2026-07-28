@@ -22,8 +22,7 @@ from scripts.database_safety import (
 )
 
 DEFAULT_PLAYWRIGHT_DATABASE_URL = (
-    "postgresql+psycopg://postgres:postgres@localhost:5432/"
-    "next_fastapi_e2e_test"
+    "postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi_e2e_test"
 )
 MISSING_DATABASE_SQLSTATE = "3D000"
 BACKEND_DIR = Path(__file__).resolve().parent.parent

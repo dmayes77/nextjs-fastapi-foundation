@@ -21,9 +21,7 @@ class ProjectRepository:
         return await self._session.get(Project, project_id)
 
     async def get_for_update(self, project_id: UUID) -> Project | None:
-        statement = (
-            select(Project).where(Project.id == project_id).with_for_update()
-        )
+        statement = select(Project).where(Project.id == project_id).with_for_update()
         result = await self._session.execute(statement)
         return result.scalar_one_or_none()
 
