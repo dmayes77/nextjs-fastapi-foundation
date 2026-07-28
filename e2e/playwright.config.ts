@@ -3,7 +3,11 @@ import { defineConfig, devices } from "@playwright/test";
 import { playwrightDatabaseUrl, runDatabaseCommand } from "./support/database";
 
 // Config evaluation precedes Playwright's web-server startup. This guard ensures an
-// unsafe target cannot start either application process.
+// unsafe target cannot start either application process. It does not prepare the
+// database — that is `pnpm test:e2e`'s job (see package.json), run once before this
+// config is even loaded, so preparation (migration + cleanup) never runs twice.
+// Direct `pnpm exec playwright test --config=e2e/playwright.config.ts` is
+// consequently not a supported entry point: use `pnpm test:e2e`.
 runDatabaseCommand("validate");
 
 const isCI = Boolean(process.env.CI);
@@ -18,7 +22,6 @@ export default defineConfig({
   },
   retries: isCI ? 1 : 0,
   reporter: "line",
-  globalSetup: "./global-setup.ts",
   globalTeardown: "./global-teardown.ts",
   use: {
     baseURL: "http://localhost:3000",

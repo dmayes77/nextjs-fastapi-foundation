@@ -81,18 +81,24 @@ pnpm db:history
 - Each test gets a fresh application from `create_app()` and its own `httpx.AsyncClient` over `httpx.ASGITransport`, so middleware, exception handlers, and dependency overrides never leak between tests.
 - An autouse fixture clears the `get_settings()` cache before and after every test.
 - Database readiness is tested by monkeypatching `app.services.system.check_database` directly, not through `app.dependency_overrides` — `check_readiness()` calls it as a plain function, not as a FastAPI dependency.
-- The default test suite does not require PostgreSQL and never runs Alembic migrations. Real database and Alembic integration tests are deferred to a later, separate test category.
+- The default test suite does not require PostgreSQL and never runs Alembic migrations. Real-PostgreSQL and Alembic integration tests live in `tests/integration/` as a separate, explicit test category (see below) — they are not part of the default suite.
 
-Run the suite from `backend/`:
-
-```bash
-uv run --group dev pytest
-```
-
-Or from the repository root:
+Run the safe default suite from the repository root:
 
 ```bash
 pnpm test:backend
+```
+
+Or from `backend/`:
+
+```bash
+uv run --group dev pytest --ignore=tests/integration
+```
+
+Do not run unrestricted `uv run --group dev pytest` casually — without `--ignore=tests/integration` it also discovers `tests/integration/`, which uses a dedicated PostgreSQL test database (`next_fastapi_test` by default) and may reset it. That database is protected by a fail-closed safety guard (rejects any URL that doesn't look like a disposable test database), but running the integration suite is still a deliberate, explicit action, not something to trigger by accident. Run it on purpose from the repository root instead:
+
+```bash
+pnpm test:backend:integration
 ```
 
 ## Error Responses

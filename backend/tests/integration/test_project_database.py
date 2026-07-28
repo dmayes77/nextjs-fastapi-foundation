@@ -6,6 +6,7 @@ native UUID type or the CHECK constraint's exact rendering).
 """
 
 import asyncio
+from datetime import UTC, datetime
 from uuid import UUID
 
 import pytest
@@ -204,6 +205,77 @@ async def test_project_repository_and_service_persist_the_project_lifecycle(
             assert updated.status is ProjectStatus.ACTIVE
             assert archived.status is ProjectStatus.ARCHIVED
             assert restored.status is ProjectStatus.PLANNED
+    finally:
+        await engine.dispose()
+
+
+async def test_list_orders_projects_newest_first_with_a_deterministic_tiebreak(
+    project_schema_at_head: None,
+) -> None:
+    engine = create_async_engine(TEST_DATABASE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    try:
+        async with session_factory() as session:
+            repository = ProjectRepository(session)
+            shared_created_at = datetime(2026, 1, 1, tzinfo=UTC)
+
+            # Two Projects sharing the exact same created_at exercise the
+            # `id` tiebreaker in isolation from timestamp ordering.
+            tie_a = await repository.create(
+                Project(name="Tie A", created_at=shared_created_at)
+            )
+            tie_b = await repository.create(
+                Project(name="Tie B", created_at=shared_created_at)
+            )
+            # A third Project with a strictly later created_at must sort
+            # before both tied rows regardless of its id.
+            newest = await repository.create(
+                Project(
+                    name="Newest",
+                    created_at=datetime(2026, 1, 2, tzinfo=UTC),
+                )
+            )
+            await repository.commit()
+
+            expected_tie_order = sorted([tie_a.id, tie_b.id], reverse=True)
+
+            listed = await repository.list()
+
+            assert [project.id for project in listed] == [
+                newest.id,
+                *expected_tie_order,
+            ]
+    finally:
+        await engine.dispose()
+
+
+async def test_sequential_creation_matches_newest_first_reconciliation_order(
+    project_schema_at_head: None,
+) -> None:
+    """Covers the normal sequential-creation path: the later created_at value
+    matches client-side prepend when the server order is reconciled. Equal
+    timestamps and their UUID tie-breaker are covered separately."""
+    engine = create_async_engine(TEST_DATABASE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    try:
+        async with session_factory() as session:
+            service = ProjectService(ProjectRepository(session))
+
+            first = await service.create_project(ProjectCreate(name="First"))
+            second = await service.create_project(ProjectCreate(name="Second"))
+
+            before_reconciliation = await service.list_projects()
+            after_reconciliation = await service.list_projects()
+
+            assert [project.id for project in before_reconciliation] == [
+                second.id,
+                first.id,
+            ]
+            assert [project.id for project in after_reconciliation] == [
+                project.id for project in before_reconciliation
+            ]
     finally:
         await engine.dispose()
 

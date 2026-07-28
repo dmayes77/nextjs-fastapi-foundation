@@ -43,7 +43,7 @@ The FastAPI origin used by Server Components and Server Actions for direct serve
 - Local: `http://127.0.0.1:8000`
 - Production: `https://api.example.com`
 
-Server code calls FastAPI directly through this variable because server-to-server requests don't need to go through the browser. Browser code should eventually use the same-origin `/api/...` rewrite path instead, so the browser never needs to know the backend's real origin. This variable must remain server-only and must never be exposed through a `NEXT_PUBLIC_` variable — doing so would ship the backend's internal origin to every client.
+Server code calls FastAPI directly through this variable because server-to-server requests don't need to go through the browser. Browser code uses the same-origin `/api/...` rewrite path instead (see API Requests below), so the browser never needs to know the backend's real origin. This variable must remain server-only and must never be exposed through a `NEXT_PUBLIC_` variable — doing so would ship the backend's internal origin to every client.
 
 ### Production
 
@@ -121,16 +121,19 @@ pnpm test        # run once
 pnpm test:watch  # watch mode
 ```
 
+`pnpm test` (and therefore this package's frontend tests) runs as part of the repository-root `pnpm check`, alongside backend tests, linting, formatting, generated-API freshness, and the production build — see [Testing standards](../docs/testing-standards.md) for the full test-layer policy.
+
 Jest runs through Next.js's built-in [`next/jest`](https://nextjs.org/docs) integration (`jest.config.ts`), which handles SWC transforms, CSS/image/font mocking, and `.env` loading automatically. `moduleNameMapper` mirrors the `@/*` path alias, since `next/jest` transforms that alias but does not resolve it for Jest's own module resolution. `jest.setup.ts` loads `@testing-library/jest-dom` matchers for every test via `setupFilesAfterEnv`.
 
-Tests live under `tests/`, mirrored by layer rather than by feature:
+Tests live under `tests/`, mirrored by layer rather than by feature — for example:
 
 - `tests/api/` — the API client foundation (`lib/api/`): error classes, construction, inheritance, and type-level checks proving the generated contract still exposes the expected operations and response shapes.
 - `tests/errors/` — the error normalization layer (`lib/errors/`): `normalizeError()` across every transport error type and unrecognized thrown value.
 - `tests/integration/` — the `/api/backend/health` route handler, run under `testEnvironment: "node"` (it constructs and reads native `Request`/`Response` objects) with `lib/api/server.ts` mocked at the module boundary, so route orchestration is tested independently of fetch, transport behavior, and any running backend.
 - `tests/components/` — `BackendStatus`, with `lib/api/client.ts` mocked at the module boundary rather than mocking `fetch`, since jsdom does not implement the Fetch API.
+- `tests/projects/` — the Project Management workspace components (create, edit, archive, and list ordering).
 
-End-to-end coverage is out of scope for Jest and belongs to Playwright once the application is integrated.
+End-to-end coverage is out of scope for Jest. Browser-to-PostgreSQL Project lifecycle coverage exists under the repository's `e2e/` directory (Playwright) and runs through the root `pnpm test:e2e` command; see [Testing standards](../docs/testing-standards.md) for how it fits alongside the other test layers.
 
 ## Learn More
 

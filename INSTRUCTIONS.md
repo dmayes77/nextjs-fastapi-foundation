@@ -1143,6 +1143,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 27: Add GitHub Actions
 - [x] Step 28: Write the complete template README
 - [x] Audit Cleanup A: Dependency and Runtime Safety
+- [x] Audit Cleanup B: Consistency, E2E Efficiency, and Documentation Alignment
 - [ ] Step 29: Prepare the GitHub template
 - [ ] Step 30: Release version 1.0.0
 
@@ -1152,8 +1153,11 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Audit Cleanup B only after the Audit Cleanup A checkpoint is reviewed and committed.**
+> **Begin Step 29 only after the Audit Cleanup B checkpoint is reviewed and committed.**
 
 Steps 20 through 28 are complete. Audit Cleanup A (dependency advisories, async
-engine disposal, deprecated 422 constant) is complete. Audit Cleanup B has not
-started. Step 29 template preparation has not started.
+engine disposal, deprecated 422 constant) and Audit Cleanup B (canonical Project
+ordering with server-authoritative reconciliation, single-owner E2E database
+preparation, removal of dead CORS configuration, corrected backend/frontend
+test documentation, and consolidated Playwright setup guidance) are complete.
+Step 29 template preparation and Step 30 release preparation have not started.

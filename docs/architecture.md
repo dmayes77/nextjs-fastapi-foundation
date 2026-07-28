@@ -272,7 +272,6 @@ The backend uses variables such as:
 
 APP_ENV=development
 DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/next_fastapi
-CORS_ORIGINS=http://localhost:3000
 
 Real .env files must not be committed.
 

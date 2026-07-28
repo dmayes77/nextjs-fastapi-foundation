@@ -13,7 +13,12 @@ class ProjectRepository:
         self._session = session
 
     async def list(self) -> list[Project]:
-        statement = select(Project).order_by(Project.created_at, Project.id)
+        # Return newest Projects first. The descending UUID tie-breaker keeps
+        # equal timestamps deterministic, and frontend reconciliation adopts
+        # this canonical backend order.
+        statement = select(Project).order_by(
+            Project.created_at.desc(), Project.id.desc()
+        )
         result = await self._session.execute(statement)
         return list(result.scalars().all())
 
