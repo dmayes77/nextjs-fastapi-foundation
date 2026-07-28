@@ -67,6 +67,34 @@ operations return `503 Service Unavailable` using the standard safe
 `database_unavailable` error envelope and request ID. `/health` remains a
 process-only liveness check.
 
+## Repository Quality Commands
+
+Run the canonical safe pre-commit workflow from the repository root:
+
+```bash
+pnpm check
+```
+
+It runs frontend ESLint, backend Ruff lint and formatting checks, frontend and
+backend unit tests, OpenAPI and generated-client freshness checks, the Next.js
+production build, and backend compile validation. It does not run PostgreSQL
+integration tests, Playwright, database creation, Alembic migrations, or GitHub
+Actions.
+
+The individual repository commands are:
+
+```bash
+pnpm lint
+pnpm format
+pnpm format:check
+pnpm test
+pnpm build
+```
+
+`pnpm format` applies Ruff formatting to backend Python while excluding Alembic
+revision files. The corresponding `pnpm format:check` command is read-only.
+PostgreSQL integration and Playwright remain explicit commands documented below.
+
 ## Backend Tests
 
 ```bash

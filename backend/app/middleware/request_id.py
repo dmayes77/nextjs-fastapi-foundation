@@ -34,7 +34,9 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         # after the context var has already been reset in `finally` below.
         request.state.request_id = request_id
         start = time.perf_counter()
-        logger.info("request started method=%s path=%s", request.method, request.url.path)
+        logger.info(
+            "request started method=%s path=%s", request.method, request.url.path
+        )
         try:
             response = await call_next(request)
             duration_ms = (time.perf_counter() - start) * 1000

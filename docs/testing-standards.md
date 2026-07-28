@@ -372,26 +372,44 @@ Prefer direct assertions for important behavior.
 
 Test Commands
 
-The final root commands should include:
+The verified repository-wide commands are:
 
+pnpm lint
+pnpm format
+pnpm format:check
 pnpm test
 pnpm test:frontend
 pnpm test:backend
 pnpm test:backend:integration
 pnpm test:e2e
+pnpm build
 pnpm check
 
-The exact commands must be documented in the README after they are verified. `pnpm test:backend` is the PostgreSQL-free default and `pnpm test:backend:integration` explicitly runs the real-PostgreSQL Alembic suite; the remaining commands are added with their respective testing layers.
+`pnpm lint` composes frontend ESLint and backend Ruff linting. `pnpm format`
+formats backend Python through Ruff, while `pnpm format:check` verifies formatting
+without writing. Alembic revision files under `backend/migrations/versions/` remain
+eligible for linting but are deliberately excluded from automatic formatting so
+generated migration structure is not rewritten incidentally.
+
+`pnpm test` composes frontend Jest and the PostgreSQL-free default backend suite.
+`pnpm build` composes the Next.js production build and backend byte-compilation
+validation. `pnpm test:backend:integration` remains the explicit real-PostgreSQL
+suite, and `pnpm test:e2e` remains the explicit Playwright workflow with its
+dedicated database preparation.
 
 Local Test Workflow
 
 Before committing a feature, run the smallest relevant test set.
 
-Before opening a pull request, run the complete safe validation command.
-
-Example future workflow:
+Before opening a pull request, run the complete safe validation command:
 
 pnpm check
+
+`pnpm check` runs lint, formatting verification, frontend and backend unit tests,
+OpenAPI and generated-client freshness checks, the frontend production build,
+and backend compile validation. It never creates a database, runs Alembic,
+executes PostgreSQL integration tests, starts Playwright, or invokes GitHub
+Actions. Those workflows remain separate and explicit.
 
 Run end-to-end tests when the change affects:
 

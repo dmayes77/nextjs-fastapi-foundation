@@ -27,7 +27,9 @@ from scripts.database_safety import (
     validate_test_database_url,
 )
 
-BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BACKEND_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 BASELINE_REVISION = "211caf2bc442"
 TEST_DATABASE_URL = normalize_test_database_url(
     os.environ.get(
