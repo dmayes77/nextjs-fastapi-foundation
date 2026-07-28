@@ -76,7 +76,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.139.2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.51" },
 ]
 
 [package.metadata.requires-dev]
