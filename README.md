@@ -462,11 +462,24 @@ repository behavior, row-lock concurrency, and model/Alembic parity.
 
 ### Browser-to-database E2E
 
-Install the repository-managed Chromium build once:
+Install the repository-managed Chromium build once with the command for your
+platform.
+
+macOS and Windows:
 
 ```bash
 pnpm playwright:install
 ```
+
+Linux:
+
+```bash
+pnpm exec playwright install --with-deps chromium
+```
+
+The Linux command installs Chromium together with its required operating-system
+dependencies. Installing those system packages may require elevated permissions,
+depending on the Linux environment.
 
 Then run:
 
@@ -749,12 +762,8 @@ refuses to reuse existing servers so it cannot silently test stale code.
 
 ### Playwright browser is missing
 
-```bash
-pnpm playwright:install
-```
-
-On Linux CI, the workflow installs Chromium and its system dependencies with
-Playwright's official command.
+Run the platform-specific installation command in
+[Browser-to-database E2E](#browser-to-database-e2e), then retry the test.
 
 ### E2E left a stale development server
 
