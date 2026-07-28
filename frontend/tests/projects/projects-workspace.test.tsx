@@ -118,6 +118,93 @@ describe("Projects workspace", () => {
     expect(screen.queryByRole("heading", { name: "No projects yet" })).not.toBeInTheDocument();
   });
 
+  it("places a newly created project first and keeps it there when the server returns it first", async () => {
+    const user = userEvent.setup();
+    const created = {
+      ...plannedProject,
+      id: "33333333-3333-4333-8333-333333333333",
+      name: "Freshly created",
+      createdAt: "2026-07-26T12:00:00Z",
+      updatedAt: "2026-07-26T12:00:00Z",
+    };
+    mockApiRequest.mockReturnValueOnce(response(created, 201));
+    const { rerender } = render(<ProjectsWorkspace initialProjects={[plannedProject]} />);
+
+    await user.click(screen.getByRole("button", { name: "New project" }));
+    await user.type(screen.getByLabelText("Name"), "Freshly created");
+    await user.click(screen.getByRole("button", { name: "Create project" }));
+    await within(await screen.findByLabelText("Project list")).findByText(
+      "Freshly created",
+    );
+
+    const namesAfterCreate = within(screen.getByLabelText("Project list"))
+      .getAllByRole("article")
+      .map((card) => card.getAttribute("aria-label"));
+    expect(namesAfterCreate).toEqual([
+      "Project Freshly created",
+      "Project Foundation launch",
+    ]);
+
+    rerender(<ProjectsWorkspace initialProjects={[created, plannedProject]} />);
+
+    const namesAfterReconciliation = within(screen.getByLabelText("Project list"))
+      .getAllByRole("article")
+      .map((card) => card.getAttribute("aria-label"));
+    expect(namesAfterReconciliation).toEqual(namesAfterCreate);
+  });
+
+  it("adopts the server's UUID-descending order when created timestamps tie", async () => {
+    const user = userEvent.setup();
+    const sharedCreatedAt = "2026-07-25T12:00:00Z";
+    const existingHigherUuid = {
+      ...plannedProject,
+      id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      name: "Existing higher UUID",
+      createdAt: sharedCreatedAt,
+      updatedAt: sharedCreatedAt,
+    };
+    const createdLowerUuid = {
+      ...plannedProject,
+      id: "00000000-0000-4000-8000-000000000001",
+      name: "Created lower UUID",
+      createdAt: sharedCreatedAt,
+      updatedAt: sharedCreatedAt,
+    };
+    mockApiRequest.mockReturnValueOnce(response(createdLowerUuid, 201));
+    const { rerender } = render(
+      <ProjectsWorkspace initialProjects={[existingHigherUuid]} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "New project" }));
+    await user.type(screen.getByLabelText("Name"), "Created lower UUID");
+    await user.click(screen.getByRole("button", { name: "Create project" }));
+    await within(await screen.findByLabelText("Project list")).findByText(
+      "Created lower UUID",
+    );
+
+    const namesAfterCreate = within(screen.getByLabelText("Project list"))
+      .getAllByRole("article")
+      .map((card) => card.getAttribute("aria-label"));
+    expect(namesAfterCreate).toEqual([
+      "Project Created lower UUID",
+      "Project Existing higher UUID",
+    ]);
+
+    rerender(
+      <ProjectsWorkspace
+        initialProjects={[existingHigherUuid, createdLowerUuid]}
+      />,
+    );
+
+    const namesAfterReconciliation = within(screen.getByLabelText("Project list"))
+      .getAllByRole("article")
+      .map((card) => card.getAttribute("aria-label"));
+    expect(namesAfterReconciliation).toEqual([
+      "Project Existing higher UUID",
+      "Project Created lower UUID",
+    ]);
+  });
+
   it("validates a required non-blank name before create submission", async () => {
     const user = userEvent.setup();
     render(<ProjectsWorkspace initialProjects={[]} />);

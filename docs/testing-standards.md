@@ -120,10 +120,13 @@ The first full-flow test:
 7. Archive the Project.
 8. Confirm the Project shows as archived and read-only.
 
-Run it from the repository root with:
+Install the repository-managed Chromium build once — the command differs by
+platform (macOS/Windows vs. Linux); see
+[Browser-to-database E2E setup](../README.md#browser-to-database-e2e) for the
+exact per-platform commands and why Linux needs a different one. Then run it
+from the repository root with:
 
 ```bash
-pnpm playwright:install
 pnpm test:e2e
 ```
 
@@ -141,12 +144,18 @@ query parameters documented below. Both `postgresql://` and
 form to `postgresql+psycopg://` so every lifecycle operation uses the installed
 Psycopg 3 driver.
 
-Playwright validates the target before starting either server. Setup creates the
-validated database only for PostgreSQL's specific missing-database response,
-sets both runtime and migration URLs to that exact target, upgrades through
-Alembic to head, and deletes all Project rows. Teardown validates the target
-again and deletes all Project rows without dropping or downgrading the database.
-The normal development database is never used.
+The root `pnpm test:e2e` command is the sole preparation owner: it validates the
+target, creates the validated database only for PostgreSQL's specific
+missing-database response, upgrades through Alembic to head, and deletes all
+Project rows — all before Playwright starts. Playwright's own configuration
+only validates the same target again (a cheap, non-mutating guard that also
+protects a Playwright process started outside the root command) before
+starting either server; it does not prepare the database itself. Teardown
+validates the target again and deletes all Project rows without dropping or
+downgrading the database. The normal development database is never used.
+Running Playwright directly (`pnpm exec playwright test --config=e2e/playwright.config.ts`)
+skips preparation and is not a supported entry point — always use
+`pnpm test:e2e`.
 
 Both web servers are new processes with existing-server reuse disabled. Failure
 screenshots are retained, traces are retained on local failures (and on the first

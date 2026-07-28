@@ -18,7 +18,10 @@ async def test_list_returns_projects_from_the_ordered_query() -> None:
     returned = await repository.list()
 
     assert returned == projects
-    session.execute.assert_awaited_once()
+    statement = session.execute.await_args.args[0]
+    compiled_statement = " ".join(str(statement).split())
+    assert "projects.created_at DESC" in compiled_statement
+    assert "projects.id DESC" in compiled_statement
 
 
 async def test_get_loads_a_project_by_uuid() -> None:

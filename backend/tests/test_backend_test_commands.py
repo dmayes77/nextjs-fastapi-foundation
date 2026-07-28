@@ -5,9 +5,12 @@ from pathlib import Path
 
 import pytest
 
-ROOT_PACKAGE_JSON = Path(__file__).resolve().parents[2] / "package.json"
-FRONTEND_PACKAGE_JSON = Path(__file__).resolve().parents[2] / "frontend/package.json"
-CI_WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ci.yml"
+ROOT_DIR = Path(__file__).resolve().parents[2]
+ROOT_PACKAGE_JSON = ROOT_DIR / "package.json"
+FRONTEND_PACKAGE_JSON = ROOT_DIR / "frontend/package.json"
+CI_WORKFLOW = ROOT_DIR / ".github" / "workflows" / "ci.yml"
+E2E_DIR = ROOT_DIR / "e2e"
+PLAYWRIGHT_CONFIG = E2E_DIR / "playwright.config.ts"
 COMPOUND_COMMAND = re.compile(r"\s*(?:&&|\|\||;)\s*")
 ROOT_SCRIPT_REFERENCE = re.compile(r"^pnpm(?:\s+run)?\s+(?P<script>[A-Za-z0-9:_-]+)$")
 NON_ALIAS_PNPM_COMMANDS = frozenset({"exec", "install", "playwright:install"})
@@ -195,6 +198,47 @@ def test_explicit_database_and_browser_commands_remain_outside_check() -> None:
     assert "scripts.e2e_database prepare" in scripts["test:e2e"]
     assert "playwright test" in scripts["test:e2e"]
     assert {"test:backend:integration", "test:e2e"}.isdisjoint(check_graph.aliases)
+
+
+def test_root_e2e_command_prepares_the_database_exactly_once() -> None:
+    command = _root_scripts()["test:e2e"]
+
+    assert command.count("scripts.e2e_database prepare") == 1
+    assert "&&" in command, "test:e2e must run preparation before playwright test"
+    prepare_index = command.index("scripts.e2e_database prepare")
+    playwright_index = command.index("playwright test")
+    assert prepare_index < playwright_index, (
+        "database preparation must run before Playwright starts"
+    )
+
+
+def test_playwright_config_no_longer_performs_its_own_preparation() -> None:
+    config = PLAYWRIGHT_CONFIG.read_text()
+
+    assert "globalSetup" not in config, (
+        "Playwright must not run a second, redundant database preparation; "
+        "the root pnpm test:e2e command is the sole preparation owner"
+    )
+    assert not (E2E_DIR / "global-setup.ts").exists(), (
+        "global-setup.ts should be removed once nothing references it"
+    )
+
+
+def test_playwright_config_still_validates_and_tears_down() -> None:
+    config = PLAYWRIGHT_CONFIG.read_text()
+
+    # The cheap, non-mutating safety guard remains: it fails closed on an
+    # unsafe target before either web server can start, independent of
+    # whether preparation already ran.
+    assert 'runDatabaseCommand("validate")' in config
+    # Cleanup ownership is unchanged: teardown still runs after the suite.
+    assert 'globalTeardown: "./global-teardown.ts"' in config
+
+
+def test_global_teardown_still_owns_cleanup() -> None:
+    teardown = (E2E_DIR / "global-teardown.ts").read_text()
+
+    assert 'runDatabaseCommand("cleanup")' in teardown
 
 
 def test_command_graph_detects_a_direct_cycle() -> None:

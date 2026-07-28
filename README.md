@@ -269,12 +269,6 @@ prefix. No browser-exposed environment variable is currently required.
 | `DATABASE_MIGRATION_URL` | No | Separate Alembic target; blank falls back to `DATABASE_URL` | blank or the same local URL |
 | `APP_ENV` | No | Application environment label; defaults to `development` | `development` |
 | `DATABASE_ECHO` | No | Enables SQLAlchemy SQL logging; defaults to `false` | `false` |
-| `CORS_ORIGINS` | No | JSON list reserved in backend settings; defaults to the frontend origin | `["http://localhost:3000"]` |
-
-The implemented browser API path is the same-origin Next.js rewrite, and the
-FastAPI app does not currently install CORS middleware. Changing
-`CORS_ORIGINS` alone therefore does not enable direct browser-to-FastAPI
-cross-origin requests.
 
 ### Test variables
 
