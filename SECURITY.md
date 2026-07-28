@@ -9,6 +9,13 @@ this policy with support terms appropriate for their own users and deployments.
 
 ## Report a vulnerability
 
+Repositories generated from this template do not inherit GitHub repository
+settings. Before publishing a generated repository, its owner must either
+enable GitHub Private Vulnerability Reporting and verify that **Report a
+vulnerability** is available, or document an alternate private reporting
+channel that actually exists. Never direct reporters to disclose vulnerability
+details publicly when a private channel is unavailable.
+
 Use this repository's **Security** tab and select **Report a vulnerability** to
 open a private vulnerability report. Do not disclose exploitable details in a
 public issue, discussion, pull request, or commit.
