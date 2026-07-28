@@ -1149,7 +1149,7 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Step 28: Write the complete template README
 - [x] Audit Cleanup A: Dependency and Runtime Safety
 - [x] Audit Cleanup B: Consistency, E2E Efficiency, and Documentation Alignment
-- [ ] Step 29: Prepare the GitHub template
+- [x] Step 29: Prepare the GitHub template
 - [ ] Step 30: Release version 1.0.0
 
 ---
@@ -1158,15 +1158,8 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Finish Step 29 only after the tracked template files reach `main`, template
-> mode is enabled, and a generated repository passes local and hosted smoke
-> validation.**
+> **Begin Step 30: Release version 1.0.0.**
 
-Steps 20 through 28 are complete. Audit Cleanup A (dependency advisories, async
-engine disposal, deprecated 422 constant) and Audit Cleanup B (canonical Project
-ordering with server-authoritative reconciliation, single-owner E2E database
-preparation, removal of dead CORS configuration, corrected backend/frontend
-test documentation, and consolidated Playwright setup guidance) are complete.
-Step 29 template preparation is in progress and remains unchecked until its
-template-generated smoke test succeeds. Step 30 release preparation has not
-started.
+Steps 20 through 29 are complete. Audit Cleanup A and Audit Cleanup B are
+complete. Step 29 template preparation and generated-repository local and hosted
+smoke validation are complete. Step 30 release preparation has not started.
