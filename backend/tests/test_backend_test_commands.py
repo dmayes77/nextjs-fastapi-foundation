@@ -11,6 +11,10 @@ CI_WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "c
 COMPOUND_COMMAND = re.compile(r"\s*(?:&&|\|\||;)\s*")
 ROOT_SCRIPT_REFERENCE = re.compile(r"^pnpm(?:\s+run)?\s+(?P<script>[A-Za-z0-9:_-]+)$")
 NON_ALIAS_PNPM_COMMANDS = frozenset({"exec", "install", "playwright:install"})
+WORKFLOW_STEP = re.compile(
+    r"(?ms)^      - name: (?P<name>[^\n]+)\n"
+    r"(?P<body>.*?)(?=^      - name:|\Z)"
+)
 UNSAFE_CHECK_ALIASES = frozenset(
     {
         "test:backend:integration",
@@ -56,6 +60,15 @@ def _root_scripts() -> dict[str, str]:
 def _frontend_scripts() -> dict[str, str]:
     package = json.loads(FRONTEND_PACKAGE_JSON.read_text())
     return package["scripts"]
+
+
+def _workflow_steps(workflow: str) -> dict[str, str]:
+    steps = {
+        match["name"]: match["body"].rstrip()
+        for match in WORKFLOW_STEP.finditer(workflow)
+    }
+    assert steps, "No named GitHub Actions steps were found."
+    return steps
 
 
 def _root_script_reference(
@@ -257,18 +270,59 @@ def test_command_graph_preserves_non_root_pnpm_commands(command: str) -> None:
 
 def test_ci_uses_the_safe_root_check_and_explicit_database_suites() -> None:
     workflow = CI_WORKFLOW.read_text()
+    steps = _workflow_steps(workflow)
 
-    assert "run: pnpm check" in workflow
-    assert "run: pnpm db:upgrade" in workflow
-    assert "run: pnpm test:backend:integration" in workflow
-    assert "run: pnpm test:e2e" in workflow
+    assert "run: pnpm check" in steps["Run safe repository checks"]
+    assert "run: pnpm db:upgrade" in steps["Upgrade the integration database"]
+    assert (
+        "run: pnpm test:backend:integration"
+        in steps["Run PostgreSQL integration tests"]
+    )
+    assert "run: pnpm test:e2e" in steps["Run Playwright end-to-end tests"]
     assert "pytest --ignore=tests/integration" not in workflow
 
 
-def test_ci_uses_distinct_unambiguously_named_test_databases() -> None:
+def test_ci_scopes_database_targets_to_the_steps_that_require_them() -> None:
     workflow = CI_WORKFLOW.read_text()
+    job_environment = workflow.partition("    steps:")[0]
+    steps = _workflow_steps(workflow)
+    safe_checks = steps["Run safe repository checks"]
+    migration = steps["Upgrade the integration database"]
+    integration = steps["Run PostgreSQL integration tests"]
+    end_to_end = steps["Run Playwright end-to-end tests"]
 
-    assert "TEST_DATABASE_URL:" in workflow
-    assert "/next_fastapi_test" in workflow
-    assert "PLAYWRIGHT_DATABASE_URL:" in workflow
-    assert "/next_fastapi_e2e_test" in workflow
+    unreachable_url = "postgresql+psycopg://invalid:invalid@127.0.0.1:1/invalid"
+    integration_url = (
+        "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/next_fastapi_test"
+    )
+    end_to_end_url = (
+        "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/next_fastapi_e2e_test"
+    )
+
+    assert "DATABASE_URL:" not in job_environment
+    assert "DATABASE_MIGRATION_URL:" not in job_environment
+    assert "TEST_DATABASE_URL:" not in job_environment
+    assert "PLAYWRIGHT_DATABASE_URL:" not in job_environment
+
+    assert f"DATABASE_URL: {unreachable_url}" in safe_checks
+    assert f"DATABASE_MIGRATION_URL: {unreachable_url}" in safe_checks
+    assert integration_url not in safe_checks
+    assert end_to_end_url not in safe_checks
+
+    assert f"DATABASE_URL: {integration_url}" in migration
+    assert f"DATABASE_MIGRATION_URL: {integration_url}" in migration
+    assert f"TEST_DATABASE_URL: {integration_url}" in integration
+    assert f"PLAYWRIGHT_DATABASE_URL: {end_to_end_url}" in end_to_end
+
+
+def test_ci_always_preserves_playwright_test_results() -> None:
+    artifact_upload = _workflow_steps(CI_WORKFLOW.read_text())[
+        "Upload Playwright test results"
+    ]
+
+    assert "if: always()" in artifact_upload
+    assert "uses: actions/upload-artifact@v6" in artifact_upload
+    assert "name: playwright-test-results" in artifact_upload
+    assert "path: test-results/" in artifact_upload
+    assert "if-no-files-found: ignore" in artifact_upload
+    assert "retention-days: 7" in artifact_upload
