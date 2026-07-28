@@ -53,6 +53,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Documentation
 
+- Replaced the partial root README with a complete first-time setup and
+  operating guide covering architecture, verified installation, environment
+  contracts, PostgreSQL and Alembic, generated API clients, quality commands,
+  test isolation, full-stack CI, the Project reference slice, deployment and
+  security considerations, troubleshooting, and safe template customization.
 - Defined the project development standards covering architecture, coding, API, database, testing, and contribution rules (`7d6668d`).
 - Added the project philosophy and updated the implementation roadmap (`9b344b5`).
 - Revised the implementation roadmap to match the current build sequence (`6b6f1ab`).
