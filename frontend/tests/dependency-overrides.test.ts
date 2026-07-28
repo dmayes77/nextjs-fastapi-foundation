@@ -50,6 +50,11 @@ function resolveChain(chain: string[]): string {
 }
 
 const MINIMATCH_CONSUMERS = {
+  "minimatch@3.1.5 (via eslint > @eslint/config-array, the accepted residual path)": {
+    chain: ["eslint", "@eslint/config-array", "minimatch"],
+    expectedMinimatchVersion: "3.1.5",
+    expectedBraceExpansionVersion: "1.1.16",
+  },
   "minimatch@5.1.9 (via openapi-typescript > @redocly/openapi-core)": {
     chain: ["openapi-typescript", "@redocly/openapi-core", "minimatch"],
     expectedMinimatchVersion: "5.1.9",
