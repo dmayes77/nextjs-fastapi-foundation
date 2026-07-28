@@ -1,9 +1,14 @@
 # Third-party notices
 
+The repository as a whole is distributed under its root
+[MIT License](../LICENSE). That license does not replace or override the
+copyright notices and license terms for the third-party materials identified
+below; those terms remain applicable to their respective materials.
+
 ## Shadcn Admin
 
 The responsive application shell, navigation hierarchy, page spacing,
-typography hierarchy, and panel treatment in Step 24 use
+typography hierarchy, and panel treatment use
 [Shadcn Admin](https://github.com/satnaing/shadcn-admin) as a visual and
 interaction reference.
 

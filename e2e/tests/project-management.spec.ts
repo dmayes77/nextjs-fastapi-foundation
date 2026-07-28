@@ -6,7 +6,7 @@ test("creates, updates, and archives a project through PostgreSQL", async ({
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const projectName = `Playwright Project ${suffix}`;
   const updatedName = `${projectName} Updated`;
-  const initialDescription = "Created by the Step 25 browser lifecycle.";
+  const initialDescription = "Created by the browser lifecycle test.";
   const updatedDescription = "Updated through the full browser-to-database flow.";
 
   await page.goto("/projects");
