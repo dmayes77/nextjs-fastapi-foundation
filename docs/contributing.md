@@ -128,6 +128,10 @@ pnpm test:backend:integration
 pnpm test:e2e
 ```
 
+Every pull request runs these layers in GitHub Actions. The workflow first runs
+the same safe `pnpm check`, then uses dedicated PostgreSQL test databases for the
+explicit Alembic, integration, and Playwright commands.
+
 A change is not complete when:
 
 - Tests are failing

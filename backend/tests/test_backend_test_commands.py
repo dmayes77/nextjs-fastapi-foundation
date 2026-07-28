@@ -7,9 +7,7 @@ import pytest
 
 ROOT_PACKAGE_JSON = Path(__file__).resolve().parents[2] / "package.json"
 FRONTEND_PACKAGE_JSON = Path(__file__).resolve().parents[2] / "frontend/package.json"
-BACKEND_CI_WORKFLOW = (
-    Path(__file__).resolve().parents[2] / ".github" / "workflows" / "backend-ci.yml"
-)
+CI_WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ci.yml"
 COMPOUND_COMMAND = re.compile(r"\s*(?:&&|\|\||;)\s*")
 ROOT_SCRIPT_REFERENCE = re.compile(r"^pnpm(?:\s+run)?\s+(?P<script>[A-Za-z0-9:_-]+)$")
 NON_ALIAS_PNPM_COMMANDS = frozenset({"exec", "install", "playwright:install"})
@@ -257,16 +255,20 @@ def test_command_graph_preserves_non_root_pnpm_commands(command: str) -> None:
     assert graph.leaves == (command,)
 
 
-def test_backend_ci_command_excludes_the_integration_directory() -> None:
-    workflow = BACKEND_CI_WORKFLOW.read_text()
-    step = re.search(
-        r"(?ms)^      - name: Run backend tests\n(?P<body>.*?)(?=^      - name:|\Z)",
-        workflow,
-    )
+def test_ci_uses_the_safe_root_check_and_explicit_database_suites() -> None:
+    workflow = CI_WORKFLOW.read_text()
 
-    assert step is not None
-    command = re.search(r"(?m)^        run: (?P<command>.+)$", step["body"])
-    assert command is not None
-    assert command["command"] == (
-        "uv run --group dev pytest --ignore=tests/integration"
-    )
+    assert "run: pnpm check" in workflow
+    assert "run: pnpm db:upgrade" in workflow
+    assert "run: pnpm test:backend:integration" in workflow
+    assert "run: pnpm test:e2e" in workflow
+    assert "pytest --ignore=tests/integration" not in workflow
+
+
+def test_ci_uses_distinct_unambiguously_named_test_databases() -> None:
+    workflow = CI_WORKFLOW.read_text()
+
+    assert "TEST_DATABASE_URL:" in workflow
+    assert "/next_fastapi_test" in workflow
+    assert "PLAYWRIGHT_DATABASE_URL:" in workflow
+    assert "/next_fastapi_e2e_test" in workflow
