@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Added Step 29 template preparation: an MIT repository license, private
+  vulnerability-reporting policy, structured bug and feature issue forms, a
+  concise pull request template, and weekly Dependabot coverage for root and
+  frontend pnpm dependencies, backend uv dependencies, and GitHub Actions.
 - Added the Next.js App Router frontend foundation with TypeScript, Tailwind CSS, and ESLint (`fe47ff7`).
 - Added the FastAPI backend foundation, served with `uv` and exposing OpenAPI documentation (`560829b`).
 - Added backend environment configuration using Pydantic Settings, validated at startup and loaded from `.env` with a committed `.env.example` (`a55a9e2`).
@@ -39,6 +43,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Reworked onboarding around GitHub's template flow, documented which identity
+  values and reference features are optional to customize, distinguished
+  foundation contributors from template users, and pinned every external
+  GitHub Action to its verified immutable release commit.
+- Hardened the live public repository with accurate description and topics,
+  automatic merged-branch deletion, private vulnerability reporting, and an
+  active default-branch ruleset requiring pull requests, the full-stack CI
+  check, and resolved review conversations while blocking force-pushes and
+  branch deletion.
 - Reorganized the FastAPI backend into an `app/` package with a dedicated routes layer and a `pyproject.toml` entrypoint (`d00046a`).
 - Replaced the generated Next.js starter markup with the formatted project landing page (`13a16b7`).
 - **Audit Cleanup B: Consistency, E2E Efficiency, and Documentation Alignment.** Made Project list ordering canonical and deterministic: the backend now returns Projects by `created_at` descending, then `id` descending. The frontend prepends newly created Projects for immediate feedback and adopts the server's canonical order during reconciliation, including UUID tie-breaking when timestamps are equal. Removed the duplicate E2E database preparation: `pnpm test:e2e` is now the sole preparation owner (creates, migrates, and clears the dedicated database once before Playwright starts); Playwright's own `global-setup.ts` — which ran the same preparation a second time — was deleted, and its configuration now only re-validates the target as a cheap safety guard. Removed the unused `CORS_ORIGINS` backend setting, since FastAPI never installed CORS middleware and the same-origin Next.js proxy architecture is unchanged. Corrected stale documentation: `backend/README.md` now documents the safe default test command instead of unrestricted `pytest` discovery, `frontend/README.md` no longer describes already-implemented features (the same-origin rewrite, Playwright E2E coverage) as future work, and `docs/testing-standards.md` now links to the root README's platform-specific Playwright install commands instead of repeating an incomplete, Linux-inaccurate copy.

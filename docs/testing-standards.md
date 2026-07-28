@@ -130,7 +130,7 @@ from the repository root with:
 pnpm test:e2e
 ```
 
-Only Chromium is installed and used in Step 25. The suite uses one worker, one
+Only Chromium is installed and used. The suite uses one worker, one
 browser project, and one lifecycle test. It uses accessibility-first selectors
 and does not rely on a page-object framework.
 

@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose an outcome that improves the reusable foundation.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Start with the problem and desired outcome. Implementation ideas are welcome after the need and scope are clear.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or recurring need should be addressed?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Proposed outcome
+      description: What should users be able to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe workarounds or other approaches you considered.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Scope
+      options:
+        - Frontend
+        - Backend
+        - Frontend and backend
+        - Database or migrations
+        - Tooling, CI, or documentation
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking-change potential
+      options:
+        - No known breaking change
+        - Possibly breaking
+        - Breaking change expected
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional context
+      description: Add constraints, examples, or implementation ideas after explaining the problem.

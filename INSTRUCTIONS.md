@@ -1,5 +1,10 @@
 # Next.js FastAPI Foundation Build Instructions
 
+> **Foundation roadmap:** This file records how the reusable foundation itself
+> was built and remains the checkpoint source of truth for its maintainers. A
+> repository generated from the template may archive or remove this file after
+> establishing its own roadmap.
+
 ## Purpose
 
 This file is the master build plan for creating a reusable GitHub template that connects:
@@ -1153,11 +1158,15 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 29 only after the Audit Cleanup B checkpoint is reviewed and committed.**
+> **Finish Step 29 only after the tracked template files reach `main`, template
+> mode is enabled, and a generated repository passes local and hosted smoke
+> validation.**
 
 Steps 20 through 28 are complete. Audit Cleanup A (dependency advisories, async
 engine disposal, deprecated 422 constant) and Audit Cleanup B (canonical Project
 ordering with server-authoritative reconciliation, single-owner E2E database
 preparation, removal of dead CORS configuration, corrected backend/frontend
 test documentation, and consolidated Playwright setup guidance) are complete.
-Step 29 template preparation and Step 30 release preparation have not started.
+Step 29 template preparation is in progress and remains unchecked until its
+template-generated smoke test succeeds. Step 30 release preparation has not
+started.

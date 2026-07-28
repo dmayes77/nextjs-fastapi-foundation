@@ -11,9 +11,37 @@ the architecture from a responsive UI through FastAPI and SQLAlchemy to
 PostgreSQL. It is a reference implementation, not a complete project-management
 product.
 
-The project is pre-1.0 (`0.1.0`) and remains private package metadata. The
-application foundation and CI are implemented; GitHub template packaging and the
-first stable release are not yet complete. See [Roadmap and status](#roadmap-and-status).
+The project is pre-1.0 (`0.1.0`) and its packages remain private. The
+application foundation and CI are implemented; the first stable release remains
+future work. See [Roadmap and status](#roadmap-and-status).
+
+## Use this template
+
+1. Select **Use this template** on GitHub, then **Create a new repository**.
+2. Choose the new repository's owner, name, visibility, and description.
+3. Clone the newly created repository and enter its directory:
+
+   ```bash
+   git clone https://github.com/YOUR-OWNER/YOUR-REPOSITORY.git
+   cd YOUR-REPOSITORY
+   ```
+
+4. Review the [template customization checklist](#cleanup-checklist) and replace
+   identity values that should describe your product. The committed database
+   names and Project example are functional defaults; customization does not
+   need to block the first local run.
+5. [Install dependencies](#install-dependencies).
+6. [Create local environment files](#create-local-environment-files).
+7. [Prepare PostgreSQL](#prepare-postgresql).
+8. [Apply migrations](#apply-migrations).
+9. [Install Playwright](#install-playwright).
+10. [Run validation](#run-initial-validation).
+11. [Start development](#running-the-application).
+
+The commands in [Template setup](#template-setup) are the detailed onboarding
+path for a repository created from this template. Contributors changing the
+foundation itself should instead start with
+[Contributing to this foundation](#contributing-to-this-foundation).
 
 ## Features
 
@@ -127,9 +155,11 @@ versions remain governed by the committed lockfiles.
 │   └── openapi.json                # Committed deterministic API contract
 ├── e2e/                            # Playwright configuration, lifecycle, and tests
 ├── docs/                           # Architecture and engineering standards
-├── .github/workflows/ci.yml        # Full-stack pull-request validation
+├── .github/                        # CI, contribution templates, and Dependabot
 ├── package.json                    # Root development and validation commands
-├── INSTRUCTIONS.md                 # Numbered implementation roadmap
+├── INSTRUCTIONS.md                 # Foundation-development roadmap
+├── LICENSE                         # Repository MIT license
+├── SECURITY.md                     # Private vulnerability reporting policy
 └── README.md                       # Setup and operating guide
 ```
 
@@ -164,18 +194,10 @@ uv --version
 psql --version
 ```
 
-## Initial setup
+## Template setup
 
-### Clone the repository
-
-```bash
-git clone https://github.com/dmayes77/nextjs-fastapi-foundation.git
-cd nextjs-fastapi-foundation
-```
-
-This repository is not yet enabled as a GitHub template. Until that packaging
-step is complete, clone or fork it instead of relying on GitHub's **Use this
-template** button.
+After creating and cloning a repository through **Use this template**, run the
+following commands from its root.
 
 ### Install dependencies
 
@@ -184,7 +206,7 @@ Install the root tools, frontend application, and locked backend environment:
 ```bash
 pnpm install --frozen-lockfile
 pnpm --dir frontend install --frozen-lockfile
-cd backend && uv sync --locked --group dev && cd ..
+uv sync --project backend --group dev --locked
 ```
 
 ### Create local environment files
@@ -241,6 +263,35 @@ pnpm db:current
 
 Alembic is the only supported schema-management path. The application does not
 call `Base.metadata.create_all()`.
+
+### Install Playwright
+
+Install the repository-managed Chromium build once with the command for your
+platform.
+
+macOS and Windows:
+
+```bash
+pnpm playwright:install
+```
+
+Linux:
+
+```bash
+pnpm exec playwright install --with-deps chromium
+```
+
+### Run initial validation
+
+```bash
+pnpm check
+pnpm test:backend:integration
+pnpm test:e2e
+```
+
+These commands verify the safe checks, the dedicated PostgreSQL integration
+database, and the browser-to-database Project lifecycle before development
+starts.
 
 ## Environment configuration
 
@@ -786,21 +837,34 @@ an application response, not a transport or CORS failure.
 
 ## Template customization
 
+The committed identity and sample domain are intentionally easy to find, but
+the defaults already run. In particular, `next_fastapi`, `next_fastapi_test`,
+`next_fastapi_e2e_test`, the Project vertical slice, `backend/openapi.json`, and
+the generated frontend API operations may remain unchanged while a new project
+is being established.
+
 When adapting the foundation:
 
-1. rename root, frontend, backend, and application metadata;
-2. choose and add a repository license;
-3. replace or remove the Project model, migration, schemas, repository, service,
-   routes, generated contract, frontend workspace, and E2E test together;
+1. rename repository, package, application, and database identity where useful;
+2. update the README title, description, GitHub links, deployment targets, and
+   project-specific metadata;
+3. retain, rename, or replace the Project reference implementation; remove it
+   only after another complete vertical slice proves the architecture;
 4. add new tables through the registry and Alembic rather than `create_all()`;
-5. update environment examples, local database names, origins, and any future
-   CORS policy;
+5. update environment examples, local database names when desired, origins, and
+   any future CORS policy;
 6. export OpenAPI and regenerate the frontend client after API changes;
 7. preserve the standard error envelope, request IDs, test-database guards, and
    test isolation;
 8. keep `pnpm check`, integration tests, E2E, and CI green;
-9. update architecture, standards, notices, and changelog entries that no longer
-   match the customized product.
+9. keep the existing MIT `LICENSE` and copyright notice while the project
+   contains substantial portions of this foundation; add your own copyright
+   notice for significant original work, and replace the original notice only
+   after completely removing the foundation or obtaining appropriate legal
+   guidance;
+10. archive or remove the foundation's `INSTRUCTIONS.md` and
+    `docs/changelog.md` after establishing the new project's own roadmap and
+    changelog.
 
 For a fresh, unpublished copy you may simplify the sample migration history
 before deploying. Once any migration has been applied to a shared environment,
@@ -808,23 +872,35 @@ create new revisions instead of rewriting history.
 
 ### Cleanup checklist
 
-- [ ] Rename package names, descriptions, application metadata, and database
-      names.
-- [ ] Add an explicit repository license suitable for the new project.
-- [ ] Replace or deliberately retain the Project example.
-- [ ] Update `frontend/.env.example` and `backend/.env.example`.
-- [ ] Update public/internal origins and review any direct-browser CORS need.
-- [ ] Regenerate `backend/openapi.json` and the frontend API client.
+- [ ] Set the repository name, application display name, README title, and
+      product description.
+- [ ] Rename package names where they will identify a published or deployed
+      product.
+- [ ] Keep or rename `next_fastapi`, `next_fastapi_test`, and
+      `next_fastapi_e2e_test`; the committed names are safe local defaults.
+- [ ] Review `frontend/.env.example`, `backend/.env.example`, environment values,
+      and public/internal origins for the target deployment.
+- [ ] Replace template GitHub repository links and project-specific metadata.
+- [ ] Choose deployment targets and document their configuration.
+- [ ] Retain, rename, replace, or eventually remove the Project reference slice.
+- [ ] Regenerate `backend/openapi.json` and the frontend API operations after
+      changing the API.
 - [ ] Review migrations and apply them to a new empty database.
-- [ ] Update documentation and third-party notices.
+- [ ] Preserve the existing MIT `LICENSE` and copyright notice while substantial
+      portions of the foundation remain; add your own notice for significant
+      original work instead of replacing the upstream notice.
+- [ ] Update or replace the foundation roadmap and changelog.
 - [ ] Run `pnpm check`, PostgreSQL integration tests, and Playwright E2E.
 - [ ] Confirm no sample secrets, personal paths, or local data are tracked.
 
-This checklist prepares a local copy for customization; it does not perform the
-repository publishing and template-setting work planned for the next roadmap
-checkpoint.
+## Contributing to this foundation
 
-## Contributing
+To change the foundation itself, clone this repository directly:
+
+```bash
+git clone https://github.com/dmayes77/nextjs-fastapi-foundation.git
+cd nextjs-fastapi-foundation
+```
 
 Read [docs/contributing.md](docs/contributing.md) before opening a change. Keep
 branches and commits focused, update tests and contracts with behavior changes,
@@ -833,21 +909,23 @@ the unreleased changelog accurate.
 
 Every pull request is validated by the full-stack GitHub Actions workflow. Do
 not merge while required checks or review findings remain unresolved.
+Use the issue forms in the repository's **Issues** tab for public bug reports and
+feature requests. Follow [SECURITY.md](SECURITY.md) for private vulnerability
+reports; never disclose exploitable details in an issue. The pull request
+template supplies the expected impact and conditional validation checklist.
 
 ## Roadmap and status
 
 [INSTRUCTIONS.md](INSTRUCTIONS.md) is the implementation roadmap and current
-checkpoint source of truth. Steps 20 through 28 are complete. Template
-repository preparation and the 1.0.0 release remain unstarted.
+checkpoint source of truth for developing this foundation. A generated project
+may archive or remove it and [docs/changelog.md](docs/changelog.md) after
+creating its own planning and release records. Step 29 template preparation is
+in progress; the 1.0.0 release has not started.
 
 ## License and notices
 
-This repository does not currently include a repository-level license file.
-Until a license is selected and added, do not assume the repository itself is
-licensed for unrestricted reuse or redistribution.
-
-Third-party design and component notices, including their upstream MIT license
-texts, are recorded in
-[docs/third-party-notices.md](docs/third-party-notices.md). Those notices apply
-to the identified upstream materials and do not grant a license for the
-repository as a whole.
+The repository is licensed under the [MIT License](LICENSE), copyright 2026
+David Mayes. Third-party design and component notices, including their upstream
+license texts, remain separately recorded in
+[docs/third-party-notices.md](docs/third-party-notices.md). The repository
+license does not replace or override those terms.

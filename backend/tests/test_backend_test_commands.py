@@ -365,7 +365,16 @@ def test_ci_always_preserves_playwright_test_results() -> None:
     ]
 
     assert "if: always()" in artifact_upload
-    assert "uses: actions/upload-artifact@v6" in artifact_upload
+    action_reference = re.search(
+        r"(?m)^\s*uses:\s+(?P<action>actions/upload-artifact)"
+        r"@(?P<revision>\S+)\s+#\s+(?P<release>v\d+(?:\.\d+){1,2})\s*$",
+        artifact_upload,
+    )
+    assert action_reference is not None
+    assert action_reference["action"] == "actions/upload-artifact"
+    assert re.fullmatch(r"[0-9a-f]{40}", action_reference["revision"])
+    assert not action_reference["revision"].startswith("v")
+    assert action_reference["release"].startswith("v")
     assert "name: playwright-test-results" in artifact_upload
     assert "path: e2e/test-results/" in artifact_upload
     assert "if-no-files-found: ignore" in artifact_upload

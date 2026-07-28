@@ -1,0 +1,77 @@
+name: Bug report
+description: Report a reproducible problem in the foundation.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the project. Security vulnerabilities do not belong in public issues; follow the repository's SECURITY.md to report them privately.
+        Redact passwords, database URLs, API keys, tokens, personal data, and other sensitive values. Do not paste full environment files.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is the problem?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Frontend
+        - Backend
+        - Frontend and backend
+        - Database or migrations
+        - Tooling, CI, or documentation
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include relevant OS and tool versions. Redact sensitive values.
+      placeholder: OS, Node.js, pnpm, Python, uv, PostgreSQL, browser
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Include only the smallest useful, redacted excerpt.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation already attempted
+      description: List commands or troubleshooting steps already tried.
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Public-report safety
+      options:
+        - label: I confirm this report does not disclose a security vulnerability or sensitive data.
+          required: true
