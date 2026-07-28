@@ -919,8 +919,10 @@ template supplies the expected impact and conditional validation checklist.
 [INSTRUCTIONS.md](INSTRUCTIONS.md) is the implementation roadmap and current
 checkpoint source of truth for developing this foundation. A generated project
 may archive or remove it and [docs/changelog.md](docs/changelog.md) after
-creating its own planning and release records. Step 29 template preparation is
-in progress; the 1.0.0 release has not started.
+creating its own planning and release records. Step 29 is complete: the
+repository is configured as a GitHub template and has passed local and hosted
+generated-repository smoke validation. Step 30 release preparation has not
+started.
 
 ## License and notices
 
