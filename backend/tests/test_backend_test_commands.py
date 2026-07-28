@@ -323,6 +323,6 @@ def test_ci_always_preserves_playwright_test_results() -> None:
     assert "if: always()" in artifact_upload
     assert "uses: actions/upload-artifact@v6" in artifact_upload
     assert "name: playwright-test-results" in artifact_upload
-    assert "path: test-results/" in artifact_upload
+    assert "path: e2e/test-results/" in artifact_upload
     assert "if-no-files-found: ignore" in artifact_upload
     assert "retention-days: 7" in artifact_upload
