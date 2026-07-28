@@ -1,3 +1,33 @@
 allowBuilds:
   sharp: true
   unrs-resolver: true
+
+# Narrow, advisory-driven overrides. Each targets only the specific vulnerable
+# resolution requested by its direct parent (next, @redocly/openapi-core via
+# openapi-typescript, minimatch); the parent has no newer release that bumps
+# the pin itself, so the fix is applied here instead. All replacements are
+# same-major, semver-compatible patches.
+overrides:
+  # next@16.2.11 pins postcss to the exact vulnerable 8.4.31 (GHSA-6g55-p6wh-862q,
+  # GHSA-r28c-9q8g-f849, GHSA-qx2v-qp2m-jg93).
+  postcss@8.4.31: ^8.5.19
+  # next@16.2.11 allows sharp only within ^0.34.5 (GHSA-f88m-g3jw-g9cj / libvips CVEs).
+  sharp@^0.34.5: ^0.35.3
+  # @redocly/openapi-core@1.34.17 (via openapi-typescript) pins js-yaml to the
+  # exact vulnerable 4.2.0 (GHSA-52cp-r559-cp3m).
+  js-yaml@4.2.0: ^4.3.0
+  # GHSA-mh99-v99m-4gvg marks every brace-expansion release <=5.0.7 as
+  # vulnerable; only 5.0.8+ is patched, and 5.x changed its CommonJS export
+  # shape (no longer a bare function). Only minimatch@10.2.5's ^5.0.5
+  # request is compatible with that new shape (verified: brace-pattern
+  # matching works under the override). minimatch@3.1.5 (^1.1.7, eslint's
+  # own bundled config-loading dependency), minimatch@5.1.9 (^2.0.1, via
+  # @redocly/openapi-core/openapi-typescript), and minimatch@9.0.9 (^2.0.2,
+  # via jest's glob) all break on brace-pattern input when forced onto
+  # brace-expansion@5.0.8 (reproduced: "expand is not a function" /
+  # "brace_expansion_1.default is not a function") and have no compatible
+  # patched maintenance release, so those three are intentionally left on
+  # their natural, still-vulnerable brace-expansion@1.x/2.x resolutions —
+  # see docs/changelog.md for the reachability assessment. Do not widen this
+  # override to those ranges; see frontend/tests/dependency-overrides.test.ts.
+  brace-expansion@^5.0.5: ^5.0.8
