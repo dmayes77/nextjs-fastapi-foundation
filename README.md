@@ -921,11 +921,11 @@ template supplies the expected impact and conditional validation checklist.
 [INSTRUCTIONS.md](INSTRUCTIONS.md) is the implementation roadmap and current
 checkpoint source of truth for developing this foundation. A generated project
 may archive or remove it and [docs/changelog.md](docs/changelog.md) after
-creating its own planning and release records. Steps 1 through 30 are complete
-for the `1.0.0` release checkpoint, including local and hosted
-generated-repository smoke validation. The preparation changes do not create the
-`v1.0.0` tag or GitHub Release; maintainers publish both from the reviewed merge
-commit after this checkpoint merges.
+creating its own planning and release records. Steps 1 through 29 are complete,
+including local and hosted generated-repository smoke validation. Step 30
+release preparation is complete, but the step remains open until maintainers
+publish and verify the `v1.0.0` tag and GitHub Release from the reviewed merge
+commit.
 
 ## License and notices
 
