@@ -2,10 +2,13 @@
 
 ## Supported versions
 
-Until the first stable release, security fixes are applied to the current
-default branch only. After releases begin, this section will identify the
-supported release lines. Projects created from this template should replace
-this policy with support terms appropriate for their own users and deployments.
+| Version | Supported |
+| --- | --- |
+| 1.0.x | ✅ |
+| < 1.0 | ❌ |
+
+Projects created from this template should replace this policy with support
+terms appropriate for their own users and deployments.
 
 ## Report a vulnerability
 
