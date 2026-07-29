@@ -11,11 +11,10 @@ the architecture from a responsive UI through FastAPI and SQLAlchemy to
 PostgreSQL. It is a reference implementation, not a complete project-management
 product.
 
-The repository is prepared for its first stable foundation release, version
-`1.0.0`. The GitHub template flow has passed local and hosted
-generated-repository validation. Its tag and GitHub Release are published only
-from the reviewed Step 30 merge commit, not from the release-preparation branch.
-See [Roadmap and status](#roadmap-and-status).
+Version `1.0.0` defines the first stable release of the foundation. The GitHub
+template flow has passed local and hosted generated-repository validation.
+Stable release artifacts are published only from reviewed commits. See
+[Roadmap and status](#roadmap-and-status).
 
 ## Use this template
 
@@ -923,9 +922,8 @@ checkpoint source of truth for developing this foundation. A generated project
 may archive or remove it and [docs/changelog.md](docs/changelog.md) after
 creating its own planning and release records. Steps 1 through 29 are complete,
 including local and hosted generated-repository smoke validation. Step 30
-release preparation is complete, but the step remains open until maintainers
-publish and verify the `v1.0.0` tag and GitHub Release from the reviewed merge
-commit.
+defines the version `1.0.0` stable-release milestone and its maintainer
+publication requirements.
 
 ## License and notices
 
