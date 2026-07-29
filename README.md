@@ -11,9 +11,10 @@ the architecture from a responsive UI through FastAPI and SQLAlchemy to
 PostgreSQL. It is a reference implementation, not a complete project-management
 product.
 
-The project is pre-1.0 (`0.1.0`) and its packages remain private. The
-application foundation and CI are implemented; the first stable release remains
-future work. See [Roadmap and status](#roadmap-and-status).
+Version `1.0.0` defines the first stable release of the foundation. The GitHub
+template flow has passed local and hosted generated-repository validation.
+Stable release artifacts are published only from reviewed commits. See
+[Roadmap and status](#roadmap-and-status).
 
 ## Use this template
 
@@ -627,7 +628,7 @@ preserving the layer boundaries and contract workflow.
 | [docs/testing-standards.md](docs/testing-standards.md) | Test layers, isolation, CI, and E2E database safety |
 | [docs/contributing.md](docs/contributing.md) | Branches, commits, pull requests, validation, and changelog workflow |
 | [docs/project-philosophy.md](docs/project-philosophy.md) | Scope, simplicity, and production-first principles |
-| [docs/changelog.md](docs/changelog.md) | Unreleased changes and future release history |
+| [docs/changelog.md](docs/changelog.md) | Release history and unreleased changes |
 | [docs/third-party-notices.md](docs/third-party-notices.md) | Upstream design and component notices |
 
 Architecture decisions are recorded separately under `docs/adr/`.
@@ -919,10 +920,10 @@ template supplies the expected impact and conditional validation checklist.
 [INSTRUCTIONS.md](INSTRUCTIONS.md) is the implementation roadmap and current
 checkpoint source of truth for developing this foundation. A generated project
 may archive or remove it and [docs/changelog.md](docs/changelog.md) after
-creating its own planning and release records. Step 29 is complete: the
-repository is configured as a GitHub template and has passed local and hosted
-generated-repository smoke validation. Step 30 release preparation has not
-started.
+creating its own planning and release records. Steps 1 through 29 are complete,
+including local and hosted generated-repository smoke validation. Step 30
+defines the version `1.0.0` stable-release milestone and its maintainer
+publication requirements.
 
 ## License and notices
 

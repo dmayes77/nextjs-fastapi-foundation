@@ -1158,8 +1158,11 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 
 The next action is:
 
-> **Begin Step 30: Release version 1.0.0.**
+> **Complete the Step 30 review, merge PR #39, then publish and verify version
+> `1.0.0` from the exact reviewed merge commit.**
 
-Steps 20 through 29 are complete. Audit Cleanup A and Audit Cleanup B are
+Steps 1 through 29 are complete. Audit Cleanup A and Audit Cleanup B are
 complete. Step 29 template preparation and generated-repository local and hosted
-smoke validation are complete. Step 30 release preparation has not started.
+smoke validation are complete. Step 30 release preparation is complete, but Step
+30 remains open until the annotated `v1.0.0` tag is pushed and the GitHub Release
+is published and verified against the intended merge commit.

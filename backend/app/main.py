@@ -13,6 +13,8 @@ from app.database.engine import engine
 from app.middleware.request_id import RequestIdMiddleware
 from app.schemas.errors import ErrorResponse
 
+APP_VERSION = "1.0.0"
+
 
 def generate_operation_id(route: APIRoute) -> str:
     """Deterministic fallback for a route that does not set its own
@@ -47,6 +49,7 @@ def create_app() -> FastAPI:
     get_settings()
     configure_logging()
     app = FastAPI(
+        version=APP_VERSION,
         responses={"default": {"model": ErrorResponse}},
         generate_unique_id_function=generate_operation_id,
         lifespan=lifespan,
