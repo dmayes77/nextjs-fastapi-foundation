@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-28
+
 ### Added
 
 - Added Step 29 template preparation: an MIT repository license, private
@@ -112,11 +114,5 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Included agent guidance files (`frontend/CLAUDE.md`, `frontend/AGENTS.md`) for AI-assisted development (`fe47ff7`).
 - Verified that the applications start independently and through the combined root command (`ae5bc4a`).
 
-<!--
-When a release is created:
-
-## [0.1.0] - YYYY-MM-DD
-
-Move the appropriate entries from [Unreleased] into the new version section.
-Leave [Unreleased] at the top for future changes.
--->
+[Unreleased]: https://github.com/dmayes77/nextjs-fastapi-foundation/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/dmayes77/nextjs-fastapi-foundation/releases/tag/v1.0.0

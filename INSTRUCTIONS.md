@@ -1150,16 +1150,18 @@ Formatting-only, typo-only, and temporary investigative commits do not require c
 - [x] Audit Cleanup A: Dependency and Runtime Safety
 - [x] Audit Cleanup B: Consistency, E2E Efficiency, and Documentation Alignment
 - [x] Step 29: Prepare the GitHub template
-- [ ] Step 30: Release version 1.0.0
+- [x] Step 30: Release version 1.0.0
 
 ---
 
-# Resume Point
+# Final Status
 
-The next action is:
+> **After the release-preparation pull request merges, create the annotated
+> `v1.0.0` tag on its reviewed merge commit and publish the GitHub Release from
+> that tag.**
 
-> **Begin Step 30: Release version 1.0.0.**
-
-Steps 20 through 29 are complete. Audit Cleanup A and Audit Cleanup B are
-complete. Step 29 template preparation and generated-repository local and hosted
-smoke validation are complete. Step 30 release preparation has not started.
+Steps 1 through 30 are complete. Audit Cleanup A and Audit Cleanup B are
+complete. Generated-template local and hosted smoke validation passed. Version
+`1.0.0` release preparation is complete. The remaining maintainer action is to
+tag the reviewed merge commit and publish its GitHub Release; neither action is
+performed from the preparation branch.
