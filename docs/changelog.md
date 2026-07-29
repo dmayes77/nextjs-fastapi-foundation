@@ -12,6 +12,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   vulnerability-reporting policy, structured bug and feature issue forms, a
   concise pull request template, and weekly Dependabot coverage for root and
   frontend pnpm dependencies, backend uv dependencies, and GitHub Actions.
+- Completed Step 29 after a private repository generated through **Use this
+  template** passed local and hosted validation:
+  - Local:
+    - 152 frontend tests across 14 suites
+    - 196 backend tests
+    - 11 PostgreSQL integration tests
+    - 1 Playwright E2E test
+    - production frontend build passed
+    - OpenAPI and generated frontend API freshness passed
+  - Hosted:
+    - Full-stack CI run `30404101906`
+    - `Quality, PostgreSQL, and Playwright`
+    - conclusion: success
+  - The disposable validation PR #12 was closed without merge, and the
+    temporary repository was used only for template verification.
 - Added the Next.js App Router frontend foundation with TypeScript, Tailwind CSS, and ESLint (`fe47ff7`).
 - Added the FastAPI backend foundation, served with `uv` and exposing OpenAPI documentation (`560829b`).
 - Added backend environment configuration using Pydantic Settings, validated at startup and loaded from `.env` with a committed `.env.example` (`a55a9e2`).
