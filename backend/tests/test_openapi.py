@@ -68,6 +68,10 @@ def test_operation_ids_are_explicit_and_unique():
     assert len(operation_ids) == len(set(operation_ids))
 
 
+def test_application_openapi_advertises_release_version() -> None:
+    assert create_app().openapi()["info"]["version"] == "1.0.0"
+
+
 def test_every_api_route_declares_exactly_one_http_method() -> None:
     # A single `APIRoute` spanning multiple HTTP methods gets one FastAPI
     # unique ID across all of them, which can silently collide operation
